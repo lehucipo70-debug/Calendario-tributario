@@ -1,0 +1,2436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendario Tributario 2026</title>
+<style>
+  :root {
+    --bg: #f8fafc; --bg2: #ffffff; --bg3: #f1f5f9; --border: #e2e8f0;
+    --text: #0f172a; --text2: #475569; --text3: #94a3b8;
+    --blue: #3b82f6; --blue-light: #eff6ff; --blue-text: #1d4ed8;
+    --green: #10b981; --green-light: #ecfdf5; --green-text: #065f46;
+    --red: #ef4444; --red-light: #fef2f2; --red-text: #991b1b;
+    --amber: #f59e0b; --amber-light: #fffbeb; --amber-text: #92400e;
+    --gray-light: #f8fafc; --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+    --radius: 12px;
+  }
+  .dark {
+    --bg: #0f172a; --bg2: #1e293b; --bg3: #334155; --border: #334155;
+    --text: #f1f5f9; --text2: #94a3b8; --text3: #64748b;
+    --blue-light: #1e3a5f; --blue-text: #93c5fd;
+    --green-light: #064e3b; --green-text: #6ee7b7;
+    --red-light: #450a0a; --red-text: #fca5a5;
+    --amber-light: #451a03; --amber-text: #fcd34d;
+    --gray-light: #1e293b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+  
+  /* Layout */
+  header { position: sticky; top:0; z-index:50; background: var(--bg2); border-bottom: 1px solid var(--border); backdrop-filter: blur(8px); }
+  .header-inner { max-width:1400px; margin:0 auto; padding:0 16px; height:56px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .logo { display:flex; align-items:center; gap:10px; }
+  .logo-icon { width:36px; height:36px; background: linear-gradient(135deg,#3b82f6,#6366f1); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .logo-text h1 { font-size:15px; font-weight:700; }
+  .logo-text p { font-size:11px; color:var(--text3); }
+  nav { display:flex; gap:4px; }
+  nav button { padding:6px 12px; border-radius:8px; border:none; background:transparent; color:var(--text2); font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; white-space:nowrap; }
+  nav button:hover { background:var(--bg3); color:var(--text); }
+  nav button.active { background:var(--blue); color:#fff; }
+  .header-actions { display:flex; gap:8px; align-items:center; }
+  .btn-icon { width:32px; height:32px; border-radius:8px; border:1px solid var(--border); background:var(--bg2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; transition:background .15s; }
+  .btn-icon:hover { background:var(--bg3); }
+  
+  main { max-width:1400px; margin:0 auto; padding:20px 16px; }
+
+  /* Cards */
+  .card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); }
+  .card-pad { padding:20px; }
+  .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:16px; }
+  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  @media(max-width:900px){ .grid-4{grid-template-columns:repeat(2,1fr);} .grid-3{grid-template-columns:repeat(2,1fr);} }
+  @media(max-width:600px){ .grid-4{grid-template-columns:repeat(2,1fr);} .grid-3{grid-template-columns:1fr;} .grid-2{grid-template-columns:1fr;} nav button span.label{display:none;} }
+
+  /* Stat cards */
+  .stat-card { padding:16px; }
+  .stat-label { font-size:11px; color:var(--text2); font-weight:500; text-transform:uppercase; letter-spacing:.5px; }
+  .stat-value { font-size:36px; font-weight:800; margin:4px 0; }
+  .stat-bar { height:4px; border-radius:2px; background:var(--bg3); overflow:hidden; margin-top:8px; }
+  .stat-fill { height:4px; border-radius:2px; }
+  .c-blue { color:var(--blue); } .fill-blue { background:var(--blue); }
+  .c-green { color:var(--green); } .fill-green { background:var(--green); }
+  .c-red { color:var(--red); } .fill-red { background:var(--red); }
+  .c-amber { color:var(--amber); } .fill-amber { background:var(--amber); }
+
+  /* Filters */
+  .filters { display:flex; flex-wrap:wrap; gap:8px; padding:16px; border-bottom:1px solid var(--border); }
+  input[type=text], input[type=month], select {
+    padding:7px 12px; border-radius:8px; border:1px solid var(--border);
+    background:var(--bg2); color:var(--text); font-size:13px;
+    outline:none; transition:border-color .15s;
+  }
+  input[type=text]:focus, select:focus { border-color:var(--blue); }
+  input[type=text] { flex:1; min-width:200px; }
+  .btn { padding:7px 14px; border-radius:8px; border:1px solid var(--border); background:var(--bg2); color:var(--text2); font-size:13px; cursor:pointer; transition:all .15s; }
+  .btn:hover { background:var(--bg3); }
+  .btn-primary { background:var(--blue); color:#fff; border-color:var(--blue); }
+  .btn-primary:hover { background:#2563eb; }
+  .btn-success { background:var(--green); color:#fff; border-color:var(--green); font-size:12px; padding:4px 10px; }
+  .btn-success:hover { background:#059669; }
+  .btn-ghost { background:transparent; border:none; color:var(--text3); cursor:pointer; font-size:12px; padding:4px 8px; border-radius:6px; }
+  .btn-ghost:hover { color:var(--red); background:var(--red-light); }
+  .filter-count { font-size:12px; color:var(--text3); padding:0 16px 12px; }
+
+  /* Table */
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; padding:10px 14px; font-size:11px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:.4px; background:var(--bg3); border-bottom:1px solid var(--border); white-space:nowrap; }
+  td { padding:9px 14px; border-bottom:1px solid var(--border); font-size:13px; }
+  tr:hover td { background:var(--bg3); }
+  tr:last-child td { border-bottom:none; }
+
+  /* Status badges & row colors */
+  .badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; }
+  .b-green { background:var(--green-light); color:var(--green-text); }
+  .b-red { background:var(--red-light); color:var(--red-text); }
+  .b-amber { background:var(--amber-light); color:var(--amber-text); }
+  .b-gray { background:var(--bg3); color:var(--text2); }
+  .b-blue { background:var(--blue-light); color:var(--blue-text); }
+  .row-green { border-left:3px solid var(--green); }
+  .row-red { border-left:3px solid var(--red); }
+  .row-amber { border-left:3px solid var(--amber); }
+  .row-gray { border-left:3px solid var(--border); }
+
+  /* Progress bar multi */
+  .progress-multi { height:8px; border-radius:4px; background:var(--bg3); overflow:hidden; display:flex; }
+  .progress-label { display:flex; gap:16px; margin-top:8px; }
+  .progress-label span { font-size:11px; color:var(--text2); display:flex; align-items:center; gap:4px; }
+  .dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+
+  /* Contador cards */
+  .cnt-card { padding:20px; }
+  .cnt-avatar { width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#6366f1,#8b5cf6); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:18px; flex-shrink:0; }
+  .mini-stats { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin:12px 0; }
+  .mini-stat { padding:8px 12px; border-radius:8px; }
+  .mini-stat b { display:block; font-size:22px; font-weight:800; }
+  .mini-stat span { font-size:11px; }
+  .ms-green { background:var(--green-light); color:var(--green-text); }
+  .ms-red { background:var(--red-light); color:var(--red-text); }
+  .ms-amber { background:var(--amber-light); color:var(--amber-text); }
+  .ms-gray { background:var(--bg3); color:var(--text2); }
+
+  /* Calendar */
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); }
+  .cal-head { text-align:center; padding:8px; font-size:11px; font-weight:600; color:var(--text2); background:var(--bg3); border-bottom:1px solid var(--border); }
+  .cal-cell { min-height:80px; padding:4px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); vertical-align:top; }
+  .cal-cell:nth-child(7n) { border-right:none; }
+  .cal-day-num { font-size:12px; font-weight:500; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:50%; }
+  .cal-today .cal-day-num { background:var(--blue); color:#fff; }
+  .cal-event { font-size:10px; padding:1px 4px; border-radius:3px; margin-top:2px; truncate:clip; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; cursor:default; }
+
+  /* Modal */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:100; display:flex; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(4px); }
+  .modal { background:var(--bg2); border-radius:16px; padding:24px; width:100%; max-width:480px; box-shadow:0 25px 50px rgba(0,0,0,.25); max-height:90vh; overflow-y:auto; }
+  .modal h3 { font-size:17px; font-weight:700; margin-bottom:4px; }
+  .modal p.sub { font-size:13px; color:var(--text2); margin-bottom:16px; }
+  textarea { width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:var(--bg2); color:var(--text); font-size:13px; font-family:inherit; resize:vertical; outline:none; }
+  .modal-actions { display:flex; gap:8px; margin-top:16px; }
+  .modal-actions button { flex:1; padding:10px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; border:none; transition:all .15s; }
+  .modal-confirm { background:var(--green); color:#fff; }
+  .modal-confirm:hover { background:#059669; }
+  .modal-cancel { background:var(--bg3); color:var(--text); }
+  .modal-cancel:hover { background:var(--border); }
+
+  /* Empresa cards */
+  .emp-card { padding:16px; cursor:pointer; transition:box-shadow .15s; }
+  .emp-card:hover { box-shadow:0 4px 12px rgba(0,0,0,.15); }
+  .emp-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
+  .emp-tag { font-size:10px; padding:2px 6px; border-radius:4px; background:var(--blue-light); color:var(--blue-text); }
+
+  /* Misc */
+  .section-title { font-size:18px; font-weight:700; margin-bottom:16px; }
+  .mb4 { margin-bottom:16px; } .mb3 { margin-bottom:12px; }
+  .mt3 { margin-top:12px; } .mt2 { margin-top:8px; }
+  .flex { display:flex; } .items-center { align-items:center; }
+  .justify-between { justify-content:space-between; } .gap-2 { gap:8px; }
+  .gap-3 { gap:12px; } .text-sm { font-size:13px; } .text-xs { font-size:11px; }
+  .font-mono { font-family:monospace; }
+  .text-muted { color:var(--text2); }
+  .truncate { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+  .empty { text-align:center; padding:48px; color:var(--text3); font-size:14px; }
+  .ring-red { outline:1px solid var(--red); }
+  .venc-item { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-radius:8px; margin-bottom:4px; }
+  .imp-row { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+  .imp-name { width:160px; font-size:12px; font-weight:500; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+  .imp-bar { flex:1; height:6px; border-radius:3px; background:var(--bg3); overflow:hidden; }
+  .imp-fill { height:6px; border-radius:3px; background:var(--green); }
+  .imp-pct { font-size:11px; color:var(--text2); width:60px; text-align:right; }
+  .cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .detail-list { margin-top:12px; max-height:400px; overflow-y:auto; }
+  .mobile-nav { display:none; }
+  @media(max-width:700px) { nav { display:none; } .mobile-nav { display:flex; overflow-x:auto; gap:4px; padding:8px 16px; border-top:1px solid var(--border); } }
+  .history-note { font-size:11px; color:var(--text3); font-style:italic; margin-top:2px; }
+
+  /* ── AUTH SCREEN ── */
+  .auth-overlay { position:fixed;inset:0;background:linear-gradient(135deg,#1e3a5f,#0f172a);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px; }
+  .auth-card { background:#1e293b;border:1px solid #334155;border-radius:20px;padding:40px 36px;width:100%;max-width:420px;box-shadow:0 25px 60px rgba(0,0,0,.5); }
+  .auth-logo { text-align:center;margin-bottom:28px; }
+  .auth-logo .icon { font-size:48px;display:block;margin-bottom:8px; }
+  .auth-logo h1 { color:#f1f5f9;font-size:22px;font-weight:800; }
+  .auth-logo p { color:#64748b;font-size:13px;margin-top:4px; }
+  .auth-tab { display:flex;gap:2px;background:#0f172a;border-radius:10px;padding:3px;margin-bottom:24px; }
+  .auth-tab button { flex:1;padding:8px;border-radius:8px;border:none;background:transparent;color:#64748b;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s; }
+  .auth-tab button.active { background:#3b82f6;color:#fff; }
+  .auth-field { margin-bottom:14px; }
+  .auth-field label { display:block;font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:5px; }
+  .auth-field input { width:100%;padding:10px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#f1f5f9;font-size:14px;outline:none;transition:border-color .15s; }
+  .auth-field input:focus { border-color:#3b82f6; }
+  .auth-btn { width:100%;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:opacity .15s; }
+  .auth-btn:hover { opacity:.9; }
+  .auth-btn:disabled { opacity:.5;cursor:not-allowed; }
+  .auth-error { background:#450a0a;border:1px solid #991b1b;color:#fca5a5;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px; }
+  .auth-success { background:#064e3b;border:1px solid #065f46;color:#6ee7b7;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px; }
+  .auth-link { text-align:center;margin-top:16px;font-size:12px;color:#64748b; }
+  .auth-link button { background:none;border:none;color:#3b82f6;cursor:pointer;font-size:12px;text-decoration:underline; }
+  
+  /* ── USER BADGE ── */
+  .user-badge { display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:20px;background:var(--bg3);border:1px solid var(--border); }
+  .user-avatar { width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#6366f1);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0; }
+  .user-info { font-size:11px;line-height:1.3; }
+  .user-name { font-weight:600;color:var(--text); }
+  .user-role { color:var(--text3); }
+  .btn-logout { padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:11px;cursor:pointer;transition:all .15s; }
+  .btn-logout:hover { background:var(--red-light);color:var(--red-text);border-color:var(--red); }
+
+  /* ── REALTIME INDICATOR ── */
+  .realtime-dot { width:8px;height:8px;border-radius:50%;background:#10b981;animation:pulse-dot 2s infinite; }
+  .realtime-dot.offline { background:#ef4444;animation:none; }
+  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+  .toast { position:fixed;bottom:20px;right:20px;z-index:300;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px;animation:slideIn .3s ease;max-width:320px; }
+  @keyframes slideIn { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+  /* ── ADMIN PANEL ── */
+  .admin-table th { background:var(--bg3); }
+  .badge-admin { background:#fef3c7;color:#92400e;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700; }
+  .badge-contador { background:#eff6ff;color:#1d4ed8;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700; }
+
+  /* ── HISTORIAL ── */
+  .hist-item { padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px; }
+  .hist-icon { width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0; }
+  .hist-icon.update { background:#eff6ff; }
+  .hist-body { flex:1; }
+  .hist-desc { font-size:13px;font-weight:500; }
+  .hist-meta { font-size:11px;color:var(--text3);margin-top:2px; }
+
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-overlay" style="position:fixed;inset:0;background:linear-gradient(135deg,#1e3a5f,#0f172a);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#1e293b;border:1px solid #334155;border-radius:20px;padding:36px;width:100%;max-width:400px;box-shadow:0 25px 60px rgba(0,0,0,.5)">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:48px">📋</div>
+      <h1 style="color:#f1f5f9;font-size:20px;font-weight:800;margin:8px 0 4px">Calendario Tributario</h1>
+      <p style="color:#64748b;font-size:13px">Gestión tributaria 2026</p>
+    </div>
+
+    <div id="offline-tip" style="display:none;background:#172554;border:1px solid #1d4ed8;border-radius:8px;padding:10px;font-size:12px;color:#93c5fd;margin-bottom:14px;text-align:center">
+      ⚡ Modo sin conexión — cualquier correo y contraseña funcionan
+    </div>
+    <div id="auth-err" style="display:none;background:#450a0a;border:1px solid #991b1b;color:#fca5a5;padding:10px;border-radius:8px;font-size:13px;margin-bottom:12px"></div>
+    <div id="auth-ok"  style="display:none;background:#064e3b;border:1px solid #065f46;color:#6ee7b7;padding:10px;border-radius:8px;font-size:13px;margin-bottom:12px"></div>
+
+    <!-- LOGIN -->
+    <div id="frm-login">
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:5px">Correo electrónico</label>
+        <input id="inp-email" type="email" placeholder="correo@empresa.com"
+          style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#f1f5f9;font-size:14px;outline:none;box-sizing:border-box"
+          onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:5px">Contraseña</label>
+        <input id="inp-pass" type="password" placeholder="Tu contraseña"
+          style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#f1f5f9;font-size:14px;outline:none;box-sizing:border-box"
+          onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <button id="btn-login" onclick="doLogin()"
+        style="width:100%;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:15px;font-weight:700;cursor:pointer">
+        Iniciar sesión
+      </button>
+      <div style="text-align:center;margin-top:14px">
+        <button onclick="showFrm('rec')" style="background:none;border:none;color:#3b82f6;cursor:pointer;font-size:12px;text-decoration:underline">¿Olvidaste tu contraseña?</button>
+      </div>
+    </div>
+
+    <!-- RECOVERY -->
+    <div id="frm-rec" style="display:none">
+      <p style="color:#94a3b8;font-size:13px;margin-bottom:14px">Te enviaremos un enlace de recuperación.</p>
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:5px">Correo electrónico</label>
+        <input id="inp-rec-email" type="email" placeholder="correo@empresa.com"
+          style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#f1f5f9;font-size:14px;outline:none;box-sizing:border-box" />
+      </div>
+      <button onclick="doRecovery()"
+        style="width:100%;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:15px;font-weight:700;cursor:pointer">
+        Enviar enlace
+      </button>
+      <div style="text-align:center;margin-top:14px">
+        <button onclick="showFrm('login')" style="background:none;border:none;color:#3b82f6;cursor:pointer;font-size:12px;text-decoration:underline">← Volver</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP (hidden until login) -->
+<div id="app" style="display:none">
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">📋</div>
+        <div class="logo-text">
+          <h1>Calendario Tributario</h1>
+          <p id="hdr-sub">2026</p>
+        </div>
+      </div>
+      <nav id="main-nav"></nav>
+      <div class="header-actions" id="hdr-right">
+        <button class="btn-icon" id="btn-dark">🌙</button>
+      </div>
+    </div>
+    <div class="mobile-nav" id="mobile-nav"></div>
+  </header>
+
+  <main id="main-content" style="max-width:1400px;margin:0 auto;padding:20px 16px"></main>
+</div>
+
+<!-- Modals (same as before) -->
+<div class="modal-overlay" id="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>✅ Marcar como Presentado</h3>
+    <p class="sub" id="modal-sub"></p>
+    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Observaciones (opcional)</label>
+    <textarea id="modal-obs" rows="3" placeholder="Número radicado, fecha real, notas..."></textarea>
+    <div class="modal-actions">
+      <button class="modal-confirm" onclick="confirmPresent()">Confirmar</button>
+      <button class="modal-cancel" onclick="document.getElementById('modal').style.display='none'">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="detail-modal" style="display:none" onclick="this.style.display='none'">
+  <div class="modal" style="max-width:640px" onclick="event.stopPropagation()">
+    <div class="flex justify-between items-center mb3">
+      <div><h3 id="dm-title"></h3><p class="sub" id="dm-sub" style="margin-bottom:0"></p></div>
+      <button class="btn-ghost" onclick="document.getElementById('detail-modal').style.display='none'" style="font-size:20px">✕</button>
+    </div>
+    <div id="dm-body"></div>
+  </div>
+</div>
+
+<div id="toast-ct" style="position:fixed;bottom:20px;right:20px;z-index:300;display:flex;flex-direction:column;gap:8px"></div>
+<input type="file" id="excel-input" accept=".xlsx,.xls" style="display:none" onchange="handleExcelFile(event)" />
+
+<!-- IMPORT PROGRESS MODAL -->
+<div id="import-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--bg2);border-radius:16px;padding:28px;width:100%;max-width:440px;box-shadow:0 25px 50px rgba(0,0,0,.3)">
+    <h3 style="font-size:17px;font-weight:700;margin-bottom:6px">📂 Importar Excel</h3>
+    <p id="import-status" style="font-size:13px;color:var(--text2);margin-bottom:16px">Leyendo archivo...</p>
+    <div style="height:8px;border-radius:4px;background:var(--bg3);overflow:hidden;margin-bottom:12px">
+      <div id="import-bar" style="height:8px;border-radius:4px;background:var(--blue);width:0%;transition:width .3s"></div>
+    </div>
+    <div id="import-log" style="font-size:12px;color:var(--text3);max-height:120px;overflow-y:auto;line-height:1.8"></div>
+    <button id="import-close-btn" onclick="closeImportModal()" style="display:none;margin-top:16px;width:100%;padding:10px;border-radius:10px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:600;cursor:pointer">✅ Listo — Cerrar</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// SUPABASE CONFIG — reemplaza con tus credenciales
+// ═══════════════════════════════════════════════════
+const SUPABASE_URL      = 'https://azjkdqnnqwkrtzgtlgul.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6amtkcW5ucXdrcnR6Z3RsZ3VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTYwNDksImV4cCI6MjA5NzczMjA0OX0.o_S2K7UeXCvgVEouhLOtpuBFMy6im8YDJiFrDIq0LKc';
+const SB_READY = !SUPABASE_URL.includes('TU_') && !SUPABASE_ANON_KEY.includes('TU_');
+
+// ── EMBEDDED DATA ───────────────────────────────────
+const DATA_B64 = "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";
+const PERSISTED_B64 = "";
+
+async function decompress(b64) {
+  const bin   = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const ds     = new DecompressionStream('gzip');
+  const writer = ds.writable.getWriter();
+  writer.write(bytes); writer.close();
+  const chunks = [];
+  const reader = ds.readable.getReader();
+  while (true) { const {done, value} = await reader.read(); if (done) break; chunks.push(value); }
+  const out = new Uint8Array(chunks.reduce((n, c) => n + c.length, 0));
+  let off = 0; for (const ch of chunks) { out.set(ch, off); off += ch.length; }
+  return JSON.parse(new TextDecoder().decode(out));
+}
+
+// ── GLOBALS ─────────────────────────────────────────
+let supabase = null;
+let currentUser   = null;
+let currentPerfil = null;
+let DATA      = [];
+let persisted = {};
+let modalKey  = null;
+let useSupabase = false;
+
+const STORAGE_KEY = 'trib_v2';
+const TODAY       = new Date(); TODAY.setHours(0,0,0,0); // Always use current date
+const WARN_DAYS   = 7;
+
+let TABS = [
+  {id:'dashboard',    icon:'📊', label:'Dashboard'},
+  {id:'obligaciones', icon:'📋', label:'Obligaciones'},
+  {id:'contadores',   icon:'👤', label:'Contadores'},
+  {id:'calendario',   icon:'📅', label:'Calendario'},
+  {id:'empresas',     icon:'🏢', label:'Empresas'},
+];
+
+// ── VERSION HISTORY ─────────────────────────────────────────
+// Stores last 5 uploaded Excel versions with metadata
+const VERSION_KEY = 'trib_versions_v1';
+const MAX_VERSIONS = 5;
+
+function saveVersion(fileName, data, columnMap) {
+  try {
+    const versions = getVersions();
+    const newVersion = {
+      id: Date.now(),
+      fileName,
+      date: new Date().toISOString(),
+      recordCount: data.length,
+      columnMap, // original column structure from Excel
+      data       // full dataset snapshot
+    };
+    versions.unshift(newVersion);
+    if (versions.length > MAX_VERSIONS) versions.pop();
+    localStorage.setItem(VERSION_KEY, JSON.stringify(versions));
+    return newVersion.id;
+  } catch(e) { console.warn('Version save failed:', e); return null; }
+}
+
+function getVersions() {
+  try { return JSON.parse(localStorage.getItem(VERSION_KEY) || '[]'); } catch { return []; }
+}
+
+function deleteVersion(id) {
+  const versions = getVersions().filter(v => v.id !== id);
+  localStorage.setItem(VERSION_KEY, JSON.stringify(versions));
+}
+
+// Dynamic tabs generated from Excel extra sheets
+// Stored as: { id, label, icon, data: [{col1, col2, ...}] }
+let DYNAMIC_TABS = {};
+
+function saveDynamicTabs() {
+  try { localStorage.setItem('dyn_tabs_v1', JSON.stringify(DYNAMIC_TABS)); } catch {}
+}
+function loadDynamicTabs() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('dyn_tabs_v1') || '{}');
+    DYNAMIC_TABS = stored;
+    // Register each stored dynamic tab
+    for (const id of Object.keys(DYNAMIC_TABS)) {
+      const tab = DYNAMIC_TABS[id];
+      if (!TABS.find(t => t.id === id)) {
+        TABS.push({ id, icon: tab.icon, label: tab.label });
+      }
+    }
+  } catch {}
+}
+
+function renderNav() {
+  const nav = document.getElementById('main-nav');
+  const mnav = document.getElementById('mobile-nav');
+  if (!nav) return;
+  nav.innerHTML = TABS.map(t=>`<button class="${t.id===state.tab?'active':''}" onclick="setTab('${t.id}')">${t.icon} <span class="label">${t.label}</span></button>`).join('');
+  if (mnav) mnav.innerHTML = TABS.map(t=>`<button class="btn ${t.id===state.tab?'btn-primary':''}" onclick="setTab('${t.id}')" style="flex-shrink:0;padding:6px 10px;font-size:12px">${t.icon} ${t.label}</button>`).join('');
+}
+
+let state = { dark:false, tab:'dashboard', filters:{}, search:'', calYear:2026, calMonth:5 };
+
+// ── AUTH UI HELPERS ──────────────────────────────────
+function showFrm(name) {
+  document.getElementById('frm-login').style.display = name==='login' ? 'block' : 'none';
+  document.getElementById('frm-rec').style.display   = name==='rec'   ? 'block' : 'none';
+  document.getElementById('auth-err').style.display  = 'none';
+  document.getElementById('auth-ok').style.display   = 'none';
+}
+function authErr(msg) {
+  const el = document.getElementById('auth-err');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('auth-ok').style.display = 'none';
+}
+function authOk(msg) {
+  const el = document.getElementById('auth-ok');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('auth-err').style.display = 'none';
+}
+
+// ── SUPABASE INIT ────────────────────────────────────
+async function initSB() {
+  if (!SB_READY) return false;
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { autoRefreshToken:true, persistSession:true }
+    });
+    return true;
+  } catch(e) { console.warn('Supabase init error:', e); return false; }
+}
+
+async function getSBPerfil(uid) {
+  try {
+    const { data, error } = await supabase.from('perfiles').select('*').eq('id', uid).single();
+    if (error) { console.warn('getSBPerfil error:', error.message); return null; }
+    return data;
+  } catch(e) { console.warn('getSBPerfil failed:', e); return null; }
+}
+
+// ── LOGIN ────────────────────────────────────────────
+async function doLogin() {
+  const email = (document.getElementById('inp-email').value || '').trim();
+  const pass  = (document.getElementById('inp-pass').value  || '');
+  if (!email || !pass) { authErr('Ingresa correo y contraseña.'); return; }
+
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true;
+  btn.textContent = 'Entrando...';
+  btn.style.opacity = '0.7';
+
+  try {
+    if (!supabase) {
+      // ── MODO OFFLINE ──
+      currentUser   = { email, id:'local' };
+      currentPerfil = { rol:'admin', nombre: email.split('@')[0], correo: email };
+      await enterApp();
+    } else {
+      // ── MODO ONLINE ──
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      if (error) {
+        authErr(error.message.includes('Invalid') ? 'Correo o contraseña incorrectos.' : error.message);
+        return;
+      }
+      currentUser   = data.user;
+      currentPerfil = await getSBPerfil(currentUser.id);
+      await enterApp();
+    }
+  } catch(err) {
+    authErr('Error inesperado: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Iniciar sesión';
+    btn.style.opacity = '1';
+  }
+}
+
+async function doRecovery() {
+  const email = (document.getElementById('inp-rec-email').value || '').trim();
+  if (!email) { authErr('Ingresa tu correo.'); return; }
+  if (supabase) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.href
+    });
+    if (error) { authErr('Error al enviar enlace: ' + error.message); return; }
+  }
+  authOk('Enlace enviado. Revisa tu correo (incluyendo spam).');
+}
+
+async function doLogout() {
+  if (supabase) await supabase.auth.signOut();
+  if (_realtimeChannel && supabase) { supabase.removeChannel(_realtimeChannel); _realtimeChannel = null; }
+  currentUser = null; currentPerfil = null; DATA = []; persisted = {};
+  TABS = [
+    {id:'dashboard',icon:'📊',label:'Dashboard'},
+    {id:'obligaciones',icon:'📋',label:'Obligaciones'},
+    {id:'contadores',icon:'👤',label:'Contadores'},
+    {id:'calendario',icon:'📅',label:'Calendario'},
+    {id:'empresas',icon:'🏢',label:'Empresas'},
+  ];
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth-overlay').style.display = 'flex';
+  document.getElementById('inp-email').value = '';
+  document.getElementById('inp-pass').value  = '';
+  showFrm('login');
+}
+
+// ── ENTER APP ────────────────────────────────────────
+let _isEnteringApp = false;
+async function enterApp() {
+  if (_isEnteringApp) return;
+  _isEnteringApp = true;
+  // Add admin tabs if needed
+  if (currentPerfil?.rol === 'admin') {
+    if (!TABS.find(t => t.id === 'admin')) {
+      TABS.push({id:'admin',    icon:'⚙️', label:'Admin'});
+      TABS.push({id:'historial',icon:'📜', label:'Historial'});
+    }
+  }
+
+  // Show app, hide auth
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  // Render user badge
+  const nombre  = currentPerfil?.nombre || currentUser?.email?.split('@')[0] || 'Usuario';
+  const isAdmin = currentPerfil?.rol === 'admin';
+  document.getElementById('hdr-right').innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#6366f1);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700">${nombre[0]?.toUpperCase()||'U'}</div>
+      <div style="font-size:11px;line-height:1.3">
+        <div style="font-weight:600">${nombre}</div>
+        <div style="color:var(--text3)">${isAdmin?'👑 Admin':'📊 Contador'}</div>
+      </div>
+      <div id="rt-dot" style="width:8px;height:8px;border-radius:50%;background:#94a3b8" title="Estado conexión"></div>
+    </div>
+    <button onclick="doLogout()" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:11px;cursor:pointer">Salir</button>
+    <button class="btn-icon" id="btn-dark">🌙</button>`;
+
+  // Add sync button to header
+  const syncBtn = document.createElement('button');
+  syncBtn.id = 'btn-sync';
+  syncBtn.title = 'Sincronizar datos';
+  syncBtn.style.cssText = 'padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s';
+  syncBtn.innerHTML = '🔄 Sincronizar';
+  syncBtn.onclick = syncData;
+  document.getElementById('hdr-right').prepend(syncBtn);
+
+  // Re-attach dark mode
+  document.getElementById('btn-dark').addEventListener('click', () => {
+    state.dark = !state.dark;
+    document.documentElement.classList.toggle('dark', state.dark);
+    document.getElementById('btn-dark').textContent = state.dark ? '☀️' : '🌙';
+  });
+
+  // Load data
+  document.getElementById('main-content').innerHTML = '<div class="empty">⏳ Cargando datos...</div>';
+
+  // Load persisted state
+  await loadPersistedState();
+  loadDynamicTabs(); // Restore dynamic tabs from previous import
+
+  // Load obligations
+  DATA = await loadObligations();
+
+  // Filter for contador role
+  if (currentPerfil?.rol === 'contador' && currentPerfil?.nombre) {
+    const nombre = currentPerfil.nombre.toUpperCase().trim();
+    if (['JAT','ILP','EXTERNO'].includes(nombre)) {
+      // Firma login — filter by grupo
+      state.filters.grupo = nombre;
+      state.filters.contador = '';
+    } else {
+      // Regular contador — filter by name
+      state.filters.contador = currentPerfil.nombre;
+      state.filters.grupo = '';
+    }
+  }
+
+  renderAll();
+  initRealtime();
+  _isEnteringApp = false;
+}
+
+// ── DATA LOADING ─────────────────────────────────────
+async function loadObligations() {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('obligaciones').select('*')
+        .order('fecha_vencimiento');
+      if (!error && data?.length) {
+        useSupabase = true;
+        return data.map(r => ({
+          id:   r.empresa_nit + '||' + r.impuesto + '||' + r.periodo + '||' + r.fecha_vencimiento + '||' + (r.municipio||''),
+          empresa: r.empresa_nombre,
+          nit:     r.empresa_nit,
+          contador: r.contador || '',
+          impuesto: r.impuesto,
+          periodo:  r.periodo,
+          fecha:    r.fecha_vencimiento,
+          grupo:       r.grupo || '',
+          municipio: r.municipio || '', campos_extra: r.campos_extra || null,
+          _db_id:      r.id,
+          _estado_db: r.estado,
+          _pres_por:  r.presentado_por,
+          _pres_at:   r.fecha_presentacion,
+          _obs:       r.observaciones,
+        }));
+      }
+    } catch(e) {
+      console.warn('Supabase data error:', e);
+      showToast('⚠️ Error conectando a Supabase. Mostrando datos locales.');
+    }
+  }
+  useSupabase = false;
+  return await decompress(DATA_B64);
+}
+
+async function loadPersistedState() {
+  if (supabase && useSupabase) { persisted = {}; return; }
+  try {
+    const userChanges = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    persisted = userChanges;
+  } catch { persisted = {}; }
+}
+
+function saveLocal() {
+  if (!useSupabase) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted)); } catch {}
+  }
+}
+
+// ── REALTIME ─────────────────────────────────────────
+let _realtimeChannel = null;
+function initRealtime() {
+  if (!supabase) return;
+  // Clean up existing channel before creating new one
+  if (_realtimeChannel) { supabase.removeChannel(_realtimeChannel); _realtimeChannel = null; }
+  const dot = document.getElementById('rt-dot');
+  _realtimeChannel = supabase.channel('obl-rt')
+    .on('postgres_changes', {event:'UPDATE', schema:'public', table:'obligaciones'}, payload => {
+      const r   = payload.new;
+      const key = r.empresa_nit + '||' + r.impuesto + '||' + r.periodo + '||' + r.fecha_vencimiento + '||' + (r.municipio||'');
+      const idx = DATA.findIndex(x => x.id === key);
+      if (idx >= 0) {
+        DATA[idx]._estado_db = r.estado;
+        DATA[idx]._pres_por  = r.presentado_por;
+        DATA[idx]._pres_at   = r.fecha_presentacion;
+        DATA[idx]._obs       = r.observaciones;
+      }
+      showToast(`✅ ${r.empresa_nombre} · ${r.impuesto} → ${r.estado}`);
+      renderAll();
+    })
+    .subscribe(status => {
+      if (dot) dot.style.background = status === 'SUBSCRIBED' ? '#10b981' : '#ef4444';
+    });
+}
+
+// ── TOAST ────────────────────────────────────────────
+function showToast(msg) {
+  const ct = document.getElementById('toast-ct');
+  if (!ct) return;
+  const t = document.createElement('div');
+  t.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.2);animation:slideIn .3s ease';
+  t.textContent = msg;
+  ct.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+// ── MODAL ────────────────────────────────────────────
+function openModal(key, empresa, impuesto, periodo) {
+  modalKey = key;
+  document.getElementById('modal-sub').textContent = empresa + ' · ' + impuesto + ' · ' + periodo;
+  document.getElementById('modal-obs').value = '';
+  document.getElementById('modal').style.display = 'flex';
+}
+
+async function confirmPresent() {
+  if (!modalKey) return;
+  const obs  = document.getElementById('modal-obs').value;
+  const rec  = DATA.find(r => r.id === modalKey);
+  const name = currentPerfil?.nombre || 'Usuario';
+
+  if (useSupabase && rec?._db_id) {
+    const { error } = await supabase.from('obligaciones').update({
+      estado: 'Presentado', fecha_presentacion: new Date().toISOString(),
+      presentado_por: name, observaciones: obs || null
+    }).eq('id', rec._db_id);
+    if (error) { showToast('❌ Error al guardar'); return; }
+    rec._estado_db = 'Presentado'; rec._pres_por = name;
+    rec._pres_at   = new Date().toISOString(); rec._obs = obs;
+  } else {
+    persisted[modalKey] = { status:'Presentado', at: new Date().toISOString(), por: name, obs };
+    saveLocal();
+  }
+  document.getElementById('modal').style.display = 'none';
+  renderAll();
+}
+
+async function unmark(key) {
+  const rec = DATA.find(r => r.id === key);
+  if (useSupabase && rec?._db_id) {
+    await supabase.from('obligaciones').update({
+      estado:'Pendiente', fecha_presentacion:null, presentado_por:null
+    }).eq('id', rec._db_id);
+    rec._estado_db = 'Pendiente'; rec._pres_por = null; rec._pres_at = null;
+  } else {
+    delete persisted[key]; saveLocal();
+  }
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER FUNCTIONS (original, untouched)
+// ═══════════════════════════════════════════════════
+function getStatus(rec) {
+  // Supabase mode: use DB estado
+  if (useSupabase && rec._estado_db) {
+    if (rec._estado_db === 'Presentado') return 'Presentado';
+    const d = new Date(rec.fecha);
+    if (d < TODAY) return 'Vencido';
+    return (d - TODAY)/86400000 <= WARN_DAYS ? 'Próximo' : 'Pendiente';
+  }
+  // Offline mode: use persisted state
+  if (persisted[rec.id]?.status === 'Presentado') return 'Presentado';
+  const d = new Date(rec.fecha);
+  if (d < TODAY) return 'Vencido';
+  const diff = (d - TODAY)/86400000;
+  if (diff <= WARN_DAYS) return 'Próximo';
+  return 'Pendiente';
+}
+
+function fmtDate(s) {
+  if(!s) return '-';
+  const str = String(s).trim();
+  // Format: YYYY-MM-DD (standard)
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+    const [y,m,d] = str.substring(0,10).split('-');
+    return d+'/'+m+'/'+y;
+  }
+  // Format: "Tuesday, July 14, 2026" or "July 14, 2026"
+  try {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      return dd+'/'+mm+'/'+d.getFullYear();
+    }
+  } catch(e) {}
+  return str;
+}
+
+function rowClass(st) {
+  return st==='Presentado'?'row-green':st==='Vencido'?'row-red':st==='Próximo'?'row-amber':'row-gray';
+}
+function badgeClass(st) {
+  return st==='Presentado'?'b-green':st==='Vencido'?'b-red':st==='Próximo'?'b-amber':'b-gray';
+}
+function bgClass(st) {
+  return st==='Presentado'?'var(--green-light)':st==='Vencido'?'var(--red-light)':st==='Próximo'?'var(--amber-light)':'var(--bg3)';
+}
+
+// ─── RENDER HELPERS ─────────────────────────────────────────────────────────
+function statusBadge(st) {
+  return `<span class="badge ${badgeClass(st)}">${st}</span>`;
+}
+
+function impBadge(imp) {
+  return `<span class="badge b-blue" style="font-size:10px">${imp}</span>`;
+}
+
+function markBtn(key, empresa, impuesto, periodo) {
+  return `<button class="btn btn-success" onclick="openModal('${escH(key)}','${escH(empresa)}','${escH(impuesto)}','${escH(periodo)}')">✓ Marcar</button>`;
+}
+
+function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;').replace(/"/g,'&quot;'); }
+
+function filteredData() {
+  const f = state.filters, q = (state.search||'').toLowerCase();
+  return DATA.filter(r => {
+    const st = getStatus(r);
+    if(f.contador && r.contador!==f.contador) return false;
+    if(f.empresa && r.empresa!==f.empresa) return false;
+    if(f.impuesto && r.impuesto!==f.impuesto) return false;
+    if(f.status && st!==f.status) return false;
+    if(f.mes && !r.fecha.startsWith(f.mes)) return false;
+    if(f.grupo && r.grupo!==f.grupo) return false;
+    // Dynamic extra column filters
+    for (const col of getExtraCols()) {
+      const fkey = 'extra_' + col.key;
+      if (f[fkey] && r.campos_extra?.[col.key] !== f[fkey]) return false;
+    }
+    if(q && !r.empresa.toLowerCase().includes(q) && !(r.nit||'').includes(q) && !r.impuesto.toLowerCase().includes(q) && !r.contador.toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+}
+
+function allContadores() { return [...new Set(DATA.map(r=>r.contador).filter(Boolean))].sort(); }
+function allEmpresas()   { return [...new Set(DATA.map(r=>r.empresa))].sort(); }
+function allGrupos()    { return [...new Set(DATA.map(r=>r.grupo).filter(Boolean))].sort(); }
+function allImpuestos()  { return [...new Set(DATA.map(r=>r.impuesto))].sort(); }
+
+// ─── SELECTS ────────────────────────────────────────────────────────────────
+function makeSelect(id, label, opts, val, onchange) {
+  let html = `<select id="${id}" onchange="${onchange}">`;
+  html += `<option value="">${label}</option>`;
+  opts.forEach(o=>{ html+=`<option value="${escH(o)}" ${val===o?'selected':''}>${o}</option>`; });
+  html += '</select>';
+  return html;
+}
+
+// ─── RENDER DASHBOARD ───────────────────────────────────────────────────────
+// ── EXTRA COLUMNS HELPERS ─────────────────────────
+function getExtraCols() {
+  // Use cached result within same render cycle
+  if (window._cachedExtraCols) return window._cachedExtraCols;
+  // Detect extra columns from loaded DATA
+  const colMap = {};
+  for (const r of DATA) {
+    if (r.campos_extra) {
+      for (const key of Object.keys(r.campos_extra)) {
+        if (!colMap[key]) {
+          colMap[key] = { key, label: key.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) };
+        }
+      }
+    }
+  }
+  window._cachedExtraCols = Object.values(colMap);
+  return window._cachedExtraCols;
+}
+
+function allExtraVals(key) {
+  return [...new Set(DATA.map(r => r.campos_extra?.[key]).filter(v => v != null && v !== ''))].sort();
+}
+
+function renderContadorExtras(obs) {
+  const extraCols = getExtraCols();
+  if (!extraCols.length) return '';
+  let html = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px">';
+  for (const col of extraCols) {
+    const vals = allExtraVals(col.key);
+    if (!vals.length) continue;
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">';
+    html += '<span style="color:var(--text2);font-weight:600">' + col.label + ':</span>';
+    for (const val of vals) {
+      const count = obs.filter(r => r.campos_extra?.[col.key] === val).length;
+      if (!count) continue;
+      const color = val==='SI'?'var(--green)':val==='NO'?'var(--red)':'var(--blue)';
+      html += '<span style="background:var(--bg3);padding:1px 6px;border-radius:10px;color:' + color + '">' + val + ': ' + count + '</span>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderExtraSummary() {
+  const extraCols = getExtraCols();
+  if (!extraCols.length) return '';
+
+  let html = '<div style="margin-top:16px">';
+  html += '<strong style="font-size:14px;display:block;margin-bottom:12px">📊 Resumen por indicadores adicionales</strong>';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">';
+
+  for (const col of extraCols) {
+    const vals = allExtraVals(col.key);
+    if (!vals.length) continue;
+
+    html += '<div class="card" style="padding:16px">';
+    html += '<strong style="font-size:13px;display:block;margin-bottom:10px">📌 ' + col.label + '</strong>';
+
+    for (const val of vals) {
+      const obs = DATA.filter(r => r.campos_extra?.[col.key] === val);
+      const pres = obs.filter(r => getStatus(r) === 'Presentado').length;
+      const pct  = obs.length ? (pres/obs.length*100).toFixed(0) : 0;
+      const color = val === 'SI' ? 'var(--green)' : val === 'NO' ? 'var(--red)' : 'var(--blue)';
+
+      html += '<div style="margin-bottom:10px">';
+      html += '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">';
+      html += '<span style="font-weight:600">' + val + '</span>';
+      html += '<span style="color:var(--text2)">' + obs.length + ' obligaciones · ' + pct + '%</span>';
+      html += '</div>';
+      html += '<div style="height:6px;border-radius:3px;background:var(--bg3);overflow:hidden">';
+      html += '<div style="height:6px;border-radius:3px;background:' + color + ';width:' + pct + '%"></div>';
+      html += '</div>';
+
+      // List companies for this value
+      const empresas = [...new Set(obs.map(r => r.empresa))].slice(0, 5);
+      html += '<div style="font-size:10px;color:var(--text3);margin-top:3px">' + empresas.join(', ') + (obs.length > 5 ? '...' : '') + '</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  html += '</div></div>';
+  return html;
+}
+
+function renderDynamicTab(tabId) {
+  const tab = DYNAMIC_TABS[tabId];
+  if (!tab) return '<div class="empty">Pestaña no encontrada</div>';
+
+  const rows = tab.data || [];
+  if (!rows.length) return '<div class="empty">Sin datos en esta pestaña</div>';
+
+  // Get all column names from data
+  const cols = [...new Set(rows.flatMap(r => Object.keys(r)))];
+
+  // Detect if any col looks like a date
+  const isDate = v => v && /^\d{4}-\d{2}-\d{2}/.test(String(v));
+
+  // Build filter state for this tab
+  const fkey = 'dynfilter_' + tabId;
+  if (!state.filters[fkey]) state.filters[fkey] = {};
+  const f = state.filters[fkey];
+
+  // Apply filters
+  let filtered = rows.filter(r => {
+    for (const [k, v] of Object.entries(f)) {
+      if (v && String(r[k]||'').trim() !== v) return false;
+    }
+    return true;
+  });
+
+  // Build filter selects for cols with <= 20 unique values
+  const filterSelects = cols.map(col => {
+    const vals = [...new Set(rows.map(r => String(r[col]||'').trim()).filter(Boolean))];
+    if (vals.length > 20 || vals.length === 0) return '';
+    let sel = `<select onchange="setDynFilter('${tabId}','${col}',this.value)" style="padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px">`;
+    sel += `<option value="">${col}</option>`;
+    vals.sort().forEach(v => {
+      const selected = f[col] === v ? 'selected' : '';
+      sel += `<option value="${escH(v)}" ${selected}>${v}</option>`;
+    });
+    sel += '</select>';
+    return sel;
+  }).filter(Boolean).join('');
+
+  // Build summary cards for key metrics
+  const summaryCards = cols.slice(0, 4).map(col => {
+    const vals = [...new Set(rows.map(r => String(r[col]||'').trim()).filter(Boolean))];
+    if (vals.length > 10) return '';
+    const counts = {};
+    vals.forEach(v => { counts[v] = rows.filter(r => String(r[col]||'').trim() === v).length; });
+    const cards = Object.entries(counts).map(([v,c]) => {
+      const pct = (c/rows.length*100).toFixed(0);
+      const isPos = ['SI','YES','OK','PAGADO','PRESENTADO'].includes(v.toUpperCase());
+      const isNeg = ['NO','PENDIENTE','VENCIDO'].includes(v.toUpperCase());
+      const color = isPos?'var(--green)':isNeg?'var(--red)':'var(--blue)';
+      return `<div style="padding:12px 16px;border-radius:10px;background:var(--bg3);min-width:120px">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">${col}: <strong>${v}</strong></div>
+        <div style="font-size:24px;font-weight:800;color:${color}">${c}</div>
+        <div style="height:4px;border-radius:2px;background:var(--bg2);margin-top:6px">
+          <div style="height:4px;border-radius:2px;background:${color};width:${pct}%"></div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">${pct}% del total</div>
+      </div>`;
+    }).join('');
+    return cards ? `<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">${col}</div><div style="display:flex;flex-wrap:wrap;gap:8px">${cards}</div></div>` : '';
+  }).filter(Boolean).join('');
+
+  // Build table
+  const thead = cols.map(c => `<th>${c}</th>`).join('');
+  const tbody = filtered.slice(0, 500).map(r => {
+    const tds = cols.map(col => {
+      const v = r[col] != null ? String(r[col]).trim() : '—';
+      const isPos = ['SI','YES','OK','PAGADO','PRESENTADO'].includes(v.toUpperCase());
+      const isNeg = ['NO','PENDIENTE','VENCIDO'].includes(v.toUpperCase());
+      const badge = (isPos || isNeg) ? `<span class="badge ${isPos?'b-green':'b-red'}">${v}</span>` : (isDate(v) ? `<span class="font-mono" style="font-size:12px">${fmtDate(v)}</span>` : v);
+      return `<td>${badge}</td>`;
+    }).join('');
+    return `<tr>${tds}</tr>`;
+  }).join('');
+
+  return `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+    <h2 style="font-size:18px;font-weight:700">${tab.icon} ${tab.label}</h2>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span style="font-size:12px;color:var(--text2)">${filtered.length} de ${rows.length} registros</span>
+      <button onclick="clearDynFilter('${tabId}')" class="btn" style="font-size:12px">Limpiar filtros</button>
+      <button onclick="exportDynTab('${tabId}')" class="btn btn-primary" style="font-size:12px">📥 Exportar Excel</button>
+    </div>
+  </div>
+
+  ${summaryCards ? `<div class="card card-pad mb4">${summaryCards}</div>` : ''}
+
+  <div class="card mb4">
+    <div class="filters">${filterSelects || '<span style="color:var(--text3);font-size:13px">Sin filtros disponibles para esta hoja</span>'}</div>
+    <div class="filter-count">${filtered.length} registros</div>
+  </div>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr>${thead}</tr></thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function setDynFilter(tabId, col, val) {
+  const fkey = 'dynfilter_' + tabId;
+  if (!state.filters[fkey]) state.filters[fkey] = {};
+  state.filters[fkey][col] = val;
+  renderAll();
+}
+
+function clearDynFilter(tabId) {
+  state.filters['dynfilter_' + tabId] = {};
+  renderAll();
+}
+
+function exportDynTab(tabId) {
+  const tab = DYNAMIC_TABS[tabId];
+  if (!tab || !tab.data.length) return;
+  const cols = [...new Set(tab.data.flatMap(r => Object.keys(r)))];
+  const csvEscape = v => { const s = String(v ?? ''); return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g,'""') + '"' : s; };
+  const rows = tab.data.map(r => cols.map(c => csvEscape(r[c])).join(','));
+  const csv = [cols.map(c => csvEscape(c)).join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = tabId + '.csv';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+
+function renderFirmaCards() {
+  return ['JAT','ILP','EXTERNO'].map(g => {
+    const obs = DATA.filter(r => r.grupo === g);
+    if (!obs.length) return '';
+    const pres  = obs.filter(r => getStatus(r)==='Presentado').length;
+    const venc  = obs.filter(r => getStatus(r)==='Vencido').length;
+    const prox  = obs.filter(r => getStatus(r)==='Próximo').length;
+    const pct   = (pres/obs.length*100).toFixed(0);
+    const color = g==='JAT'?'#1d4ed8':g==='ILP'?'#9d174d':'#374151';
+    const bgc   = g==='JAT'?'#dbeafe':g==='ILP'?'#fce7f3':'#f3f4f6';
+    const firms = [...new Set(obs.map(r=>r.nit||r.empresa))].length;
+    return '<div class="card" style="padding:16px;border-top:3px solid '+color+'">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      + '<span style="font-weight:700;font-size:15px;color:'+color+'">'+g+'</span>'
+      + '<span class="badge" style="background:'+bgc+';color:'+color+'">'+pct+'%</span>'
+      + '</div>'
+      + '<div style="font-size:12px;color:var(--text2);margin-bottom:8px">'+obs.length+' obligaciones · '+firms+' empresas</div>'
+      + '<div style="display:flex;gap:8px;font-size:11px">'
+      + '<span style="color:var(--green)">✅ '+pres+'</span>'
+      + '<span style="color:var(--red)">🚨 '+venc+'</span>'
+      + '<span style="color:var(--amber)">⚠️ '+prox+'</span>'
+      + '</div>'
+      + '<div style="height:4px;border-radius:2px;background:var(--bg3);overflow:hidden;margin-top:8px">'
+      + '<div style="height:4px;border-radius:2px;background:'+color+';width:'+pct+'%"></div>'
+      + '</div>'
+      + '<button class="btn" style="width:100%;margin-top:10px;font-size:11px" '
+      + 'onclick="setFilter(\'grupo\',\''+g+'\');setTab(\'obligaciones\')">Ver obligaciones →</button>'
+      + '</div>';
+  }).join('');
+}
+
+function renderDashboard() {
+  const total = DATA.length;
+  const pres = DATA.filter(r=>getStatus(r)==='Presentado').length;
+  const venc = DATA.filter(r=>getStatus(r)==='Vencido').length;
+  const prox = DATA.filter(r=>getStatus(r)==='Próximo').length;
+  const pend = DATA.filter(r=>getStatus(r)==='Pendiente').length;
+
+  if (!total) return '<div class="empty">⏳ Sin datos cargados. Importa un Excel o sincroniza.</div>';
+  const pPres = (pres/total*100).toFixed(1);
+  const pVenc = (venc/total*100).toFixed(1);
+  const pProx = (prox/total*100).toFixed(1);
+
+  const cutoff = new Date(TODAY); cutoff.setDate(cutoff.getDate()+15);
+  const proxList = DATA.filter(r=>{
+    const d=new Date(r.fecha); const st=getStatus(r);
+    return d>=TODAY && d<=cutoff && st!=='Presentado';
+  }).sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,10);
+
+  const imps = allImpuestos();
+
+  document.getElementById('hdr-sub').textContent = `2026 · ${total} obligaciones`;
+
+  return renderSyncCard() + `
+  <div class="grid-4 mb4">
+    ${[
+      {label:'Total',val:total,c:'blue',fill:100},
+      {label:'Presentadas',val:pres,c:'green',fill:pPres},
+      {label:'Vencidas',val:venc,c:'red',fill:pVenc},
+      {label:'Próximas (7d)',val:prox,c:'amber',fill:pProx},
+    ].map(s=>`
+    <div class="card stat-card">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value c-${s.c}">${s.val}</div>
+      <div class="stat-bar"><div class="stat-fill fill-${s.c}" style="width:${s.fill}%"></div></div>
+    </div>`).join('')}
+  </div>
+
+  <div class="card card-pad mb4">
+    <div class="flex justify-between items-center mb3">
+      <strong>Progreso general 2026</strong>
+      <span class="c-green" style="font-weight:700;font-size:16px">${pPres}%</span>
+    </div>
+    <div class="progress-multi">
+      <div style="width:${pPres}%;background:var(--green)"></div>
+      <div style="width:${pVenc}%;background:var(--red)"></div>
+      <div style="width:${pProx}%;background:var(--amber)"></div>
+    </div>
+    <div class="progress-label">
+      <span><span class="dot" style="background:var(--green)"></span>Presentado (${pres})</span>
+      <span><span class="dot" style="background:var(--red)"></span>Vencido (${venc})</span>
+      <span><span class="dot" style="background:var(--amber)"></span>Próximo (${prox})</span>
+      <span><span class="dot" style="background:var(--border)"></span>Pendiente (${pend})</span>
+    </div>
+  </div>
+
+  <div class="grid-2 mb4">
+    <div class="card card-pad">
+      <strong style="font-size:14px">⚡ Próximos 15 días</strong>
+      <div style="margin-top:12px">
+      ${proxList.length===0?'<p class="text-muted text-sm" style="margin-top:8px">🎉 Sin vencimientos próximos</p>':
+        proxList.map(r=>{
+          const st=getStatus(r);
+          const diff=Math.round((new Date(r.fecha)-TODAY)/86400000);
+          return `<div class="venc-item ${rowClass(st)}" style="background:${bgClass(st)}">
+            <div>
+              <div style="font-weight:600;font-size:13px">${r.empresa}</div>
+              <div class="text-xs text-muted">${r.impuesto} · ${r.periodo}</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-xs">${fmtDate(r.fecha)}</span>
+              <span class="text-xs text-muted">${diff===0?'hoy':'en '+diff+'d'}</span>
+              <button class="btn btn-success" onclick="openModal('${escH(r.id)}','${escH(r.empresa)}','${escH(r.impuesto)}','${escH(r.periodo)}')">✓</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="card card-pad">
+      <strong style="font-size:14px">📊 Por tipo de impuesto</strong>
+      <div style="margin-top:12px">
+      ${imps.map(imp=>{
+        const obs=DATA.filter(r=>r.impuesto===imp);
+        const p=obs.filter(r=>getStatus(r)==='Presentado').length;
+        const v=obs.filter(r=>getStatus(r)==='Vencido').length;
+        const pct=(p/obs.length*100).toFixed(0);
+        return `<div class="imp-row">
+          <div class="imp-name">${imp}</div>
+          <div class="imp-bar"><div class="imp-fill" style="width:${pct}%"></div></div>
+          <div class="imp-pct">${pct}% · ${obs.length}${v>0?'<span class="c-red"> '+v+'🚨</span>':''}</div>
+        </div>`;
+      }).join('')}
+      </div>
+    </div>
+  </div>
+  ` + renderExtraSummary();
+}
+
+// ─── RENDER OBLIGACIONES ─────────────────────────────────────────────────────
+function renderObligaciones() {
+  const list = filteredData();
+  const contadores = allContadores();
+  const empresas = allEmpresas();
+  const imps = allImpuestos();
+  const f = state.filters;
+
+  const isAdmin = currentPerfil?.rol === 'admin';
+  const rows = list.slice(0,300).map(r=>{
+    const st = getStatus(r);
+    const extraCells = getExtraCols().map(c=>{
+      const val = r.campos_extra?.[c.key];
+      return isAdmin
+        ? editableCell(r.id, 'extra_'+c.key, val, 'font-size:12px')
+        : `<td class="text-xs">${val != null ? val : '—'}</td>`;
+    }).join('');
+
+    return `<tr class="${rowClass(st)}">
+      ${editableCell(r.id,'empresa',r.empresa,'max-width:160px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis')}
+      ${editableCell(r.id,'nit',r.nit,'font-family:monospace;font-size:11px;color:var(--text2)')}
+      ${editableCell(r.id,'contador',r.contador,'')}
+      <td>${impBadge(r.impuesto)}</td>
+      <td>${r.grupo ? `<span class="badge" style="background:${r.grupo==='JAT'?'#dbeafe':r.grupo==='ILP'?'#fce7f3':'#f3f4f6'};color:${r.grupo==='JAT'?'#1d4ed8':r.grupo==='ILP'?'#9d174d':'#374151'};font-size:10px">${r.grupo}</span>` : '—'}</td>
+      ${editableCell(r.id,'periodo',r.periodo,'font-size:12px;color:var(--text2)')}
+      <td class="font-mono text-xs">${fmtDate(r.fecha)}</td>
+      ${extraCells}
+      <td>${statusBadge(st)}${r._obs?'<div class="history-note">'+r._obs.substring(0,30)+'</div>':''}</td>
+      <td style="text-align:center">${st!=='Presentado'
+        ?markBtn(r.id,r.empresa,r.impuesto,r.periodo)
+        :`<button class="btn-ghost" onclick="unmark('${escH(r.id)}')" title="Desmarcar">↩</button>`
+      }</td>
+    </tr>`;
+  }).join('');
+
+  return `
+  <div class="card mb4">
+    <div class="filters">
+      <input type="text" placeholder="🔍 Buscar empresa, NIT, impuesto..." value="${escH(state.search||'')}" oninput="setSearch(this.value)" />
+      ${makeSelect('f-cnt','Contador',contadores,f.contador||'','setFilter(\'contador\',this.value)')}
+      ${makeSelect('f-emp','Empresa',empresas,f.empresa||'','setFilter(\'empresa\',this.value)')}
+      ${makeSelect('f-imp','Impuesto',imps,f.impuesto||'','setFilter(\'impuesto\',this.value)')}
+      ${makeSelect('f-st','Estado',['Pendiente','Presentado','Vencido','Próximo'],f.status||'','setFilter(\'status\',this.value)')}
+      ${makeSelect('f-grupo','Firma',allGrupos(),f.grupo||'','setFilter(\'grupo\',this.value)')}
+      <input type="month" value="${f.mes||''}" onchange="setFilter('mes',this.value)" />
+      ${getExtraCols().filter(c=>allExtraVals(c.key).length>0&&allExtraVals(c.key).length<=20).map(c=>
+        makeSelect('f-ex-'+c.key, c.label, allExtraVals(c.key), f['extra_'+c.key]||'',
+          'setFilter(\'extra_'+c.key+'\',this.value)')
+      ).join('')}
+      <button class="btn" onclick="clearFilters()">Limpiar</button>
+      <button class="btn" onclick="syncData()" style="background:var(--blue);color:#fff;border-color:var(--blue)">🔄 Sincronizar</button>
+    </div>
+    <div class="filter-count">${list.length} obligaciones${list.length>300?' (mostrando 300)':''}
+      ${currentPerfil?.rol==='admin' ? '<span style="margin-left:12px;font-size:11px;color:var(--blue)">✏️ Haz clic en cualquier celda para editar</span>' : ''}
+    </div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Empresa</th><th>NIT</th><th>Contador</th><th>Impuesto</th><th>Firma</th><th>Período</th><th>Vence</th>
+        ${getExtraCols().map(c=>`<th>${c.label}</th>`).join('')}
+        <th>Estado</th><th style="text-align:center">Acción</th>
+        </tr></thead>
+        <tbody>${rows}${list.length===0?'<tr><td colspan="8" class="empty">Sin resultados</td></tr>':''}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ─── RENDER CONTADORES ───────────────────────────────────────────────────────
+function renderContadores() {
+  const SKIP = ['ORDINARIO','ORDINARIO (2025)','PN','SIMPLE','SIN CONTADOR'];
+  const cnts = allContadores().filter(c=>!SKIP.includes(c));
+  return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><h2 style="font-size:18px;font-weight:700">Panel por Contador</h2><button onclick="syncData()" style="padding:6px 14px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-size:12px;font-weight:600;cursor:pointer">🔄 Sincronizar</button></div>
+  <div class="grid-3">
+  ${cnts.map(cnt=>{
+    const obs = DATA.filter(r=>r.contador===cnt);
+    const pres=obs.filter(r=>getStatus(r)==='Presentado').length;
+    const venc=obs.filter(r=>getStatus(r)==='Vencido').length;
+    const prox=obs.filter(r=>getStatus(r)==='Próximo').length;
+    const pend=obs.filter(r=>getStatus(r)==='Pendiente').length;
+    const pct=obs.length?(pres/obs.length*100).toFixed(0):0;
+    const vencList=obs.filter(r=>getStatus(r)==='Vencido').slice(0,3);
+    return `<div class="card cnt-card">
+      <div class="flex items-center gap-3 mb3">
+        <div class="cnt-avatar">${cnt[0].toUpperCase()}</div>
+        <div><strong style="font-size:15px">${cnt}</strong><div class="text-xs text-muted">${obs.length} obligaciones</div></div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat ms-green"><b>${pres}</b><span>Presentadas</span></div>
+        <div class="mini-stat ms-red"><b>${venc}</b><span>Vencidas</span></div>
+        <div class="mini-stat ms-amber"><b>${prox}</b><span>Próximas</span></div>
+        <div class="mini-stat ms-gray"><b>${pend}</b><span>Pendientes</span></div>
+      </div>
+      <div class="flex items-center gap-2">
+        <div style="flex:1;height:6px;border-radius:3px;background:var(--bg3);overflow:hidden">
+          <div style="height:6px;border-radius:3px;background:var(--green);width:${pct}%"></div>
+        </div>
+        <span class="text-xs c-green" style="font-weight:700">${pct}%</span>
+      </div>
+      ${renderContadorExtras(obs)}
+      ${vencList.length>0?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--red-light)">
+        <p class="text-xs c-red" style="font-weight:600;margin-bottom:4px">🚨 Vencidas sin presentar:</p>
+        ${vencList.map(r=>`<p class="text-xs text-muted">${r.empresa} · ${r.impuesto} · ${fmtDate(r.fecha)}</p>`).join('')}
+        ${venc>3?`<p class="text-xs text-muted">...y ${venc-3} más</p>`:''}
+      </div>`:''}
+      <button class="btn" style="width:100%;margin-top:12px;font-size:12px"
+        onclick="setFilter('contador','${escH(cnt)}');setTab('obligaciones')">Ver obligaciones →</button>
+    </div>`;
+  }).join('')}
+  </div>`;
+}
+
+// ─── RENDER CALENDARIO ───────────────────────────────────────────────────────
+const MONTH_NAMES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DAY_NAMES=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+function renderCalendario() {
+  const y=state.calYear, m=state.calMonth;
+  const prefix=y+'-'+String(m+1).padStart(2,'0');
+  const monthObs=DATA.filter(r=>r.fecha.startsWith(prefix) && getStatus(r)!=='Presentado');
+
+  const firstDay=new Date(y,m,1).getDay();
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const todayStr=TODAY.toISOString().split('T')[0];
+
+  let calCells='';
+  for(let i=0;i<firstDay;i++) calCells+=`<div class="cal-cell"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const dayObs=monthObs.filter(r=>r.fecha===ds);
+    const isToday=ds===todayStr;
+    calCells+=`<div class="cal-cell ${isToday?'cal-today':''}">
+      <div class="cal-day-num">${d}</div>
+      ${dayObs.slice(0,2).map(r=>{
+        const st=getStatus(r);
+        return `<div class="cal-event ${badgeClass(st)}" title="${r.empresa} · ${r.impuesto}">${r.empresa.substring(0,12)}</div>`;
+      }).join('')}
+      ${dayObs.length>2?`<div class="cal-event b-gray">+${dayObs.length-2} más</div>`:''}
+    </div>`;
+  }
+
+  const listItems=monthObs.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(r=>{
+    const st=getStatus(r);
+    // Show first date-like extra field
+    const dateExtras = getExtraCols().filter(c => c.key.includes('fecha') || c.key.includes('entrega') || c.key.includes('date'));
+    const entrega = dateExtras.length > 0 && r.campos_extra?.[dateExtras[0].key]
+      ? ' · 📬 ' + dateExtras[0].label + ': ' + fmtDate(r.campos_extra[dateExtras[0].key])
+      : '';
+    return `<div class="venc-item ${rowClass(st)}" style="background:${bgClass(st)}">
+      <div>
+        <span style="font-weight:600;font-size:13px">${r.empresa}</span>
+        <span class="text-xs text-muted" style="margin-left:8px">${r.impuesto} · ${r.periodo}</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="font-mono text-xs">${fmtDate(r.fecha)}</span>
+        <button class="btn btn-success" onclick="openModal('${escH(r.id)}','${escH(r.empresa)}','${escH(r.impuesto)}','${escH(r.periodo)}')">✓</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="cal-nav">
+    <h2 class="section-title" style="margin-bottom:0">${MONTH_NAMES[m]} ${y}</h2>
+    <div class="flex gap-2">
+      <button class="btn" onclick="navCal(-1)">← Anterior</button>
+      <button class="btn btn-primary" onclick="navCalToday()">Hoy</button>
+      <button class="btn" onclick="navCal(1)">Siguiente →</button>
+    </div>
+  </div>
+  <div class="card mb4">
+    <div class="cal-grid" style="border-bottom:1px solid var(--border)">
+      ${DAY_NAMES.map(d=>`<div class="cal-head">${d}</div>`).join('')}
+    </div>
+    <div class="cal-grid">${calCells}</div>
+  </div>
+  <div class="card card-pad">
+    <strong style="font-size:14px">Vencimientos del mes (${monthObs.length} pendientes)</strong>
+    <div class="detail-list mt2">${listItems||'<p class="text-muted text-sm" style="margin-top:8px">Sin vencimientos pendientes este mes 🎉</p>'}</div>
+  </div>`;
+}
+
+// ─── RENDER EMPRESAS ─────────────────────────────────────────────────────────
+function renderEmpresas() {
+  // Dedupe by nit or empresa
+  const seen=new Set();
+  const unique=[];
+  DATA.forEach(r=>{const k=r.nit||r.empresa;if(!seen.has(k)){seen.add(k);unique.push(r);}});
+  unique.sort((a,b)=>a.empresa.localeCompare(b.empresa));
+
+  return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><h2 style="font-size:18px;font-weight:700">Empresas (${unique.length})</h2><button onclick="syncData()" style="padding:6px 14px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-size:12px;font-weight:600;cursor:pointer">🔄 Sincronizar</button></div>
+  <div class="grid-3">
+  ${unique.map(u=>{
+    const obs=DATA.filter(r=>u.nit?r.nit===u.nit:r.empresa===u.empresa);
+    const pres=obs.filter(r=>getStatus(r)==='Presentado').length;
+    const venc=obs.filter(r=>getStatus(r)==='Vencido').length;
+    const prox=obs.filter(r=>getStatus(r)==='Próximo').length;
+    const pct=obs.length?(pres/obs.length*100).toFixed(0):0;
+    const imps=[...new Set(obs.map(r=>r.impuesto))].slice(0,4);
+    return `<div class="card emp-card ${venc>0?'ring-red':''}"
+      onclick="showEmpresaDetail('${escH(u.nit||u.empresa)}','${escH(u.empresa)}')">
+      <div class="flex justify-between items-center">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:14px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${u.empresa}</div>
+          <div class="font-mono text-xs text-muted">${u.nit||'Sin NIT'}</div>
+        </div>
+        ${venc>0?`<span class="text-xs c-red" style="margin-left:8px;flex-shrink:0">🚨 ${venc}</span>`:''}
+        ${prox>0&&venc===0?`<span class="text-xs c-amber" style="margin-left:8px;flex-shrink:0">⚠️ ${prox}</span>`:''}
+      </div>
+      <div class="flex items-center gap-2 mt2" style="font-size:12px">
+        <span class="c-green">${pres}✓</span>
+        <span class="text-muted">· ${obs.length} total</span>
+        <span style="margin-left:auto;font-weight:700;font-size:13px" class="c-green">${pct}%</span>
+      </div>
+      <div style="height:4px;border-radius:2px;background:var(--bg3);overflow:hidden;margin:6px 0">
+        <div style="height:4px;border-radius:2px;background:var(--green);width:${pct}%"></div>
+      </div>
+      <div class="emp-tags">
+        ${imps.map(i=>`<span class="emp-tag">${i}</span>`).join('')}
+        ${getExtraCols().slice(0,3).map(col => {
+          const empVals = [...new Set(obs.map(r=>r.campos_extra?.[col.key]).filter(v=>v))].slice(0,3);
+          return empVals.map(val => {
+            const cnt = obs.filter(r=>r.campos_extra?.[col.key]===val).length;
+            if(!cnt) return '';
+            const up = val.toUpperCase();
+            const pos = ['SI','YES','OK','PAGADO'].includes(up);
+            const neg = ['NO','PENDIENTE','VENCIDO'].includes(up);
+            const bg = pos?'var(--green-light)':neg?'var(--red-light)':'var(--blue-light)';
+            const tc = pos?'var(--green-text)':neg?'var(--red-text)':'var(--blue-text)';
+            return '<span style="background:'+bg+';color:'+tc+';font-size:10px;padding:2px 6px;border-radius:4px">'+col.label+': '+val+' ('+cnt+')</span>';
+          }).join('');
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('')}
+  </div>`;
+}
+
+function showEmpresaDetail(nitOrEmp, empresa) {
+  const obs = DATA.filter(r=>nitOrEmp && r.nit ? r.nit===nitOrEmp : r.empresa===empresa);
+  const pres=obs.filter(r=>getStatus(r)==='Presentado').length;
+  const venc=obs.filter(r=>getStatus(r)==='Vencido').length;
+  const prox=obs.filter(r=>getStatus(r)==='Próximo').length;
+  const nit=obs[0]?.nit||'';
+  document.getElementById('dm-title').textContent=empresa;
+  document.getElementById('dm-sub').textContent='NIT: '+(nit||'N/A')+' · '+obs.length+' obligaciones';
+  // Dynamic extra cols summary for this empresa
+  const extraCols = getExtraCols();
+  let extraHtml = '';
+  if (extraCols.length) {
+    extraHtml = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
+    for (const col of extraCols) {
+      // Get unique values for this col within this empresa's obligations
+      const empVals = [...new Set(obs.map(r => r.campos_extra?.[col.key]).filter(v => v != null && v !== ''))];
+      for (const val of empVals) {
+        const count = obs.filter(r => r.campos_extra?.[col.key] === val).length;
+        if (!count) continue;
+        // Auto color based on value content
+        const isPositive = ['SI','YES','OK','PAGADO','PRESENTADO','ACTIVO'].includes(val.toUpperCase());
+        const isNegative = ['NO','NO PAGADO','VENCIDO','INACTIVO','PENDIENTE'].includes(val.toUpperCase());
+        const bg = isPositive?'var(--green-light)':isNegative?'var(--red-light)':'var(--blue-light)';
+        const tc = isPositive?'var(--green-text)':isNegative?'var(--red-text)':'var(--blue-text)';
+        extraHtml += '<span style="background:'+bg+';color:'+tc+';padding:2px 8px;border-radius:10px;font-size:11px">'+col.label+': '+val+' ('+count+')</span>';
+      }
+    }
+    extraHtml += '</div>';
+  }
+
+  const badges=`<div class="flex gap-2 mt2 mb3">
+    <span class="badge b-green">${pres} Presentadas</span>
+    <span class="badge b-red">${venc} Vencidas</span>
+    <span class="badge b-amber">${prox} Próximas</span>
+  </div>` + extraHtml;
+  const items=obs.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(r=>{
+    const st=getStatus(r);
+    return `<div class="venc-item ${rowClass(st)}" style="background:${bgClass(st)};margin-bottom:4px">
+      <div>
+        <span style="font-weight:600;font-size:13px">${r.impuesto}</span>
+        <span class="text-xs text-muted" style="margin-left:8px">${r.periodo}</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="font-mono text-xs">${fmtDate(r.fecha)}</span>
+        ${statusBadge(st)}
+        ${st!=='Presentado'
+          ?`<button class="btn btn-success" onclick="openModal('${escH(r.id)}','${escH(r.empresa)}','${escH(r.impuesto)}','${escH(r.periodo)}')">✓</button>`
+          :`<button class="btn-ghost" onclick="unmark('${escH(r.id)}')">↩</button>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('dm-body').innerHTML=badges+`<div class="detail-list">${items}</div>`;
+  document.getElementById('detail-modal').style.display='flex';
+}
+
+// ─── MAIN RENDER ─────────────────────────────────────────────────────────────
+// ── STATUS (with Supabase awareness) ─────────────────
+// ── RENDER ENTRY POINT ────────────────────────────────
+function renderAll() {
+  // Cache getExtraCols() once per render cycle to avoid O(n) repeated calls
+  window._cachedExtraCols = null;
+  renderNav();
+  const el = document.getElementById('main-content');
+  switch(state.tab) {
+    case 'dashboard':    el.innerHTML = renderDashboard(); break;
+    case 'obligaciones': el.innerHTML = renderObligaciones(); break;
+    case 'contadores':   el.innerHTML = renderContadores(); break;
+    case 'calendario':   el.innerHTML = renderCalendario(); break;
+    case 'empresas':     el.innerHTML = renderEmpresas(); break;
+    case 'admin':        el.innerHTML = renderAdminTab(); break;
+    case 'historial':    loadAndRenderHistorial(); break;
+    default:
+      // Dynamic tab from Excel
+      if (DYNAMIC_TABS[state.tab]) {
+        el.innerHTML = renderDynamicTab(state.tab);
+      }
+      break;
+  }
+}
+
+// Alias so existing render() calls in renderNav / setTab still work
+function setTab(t) { state.tab = t; renderAll(); }
+function setFilter(k,v) { state.filters[k] = v; renderAll(); }
+function setSearch(v) { state.search = v; renderAll(); }
+function clearFilters() { state.filters = {}; state.search = ''; renderAll(); }
+function navCal(dir) {
+  state.calMonth += dir;
+  if (state.calMonth < 0)  { state.calMonth = 11; state.calYear--; }
+  if (state.calMonth > 11) { state.calMonth = 0;  state.calYear++; }
+  renderAll();
+}
+function navCalToday() { state.calYear = TODAY.getFullYear(); state.calMonth = TODAY.getMonth(); renderAll(); }
+function render() { renderAll(); }
+
+// ── ADMIN TAB ────────────────────────────────────────
+function renderVersionHistory() {
+  const versions = getVersions();
+  if (!versions.length) {
+    return '<p style="color:var(--text3);font-size:13px">Aún no hay versiones guardadas. Importa tu primer Excel para comenzar.</p>';
+  }
+  return versions.map((v, i) => {
+    const date = new Date(v.date).toLocaleString('es-CO');
+    const isCurrent = i === 0;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:10px;background:var(--bg3);margin-bottom:8px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-weight:600;font-size:13px">
+          ${isCurrent ? '<span style="background:var(--green-light);color:var(--green-text);font-size:10px;padding:2px 8px;border-radius:10px;margin-right:6px">ACTUAL</span>' : ''}
+          📄 ${v.fileName}
+        </div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px">
+          📅 ${date} &nbsp;·&nbsp; 📋 ${v.recordCount} registros
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="downloadCurrentExcel(${v.id})" 
+          style="padding:6px 12px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-size:12px;cursor:pointer">
+          📥 Descargar
+        </button>
+        ${!isCurrent ? `<button onclick="restoreVersion(${v.id})"
+          style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:12px;cursor:pointer">
+          ↩ Combinar con actual
+        </button>` : ''}
+        <button onclick="deleteVersion(${v.id});renderAll()"
+          style="padding:6px 12px;border-radius:8px;border:none;background:var(--red-light);color:var(--red-text);font-size:12px;cursor:pointer">
+          🗑️
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function restoreVersion(id) {
+  const versions = getVersions();
+  const ver = versions.find(v => v.id === id);
+  if (!ver) return;
+  if (!confirm(`¿Combinar versión "${ver.fileName}" con los datos actuales?\nSe agregarán los registros que no existan actualmente.`)) return;
+
+  showToast('⏳ Restaurando versión...');
+  
+  if (supabase) {
+    // Get existing keys to avoid duplicates
+    const { data: existing } = await supabase.from('obligaciones')
+      .select('empresa_nit,impuesto,periodo,fecha_vencimiento,municipio');
+    const existingKeys = new Set((existing||[]).map(r => 
+      r.empresa_nit+'||'+r.impuesto+'||'+r.periodo+'||'+r.fecha_vencimiento+'||'+(r.municipio||'')));
+
+    // Filter only records that don't exist
+    const toAdd = ver.data.filter(r => {
+      const k = (r.empresa_nit||r.empresa_nit)+'||'+r.impuesto+'||'+r.periodo+'||'+r.fecha_vencimiento+'||'+(r.municipio||'');
+      return !existingKeys.has(k);
+    });
+
+    if (!toAdd.length) { showToast('ℹ️ No hay registros nuevos para combinar'); return; }
+
+    for (let i = 0; i < toAdd.length; i += 300) {
+      await supabase.from('obligaciones').upsert(toAdd.slice(i,i+300), 
+        { onConflict: 'empresa_nit,impuesto,periodo,fecha_vencimiento,municipio' });
+    }
+    showToast(`✅ ${toAdd.length} registros combinados desde versión anterior`);
+    DATA = await loadObligations();
+    renderAll();
+  } else {
+    showToast('⚠️ Conecta Supabase para restaurar versiones');
+  }
+}
+
+function renderAdminTab() {
+  const cntrs = allContadores().filter(c => !['ORDINARIO','PN','SIMPLE','SIN CONTADOR','ORDINARIO (2025)'].includes(c));
+  const rows = cntrs.map(cnt => {
+    const obs  = DATA.filter(r => r.contador === cnt);
+    const pres = obs.filter(r => getStatus(r) === 'Presentado').length;
+    const venc = obs.filter(r => getStatus(r) === 'Vencido').length;
+    const pct  = obs.length ? (pres/obs.length*100).toFixed(1) : 0;
+    return `<tr>
+      <td><strong>${cnt}</strong></td>
+      <td>${obs.length}</td><td class="c-green">${pres}</td><td class="c-red">${venc}</td>
+      <td><span class="badge ${pct>=80?'b-green':pct>=50?'b-amber':'b-red'}">${pct}%</span></td>
+      <td><button class="btn" style="font-size:11px;padding:4px 10px"
+        onclick="setFilter('contador','${escH(cnt)}');setTab('obligaciones')">Ver →</button></td>
+    </tr>`;
+  }).join('');
+
+  const sbStatus = supabase
+    ? '<span class="badge b-green">✅ Supabase conectado</span>'
+    : '<span class="badge b-amber">⚡ Modo offline (datos locales)</span>';
+
+  return `
+  <h2 class="section-title">⚙️ Administración</h2>
+
+  <div class="card card-pad mb4">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+      <strong style="font-size:15px">📂 Importar Excel</strong>
+      <button onclick="downloadCurrentExcel()" style="padding:8px 16px;border-radius:10px;border:none;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:13px;font-weight:600;cursor:pointer">
+        📥 Descargar versión actual
+      </button>
+    </div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">
+      Carga un nuevo archivo Excel con el calendario tributario. La app detecta todas las hojas automáticamente,
+      agrega nuevas empresas y obligaciones, y conserva las que ya marcaste como Presentado.
+    </p>
+    <button onclick="triggerExcelImport()" style="padding:10px 20px;border-radius:10px;border:none;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px">
+      📂 Seleccionar archivo Excel
+    </button>
+    <span style="font-size:12px;color:var(--text3);margin-left:12px">Formatos: .xlsx / .xls</span>
+  </div>
+
+  <div class="card card-pad mb4">
+    <div class="flex justify-between items-center">
+      <strong>Estado del sistema</strong> ${sbStatus}
+    </div>
+    ${!supabase ? `<div style="margin-top:12px;padding:12px;background:var(--amber-light);border-radius:8px;font-size:13px;color:var(--amber-text)">
+      Para activar modo multiusuario: edita el archivo HTML y reemplaza <code>https://azjkdqnnqwkrtzgtlgul.supabase.co</code> y <code>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6amtkcW5ucXdrcnR6Z3RsZ3VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTYwNDksImV4cCI6MjA5NzczMjA0OX0.o_S2K7UeXCvgVEouhLOtpuBFMy6im8YDJiFrDIq0LKc</code> con tus credenciales de Supabase.
+      <br><br>Luego abre la consola (F12) y ejecuta: <code>importData()</code>
+    </div>` : ''}
+  </div>
+  <div class="card card-pad mb4">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <strong style="font-size:15px">🕐 Historial de versiones</strong>
+      <span style="font-size:12px;color:var(--text2)">Últimas 5 importaciones</span>
+    </div>
+    ${renderVersionHistory()}
+  </div>
+
+  <div class="card card-pad">
+    <strong style="font-size:14px">Resumen por contador</strong>
+    <div class="table-wrap" style="margin-top:12px">
+      <table><thead><tr><th>Contador</th><th>Total</th><th>Presentadas</th><th>Vencidas</th><th>Cumplimiento</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table>
+    </div>
+  </div>` + renderExtraSummary();
+}
+
+async function loadAndRenderHistorial() {
+  const el = document.getElementById('main-content');
+  el.innerHTML = '<div class="empty">⏳ Cargando historial...</div>';
+  if (!supabase) { el.innerHTML = '<div class="empty">📜 Conecta Supabase para ver el historial de cambios.</div>'; return; }
+  const { data } = await supabase.from('historial_cambios').select('*').order('created_at', {ascending:false}).limit(200);
+  const items = (data||[]);
+  el.innerHTML = `<h2 class="section-title">📜 Historial de cambios</h2>
+    <div class="card">
+    ${items.length === 0 ? '<div class="empty">Sin cambios registrados aún.</div>' :
+      items.map(h => `<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start">
+        <div style="font-size:20px">📝</div>
+        <div>
+          <div style="font-size:13px;font-weight:500">${h.descripcion||h.accion}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">
+            👤 ${h.usuario_nombre||'Sistema'} &nbsp;·&nbsp; 🕐 ${new Date(h.created_at).toLocaleString('es-CO')}
+            ${h.valor_anterior?.estado ? ` &nbsp;·&nbsp; ${h.valor_anterior.estado} → ${h.valor_nuevo?.estado||''}` : ''}
+          </div>
+        </div>
+      </div>`).join('')
+    }</div>`;
+}
+
+// ── IMPORT DATA TO SUPABASE ───────────────────────────
+// ── DOWNLOAD CURRENT DATA AS EXCEL ─────────────────────────
+async function downloadCurrentExcel(versionId) {
+  // Load SheetJS if needed
+  if (!window.XLSX) {
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+
+  let sourceData = DATA;
+  let fileName = 'calendario_tributario_' + new Date().toISOString().split('T')[0] + '.xlsx';
+
+  // If restoring a specific version
+  if (versionId) {
+    const versions = getVersions();
+    const ver = versions.find(v => v.id === versionId);
+    if (!ver) { showToast('❌ Versión no encontrada'); return; }
+    sourceData = ver.data;
+    fileName = 'version_' + new Date(ver.date).toLocaleDateString('es-CO').replace(/\//g,'-') + '_' + ver.fileName;
+  }
+
+  // Build Excel rows — same column structure as original upload
+  const colHeaders = [
+    'GRUPO', 'EMPRESA', 'NIT', 'MUNICIPIO', 'CONTADOR',
+    'TIPO DE IMPUESTO', 'PERÍODO', 'FECHA VENCIMIENTO', 'ESTADO'
+  ];
+
+  // Add extra col headers from data
+  const extraCols = getExtraCols();
+  const allHeaders = [...colHeaders, ...extraCols.map(c => c.label.toUpperCase())];
+
+  const rows = sourceData.map(r => {
+    const base = [
+      r.grupo || '',
+      r.empresa || '',
+      r.nit || '',
+      r.municipio || r.campos_extra?.municipio || '',
+      r.contador || '',
+      r.impuesto || '',
+      r.periodo || '',
+      r.fecha || r.fecha_vencimiento || '',
+      getStatus(r)
+    ];
+    const extras = extraCols.map(c => r.campos_extra?.[c.key] || '');
+    return [...base, ...extras];
+  });
+
+  const wsData = [allHeaders, ...rows];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Style header row
+  const headerRange = XLSX.utils.decode_range(ws['!ref']);
+  for (let C = headerRange.s.c; C <= headerRange.e.c; C++) {
+    const cellRef = XLSX.utils.encode_cell({r:0, c:C});
+    if (!ws[cellRef]) continue;
+    ws[cellRef].s = { font:{bold:true, color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'1E3A5F'}, patternType:'solid'} };
+  }
+
+  // Auto column widths
+  ws['!cols'] = allHeaders.map(h => ({ wch: Math.max(h.length + 2, 15) }));
+
+  XLSX.utils.book_append_sheet(wb, ws, 'IMPUESTOS 2026');
+  XLSX.writeFile(wb, fileName);
+  showToast('✅ Excel descargado: ' + fileName);
+}
+
+async function importData() {
+  if (!supabase) { alert('Configura Supabase primero.'); return; }
+  showToast('⏳ Importando datos...');
+  try {
+    const raw      = await decompress(DATA_B64);
+    const defaults = await decompress(PERSISTED_B64);
+
+    // Empresas
+    const empMap = {};
+    raw.forEach(r => {
+      const nit = (r.nit||'').trim();
+      if (nit && !empMap[nit]) empMap[nit] = {nit, razon_social: r.empresa.trim(), contador_responsable: r.contador||null};
+    });
+    await supabase.from('empresas').upsert(Object.values(empMap), {onConflict:'nit'});
+
+    // Obligaciones in chunks
+    const oblArr = raw.map(r => {
+      const key = (r.nit||r.empresa).trim()+'||'+r.impuesto+'||'+r.periodo;
+      const pre = defaults[key]?.status === 'Presentado';
+      return {
+        empresa_nit: (r.nit||r.empresa).trim(), empresa_nombre: r.empresa.trim(),
+        impuesto: r.impuesto, subimpuesto: r.subimpuesto||null,
+        periodo: r.periodo, fecha_vencimiento: r.fecha,
+        estado: pre ? 'Presentado' : 'Pendiente',
+        fecha_presentacion: pre ? defaults[key].at : null,
+        presentado_por: pre ? 'Cargue inicial' : null,
+        observaciones: pre ? 'Anterior al 22/06/2026' : null,
+        contador: r.contador||null,
+        grupo: r.grupo||null
+      };
+    });
+    for (let i = 0; i < oblArr.length; i += 500) {
+      await supabase.from('obligaciones').upsert(oblArr.slice(i,i+500), {onConflict:'empresa_nit,impuesto,periodo,fecha_vencimiento,municipio'});
+    }
+    showToast(`✅ ${oblArr.length} obligaciones importadas`);
+    DATA = await loadObligations();
+    renderAll();
+  } catch(e) { showToast('❌ Error: ' + e.message); console.error(e); }
+}
+window.importData = importData;
+
+// ── EXCEL IMPORT ─────────────────────────────────────
+function triggerExcelImport() {
+  document.getElementById('excel-input').click();
+}
+
+function closeImportModal() {
+  document.getElementById('import-modal').style.display = 'none';
+}
+
+function setImportProgress(pct, status, log) {
+  document.getElementById('import-bar').style.width = pct + '%';
+  if (status) document.getElementById('import-status').textContent = status;
+  if (log) {
+    const el = document.getElementById('import-log');
+    el.innerHTML += '<div>' + log + '</div>';
+    el.scrollTop = el.scrollHeight;
+  }
+}
+
+async function handleExcelFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  // Validate file size (max 20MB)
+  if (file.size > 20 * 1024 * 1024) {
+    alert('El archivo es demasiado grande. Máximo permitido: 20MB. Tu archivo: ' + (file.size/1024/1024).toFixed(1) + 'MB');
+    event.target.value = '';
+    return;
+  }
+  // Validate file extension
+  if (!file.name.match(/\.xlsx?$/i)) {
+    alert('Formato no válido. Solo se aceptan archivos .xlsx o .xls');
+    event.target.value = '';
+    return;
+  }
+  event.target.value = ''; // reset so same file can be selected again
+
+  // Show modal
+  const modal = document.getElementById('import-modal');
+  modal.style.display = 'flex';
+  document.getElementById('import-log').innerHTML = '';
+  document.getElementById('import-close-btn').style.display = 'none';
+  setImportProgress(5, 'Cargando librería Excel...', '📦 Iniciando importación de: ' + file.name);
+
+  try {
+    // Load SheetJS dynamically
+    if (!window.XLSX) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    setImportProgress(15, 'Leyendo archivo...', '📖 Leyendo hojas del Excel...');
+
+    // Read file
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+    const SKIP_SHEETS = ['INICIO','Hoja1','Sheet1'];
+    const sheets = wb.SheetNames.filter(n => !SKIP_SHEETS.includes(n));
+    setImportProgress(25, 'Procesando hojas...', `📋 ${sheets.length} hojas encontradas: ${sheets.join(', ')}`);
+
+    // Detect main data sheet vs extra sheets
+    // Main data sheet: has empresa/nit/contador columns
+    // Extra sheets: anything else → becomes a dynamic tab
+    const mainSheets = [];
+    const extraSheets = [];
+    for (const sn of sheets) {
+      const ws = wb.Sheets[sn];
+      const sr = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, nrows:5});
+      const headerStr = (sr[0]||[]).concat(sr[1]||[]).join(' ').toUpperCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      const isMain = ['EMPRESA','NIT','IMPUESTO','TIPO DE IMPUESTO'].some(k => headerStr.includes(k));
+      if (isMain) mainSheets.push(sn);
+      else extraSheets.push(sn);
+    }
+    setImportProgress(27, 'Clasificando hojas...', 
+      `📊 Hojas de datos: ${mainSheets.join(', ')||'ninguna'} | Pestañas nuevas: ${extraSheets.join(', ')||'ninguna'}`);
+
+    // Process extra sheets → dynamic tabs
+    for (const sn of extraSheets) {
+      const ws = wb.Sheets[sn];
+      const jsonData = XLSX.utils.sheet_to_json(ws, {defval:null, raw:false, dateNF:'yyyy-mm-dd'});
+      if (!jsonData.length) continue;
+      // Clean null values
+      const cleanData = jsonData.map(row => {
+        const clean = {};
+        for (const [k,v] of Object.entries(row)) {
+          if (v != null && String(v).trim() !== '' && String(v) !== 'null') {
+            clean[k.trim()] = String(v).trim();
+          }
+        }
+        return clean;
+      }).filter(r => Object.keys(r).length > 0);
+      if (!cleanData.length) continue;
+      // Icon detection based on sheet name
+      const snu = sn.toUpperCase();
+      const icon = snu.includes('AUDIT') ? '🔍'
+        : snu.includes('PAGO') ? '💰'
+        : snu.includes('MUNICIPIO') || snu.includes('CIUDAD') ? '🏙️'
+        : snu.includes('RESUMEN') || snu.includes('REPORTE') ? '📈'
+        : snu.includes('EXPORT') ? '📤'
+        : snu.includes('CONTAD') ? '👤'
+        : snu.includes('EMPRESA') ? '🏢'
+        : snu.includes('VENCIM') ? '⚠️'
+        : '📄';
+      const tabId = 'dyn_' + sn.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,20);
+      DYNAMIC_TABS[tabId] = { id: tabId, label: sn, icon, data: cleanData };
+      if (!TABS.find(t => t.id === tabId)) {
+        TABS.push({ id: tabId, icon, label: sn });
+      }
+      setImportProgress(28, 'Creando pestañas...', `  ${icon} Pestaña creada: "${sn}" (${cleanData.length} registros)`);
+    }
+    saveDynamicTabs();
+
+    // Column name mappings
+    const COL_EMPRESA  = ['EMPRESA','EMPRESAS','NOMBRE','RAZON SOCIAL','CLIENTE','NOMBRE DE EMPRESA'];
+    const COL_NIT      = ['NIT','NIT EMPRESA','IDENTIFICACION'];
+    const COL_CONTADOR = ['CONTADOR','RESPONSABLE','ENCARGADO','CONTADOR RESPONSABLE'];
+    // Known columns to skip when detecting extras
+    const KNOWN_COLS   = ['GRUPO','FIRMA','EMPRESA','EMPRESAS','NOMBRE','RAZON SOCIAL','CLIENTE',
+      'NIT','NIT EMPRESA','IDENTIFICACION','CONTADOR','RESPONSABLE','ENCARGADO',
+      'TIPO DE IMPUESTO','IMPUESTO','PERIODO','PERÍODO','FECHA VENCIMIENTO',
+      'VENCIMIENTO','DIGITO','DÍGITO'];
+    // Note: FECHA ENTREGA, ESTADO, PAGO, TIPO etc. are treated as EXTRA columns
+    // Store detected extra column names globally
+    window._extraCols = window._extraCols || [];
+    const MONTH_MAP = {
+      'ENERO':1,'FEBRERO':2,'MARZO':3,'ABRIL':4,'MAYO':5,'JUNIO':6,
+      'JULIO':7,'AGOSTO':8,'SEPTIEMBRE':9,'OCTUBRE':10,'NOVIEMBRE':11,'DICIEMBRE':12
+    };
+    const MONTH_LABELS = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
+      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+    // Normalize: remove accents for robust matching
+    function norm(s) {
+      return (s||'').toString().trim().toUpperCase()
+        .normalize('NFD').replace(/[̀-ͯ]/g, '');
+    }
+
+    function findCol(headers, candidates) {
+      for (let i = 0; i < headers.length; i++) {
+        const hu = norm(headers[i]);
+        if (candidates.some(c => hu.includes(norm(c)))) return i;
+      }
+      return -1;
+    }
+
+    function cleanNit(v) {
+      if (!v) return '';
+      return String(v).trim().replace(/[^0-9]/g,'').substring(0,12);
+    }
+
+    function parseDate(v) {
+      if (v == null || v === '') return null;
+      if (v instanceof Date) return v.toISOString().split('T')[0];
+      const s = String(v).trim();
+      // Format: 2026-07-14
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0,10);
+      // Format: Tuesday, July 14, 2026 or July 14, 2026
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,'0');
+        const day = String(d.getDate()).padStart(2,'0');
+        return y + '-' + m + '-' + day;
+      }
+      // Format: 14/07/2026 or 07/14/2026
+      const parts = s.split(/[\/\-\.]/);
+      if (parts.length === 3) {
+        if (parts[2].length === 4) return parts[2]+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0');
+        if (parts[0].length === 4) return parts[0]+'-'+parts[1].padStart(2,'0')+'-'+parts[2].padStart(2,'0');
+      }
+      return null;
+    }
+
+    // Process each sheet
+    const allObs = [];
+    const empMap = {};
+
+    for (const sheetName of sheets) {
+      const ws = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: false, dateNF: 'yyyy-mm-dd' });
+      console.log('Sheet:', sheetName, 'Rows:', rows.length, 'First row:', rows[0], 'Second row:', rows[1]);
+      if (!rows || rows.length < 2) continue;
+
+      // Find header row (search up to row 5)
+      let headerRow = -1;
+      let headers = [];
+      for (let i = 0; i < Math.min(6, rows.length); i++) {
+        const rowStr = (rows[i]||[]).map(v => (v||'').toString()).join(' ').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (COL_EMPRESA.some(k => rowStr.includes(k))) {
+          headerRow = i;
+          headers = (rows[i]||[]).map(h => (h||'').toString().trim().toUpperCase());
+          break;
+        }
+      }
+      if (headerRow === -1) continue;
+
+      const empCol = findCol(headers, COL_EMPRESA);
+      const nitCol = findCol(headers, COL_NIT);
+      const cntCol = findCol(headers, COL_CONTADOR);
+      if (empCol === -1) continue;
+
+      // Detect format: FLAT (one row per obligation) vs WIDE (dates as columns)
+      // FLAT format has: TIPO DE IMPUESTO, PERÍODO, FECHA VENCIMIENTO as columns
+      const tipoCol   = headers.findIndex(h => norm(h).includes('TIPO') || (norm(h).includes('IMPUESTO') && h.length > 10));
+      const periodoCol= headers.findIndex(h => norm(h).includes('PERIODO'));
+      const fechaCol  = headers.findIndex(h => (norm(h).includes('VENCIMIENTO') || norm(h).includes('FECHA VEN')) && !norm(h).includes('ENTREGA'));
+      const grupoCol  = headers.findIndex(h => norm(h).includes('GRUPO') || norm(h).includes('FIRMA'));
+      const municipioCol = headers.findIndex(h => norm(h).includes('MUNICIPIO') || norm(h).includes('CIUDAD'));
+      const isFlat    = tipoCol >= 0 && periodoCol >= 0 && fechaCol >= 0;
+      // Store column map for version history
+      window._lastColumnMap = { empCol, nitCol, cntCol, tipoCol, periodoCol, fechaCol, grupoCol, municipioCol, headers, sheetName };
+      console.log('Cols detected — tipo:', tipoCol, 'periodo:', periodoCol, 'fecha:', fechaCol, 'grupo:', grupoCol, 'isFlat:', isFlat);
+
+      // WIDE format: find date columns (month names in headers)
+      const dateCols = [];
+      if (!isFlat) {
+        headers.forEach((h, idx) => {
+          for (const [mName, mNum] of Object.entries(MONTH_MAP)) {
+            if (h.includes(mName) && !h.includes('ENTREGA')) {
+              dateCols.push({ idx, label: MONTH_LABELS[mNum] + ' 2026' });
+            }
+          }
+          if ((h.includes('VENCIMIENTO') || h.includes('PAGO')) && !h.includes('ENTREGA')) {
+            dateCols.push({ idx, label: h });
+          }
+        });
+      }
+
+      let sheetCount = 0;
+      for (let r = headerRow + 1; r < rows.length; r++) {
+        const row = rows[r] || [];
+        const rawEmp = row[empCol];
+        const empresa = (rawEmp != null && rawEmp !== 'null') ? String(rawEmp).trim() : '';
+        if (!empresa || empresa.toUpperCase() === 'EMPRESAS' || empresa.toUpperCase() === 'EMPRESA' || empresa.length < 2) continue;
+
+        const rawNit = nitCol >= 0 ? row[nitCol] : null;
+        const nit      = rawNit != null && rawNit !== 'null' ? cleanNit(String(rawNit)) : '';
+        const rawCnt = cntCol >= 0 ? row[cntCol] : null;
+        const contador = rawCnt != null && rawCnt !== 'null' ? String(rawCnt).trim() : '';
+        const rawGrp = grupoCol >= 0 ? row[grupoCol] : null;
+        const grupo    = rawGrp != null && rawGrp !== 'null' ? String(rawGrp).trim() : '';
+        const empKey   = nit || empresa;
+
+        if (!empMap[empKey]) empMap[empKey] = { nit, razon_social: empresa, contador_responsable: contador };
+
+        if (isFlat) {
+          // FLAT format: one row = one obligation
+          const rawTipo   = row[tipoCol];
+          const rawPeriodo= row[periodoCol];
+          const rawFecha  = row[fechaCol];
+          const impuesto  = (rawTipo   != null && rawTipo   !== 'null') ? String(rawTipo).trim()   : '';
+          const periodo   = (rawPeriodo!= null && rawPeriodo!== 'null') ? String(rawPeriodo).trim() : '';
+          const fecha     = parseDate(rawFecha);
+          if (sheetCount === 0 && r <= headerRow + 3) {
+            console.log('Row debug:', r, 'empresa:', empresa, 'impuesto:', impuesto, 'periodo:', periodo, 'fecha:', fecha, 'rawFecha:', rawFecha, 'row[fechaCol]:', row[fechaCol]);
+          }
+          if (!fecha || !impuesto || !empresa) continue;
+          const rawMun = municipioCol >= 0 ? row[municipioCol] : null;
+          const municipio = (rawMun != null && rawMun !== 'null') ? String(rawMun).trim() : '';
+          const id = (nit||empresa) + '||' + impuesto + '||' + periodo + '||' + (fecha||'') + '||' + municipio;
+          // Detect extra columns
+          const extras = {};
+          headers.forEach((h, ci) => {
+            if (!h) return;
+            const hn = norm(h);
+            const isKnown = KNOWN_COLS.some(k => {
+              const kn = norm(k);
+              return hn === kn || hn.startsWith(kn) && kn.length > 4;
+            });
+            if (!isKnown && row[ci] != null && String(row[ci]).trim() !== '' && String(row[ci]) !== 'null') {
+              const key = h.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+              const label = h; // normalized header as label
+              extras[key] = String(row[ci]).trim();
+              if (!window._extraCols.find(c => c.key === key)) {
+                window._extraCols.push({ key, label });
+              }
+            }
+          });
+
+          allObs.push({
+            empresa_nit: nit || empresa, empresa_nombre: empresa,
+            impuesto, periodo, fecha_vencimiento: fecha,
+            contador, grupo, municipio,
+            campos_extra: Object.keys(extras).length > 0 ? extras : null,
+            _id: id
+          });
+          sheetCount++;
+        } else {
+          // WIDE format: dates spread across columns
+          const cols = dateCols.length > 0 ? dateCols : [];
+          if (cols.length === 0) {
+            for (let c = Math.max(empCol, nitCol >= 0 ? nitCol : 0, cntCol >= 0 ? cntCol : 0) + 2; c < row.length; c++) {
+              const d = parseDate(row[c]);
+              if (d) cols.push({ idx: c, label: headers[c] || 'Período' });
+            }
+          }
+          for (const { idx, label } of cols) {
+            const fecha = parseDate(row[idx]);
+            if (!fecha) continue;
+            const id = (nit||empresa) + '||' + sheetName + '||' + label + '||' + fecha;
+            allObs.push({
+              empresa_nit: nit || empresa, empresa_nombre: empresa,
+              impuesto: sheetName, periodo: label,
+              fecha_vencimiento: fecha, contador, grupo, _id: id
+            });
+            sheetCount++;
+          }
+        }
+      }
+      setImportProgress(25 + Math.round(sheets.indexOf(sheetName)/sheets.length*40),
+        'Procesando ' + sheetName + '...',
+        `  ✓ ${sheetName}: ${sheetCount} obligaciones`);
+    }
+
+    setImportProgress(70, 'Guardando en base de datos...', `📊 Total: ${allObs.length} obligaciones encontradas`);
+
+    if (allObs.length === 0) {
+      setImportProgress(100, 'Sin datos para importar.', '⚠️ No se encontraron obligaciones en el archivo.');
+      document.getElementById('import-close-btn').style.display = 'block';
+      return;
+    }
+
+    // Save to Supabase or localStorage
+    if (supabase) {
+      // Upsert empresas
+      const empArr = Object.values(empMap).filter(e => e.nit);
+      if (empArr.length > 0) {
+        await supabase.from('empresas').upsert(empArr, { onConflict: 'nit', ignoreDuplicates: false });
+        setImportProgress(75, 'Guardando empresas...', `  ✓ ${empArr.length} empresas actualizadas`);
+      }
+
+      // Get existing presented states to preserve them
+      const { data: existing } = await supabase.from('obligaciones')
+        .select('empresa_nit,impuesto,periodo,estado,fecha_presentacion,presentado_por,observaciones');
+      const existingMap = {};
+      (existing||[]).forEach(r => {
+        existingMap[r.empresa_nit+'||'+r.impuesto+'||'+r.periodo] = r;
+      });
+
+      // Deduplicate allObs by _id (same empresa+impuesto+periodo)
+      const dedupMap = {};
+      for (const o of allObs) { dedupMap[o._id] = o; }
+      const dedupObs = Object.values(dedupMap);
+      console.log('After dedup:', dedupObs.length, 'from', allObs.length);
+
+      // Upsert obligaciones preserving Presentado state
+      const oblArr = dedupObs.map(o => {
+        const prev = existingMap[o._id];
+        return {
+          empresa_nit: o.empresa_nit,
+          empresa_nombre: o.empresa_nombre,
+          impuesto: o.impuesto,
+          periodo: o.periodo,
+          fecha_vencimiento: o.fecha_vencimiento,
+          contador: o.contador,
+          estado: prev?.estado === 'Presentado' ? 'Presentado' : 'Pendiente',
+          fecha_presentacion: prev?.fecha_presentacion || null,
+          presentado_por: prev?.presentado_por || null,
+          observaciones: prev?.observaciones || null,
+          grupo: o.grupo || null,
+          municipio: o.municipio || null,
+          campos_extra: o.campos_extra || null,
+        };
+      });
+
+      let saved = 0;
+      for (let i = 0; i < oblArr.length; i += 300) {
+        const chunk = oblArr.slice(i, i+300);
+        const { error } = await supabase.from('obligaciones')
+          .upsert(chunk, { onConflict: 'empresa_nit,impuesto,periodo,fecha_vencimiento,municipio' });
+        if (error) throw error;
+        saved += chunk.length;
+        setImportProgress(75 + Math.round(saved/oblArr.length*20),
+          'Guardando obligaciones...', null);
+      }
+      setImportProgress(98, 'Recargando datos...', `  ✓ ${oblArr.length} obligaciones guardadas en Supabase`);
+      DATA = await loadObligations();
+      // Save version snapshot
+      saveVersion(file.name, oblArr, window._lastColumnMap || {});
+      setImportProgress(99, 'Guardando versión...', `  📦 Versión guardada (${new Date().toLocaleString('es-CO')})`);
+    } else {
+      // Offline: update persisted state
+      allObs.forEach(o => {
+        // preserve existing Presentado
+        if (!persisted[o._id]) {
+          // new record, leave as default
+        }
+      });
+      // Update DATA in memory
+      DATA = allObs.map(o => ({
+        id: o._id, empresa: o.empresa_nombre, nit: o.empresa_nit,
+        contador: o.contador, impuesto: o.impuesto, periodo: o.periodo, fecha: o.fecha_vencimiento
+      }));
+      setImportProgress(98, 'Datos cargados en memoria.', `  ✓ ${allObs.length} obligaciones cargadas (modo offline)`);
+    }
+
+    setImportProgress(100, '¡Importación completada!', `✅ Proceso finalizado exitosamente.`);
+    document.getElementById('import-close-btn').style.display = 'block';
+    renderAll();
+
+  } catch(err) {
+    console.error(err);
+    setImportProgress(100, 'Error en la importación', '❌ Error: ' + err.message);
+    document.getElementById('import-close-btn').style.display = 'block';
+  }
+}
+
+// ── SYNC DATA ────────────────────────────────────────
+async function syncData() {
+  const btn = document.getElementById('btn-sync');
+  if (btn) { btn.innerHTML = '⏳ Sincronizando...'; btn.disabled = true; }
+
+  try {
+    const prevTotal     = DATA.length;
+    const prevEmpresas  = new Set(DATA.map(r => r.nit || r.empresa)).size;
+    const prevImpuestos = new Set(DATA.map(r => r.impuesto)).size;
+    const prevContadores= new Set(DATA.map(r => r.contador).filter(Boolean)).size;
+    const prevGrupos    = new Set(DATA.map(r => r.grupo).filter(Boolean)).size;
+
+    // Reload from Supabase
+    DATA = await loadObligations();
+    await loadPersistedState();
+
+    const newTotal      = DATA.length;
+    const newEmpresas   = new Set(DATA.map(r => r.nit || r.empresa)).size;
+    const newImpuestos  = new Set(DATA.map(r => r.impuesto)).size;
+    const newContadores = new Set(DATA.map(r => r.contador).filter(Boolean)).size;
+    const newGrupos     = new Set(DATA.map(r => r.grupo).filter(Boolean)).size;
+
+    // Build change summary
+    const changes = [];
+    if (newTotal      !== prevTotal)      changes.push(`${newTotal > prevTotal ? '+' : ''}${newTotal - prevTotal} obligaciones`);
+    if (newEmpresas   !== prevEmpresas)   changes.push(`${newEmpresas > prevEmpresas ? '+' : ''}${newEmpresas - prevEmpresas} empresas`);
+    if (newImpuestos  !== prevImpuestos)  changes.push(`${newImpuestos > prevImpuestos ? '+' : ''}${newImpuestos - prevImpuestos} tipos de impuesto`);
+    if (newContadores !== prevContadores) changes.push(`${newContadores > prevContadores ? '+' : ''}${newContadores - prevContadores} contadores`);
+    if (newGrupos     !== prevGrupos)     changes.push(`${newGrupos > prevGrupos ? '+' : ''}${newGrupos - prevGrupos} firmas`);
+
+    const msg = changes.length > 0
+      ? '🔄 Actualizado: ' + changes.join(', ')
+      : '✅ Todo al día — sin cambios nuevos';
+
+    showToast(msg);
+    renderAll();
+
+    // Update header subtitle
+    const sub = document.getElementById('hdr-sub');
+    if (sub) sub.textContent = `2026 · ${newTotal} obligaciones`;
+
+  } catch(e) {
+    showToast('❌ Error al sincronizar: ' + e.message);
+  } finally {
+    if (btn) { btn.innerHTML = '🔄 Sincronizar'; btn.disabled = false; }
+  }
+}
+
+// Add sync button to dashboard stats
+function renderSyncCard() {
+  const total      = DATA.length;
+  const empresas   = new Set(DATA.map(r => r.nit || r.empresa)).size;
+  const impuestos  = new Set(DATA.map(r => r.impuesto)).size;
+  const contadores = new Set(DATA.map(r => r.contador).filter(Boolean)).size;
+  const grupos     = new Set(DATA.map(r => r.grupo).filter(Boolean)).size;
+  const now        = new Date().toLocaleString('es-CO');
+
+  return '<div class="card card-pad" style="margin-bottom:16px;border-left:4px solid var(--blue)">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">'
+    + '<div>'
+    + '<strong style="font-size:14px">🔄 Estado de la base de datos</strong>'
+    + '<div style="font-size:12px;color:var(--text2);margin-top:4px">'
+    + total + ' obligaciones · ' + empresas + ' empresas · ' + impuestos + ' tipos · '
+    + contadores + ' contadores · ' + grupos + ' firmas'
+    + '</div>'
+    + '<div style="font-size:11px;color:var(--text3);margin-top:2px">Última consulta: ' + now + '</div>'
+    + '</div>'
+    + '<button onclick="syncData()" style="padding:8px 18px;border-radius:10px;border:none;'
+    + 'background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:13px;'
+    + 'font-weight:600;cursor:pointer;white-space:nowrap">'
+    + '🔄 Sincronizar ahora</button>'
+    + '</div>'
+    + '</div>';
+}
+
+// ── INLINE EDITING ──────────────────────────────────────────
+let editingCell = null; // { rowId, field, originalValue }
+
+function startEdit(rowId, field, currentValue, el) {
+  if (currentPerfil?.rol !== 'admin') return;
+  if (editingCell) cancelEdit();
+  editingCell = { rowId, field, originalValue: currentValue };
+  const input = document.createElement(
+    field === 'observaciones' ? 'textarea' : 'input'
+  );
+  input.value = currentValue || '';
+  input.style.cssText = 'width:100%;padding:4px 8px;border-radius:6px;border:1px solid var(--blue);background:var(--bg2);color:var(--text);font-size:13px;font-family:inherit';
+  input.onkeydown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(input.value); }
+    if (e.key === 'Escape') cancelEdit();
+  };
+  input.onblur = () => setTimeout(() => saveEdit(input.value), 150);
+  el.innerHTML = '';
+  el.appendChild(input);
+  input.focus();
+  input.select();
+}
+
+function cancelEdit() {
+  editingCell = null;
+  renderAll();
+}
+
+async function saveEdit(newValue) {
+  if (!editingCell) return;
+  const { rowId, field, originalValue } = editingCell;
+  editingCell = null;
+  if (newValue === originalValue) { renderAll(); return; }
+
+  const rec = DATA.find(r => r.id === rowId);
+  if (!rec) return;
+
+  // Update in memory immediately
+  if (field.startsWith('extra_')) {
+    const extraKey = field.replace('extra_', '');
+    if (!rec.campos_extra) rec.campos_extra = {};
+    rec.campos_extra[extraKey] = newValue;
+  } else {
+    rec[field] = newValue;
+  }
+
+  // Save to Supabase
+  if (supabase && rec._db_id) {
+    let updateObj = {};
+    if (field === 'empresa') updateObj.empresa_nombre = newValue;
+    else if (field === 'nit') updateObj.empresa_nit = newValue;
+    else if (field === 'contador') updateObj.contador = newValue;
+    else if (field === 'impuesto') updateObj.impuesto = newValue;
+    else if (field === 'periodo') updateObj.periodo = newValue;
+    else if (field === 'fecha') updateObj.fecha_vencimiento = newValue;
+    else if (field === 'grupo') updateObj.grupo = newValue;
+    else if (field === 'municipio') updateObj.municipio = newValue;
+    else if (field === 'observaciones') updateObj.observaciones = newValue;
+    else if (field.startsWith('extra_')) updateObj.campos_extra = rec.campos_extra;
+
+    const { error } = await supabase.from('obligaciones')
+      .update({ ...updateObj, updated_at: new Date().toISOString() })
+      .eq('id', rec._db_id);
+
+    if (error) {
+      showToast('❌ Error al guardar: ' + error.message);
+      // Revert
+      if (field.startsWith('extra_')) {
+        const extraKey = field.replace('extra_', '');
+        rec.campos_extra[extraKey] = originalValue;
+      } else { rec[field] = originalValue; }
+    } else {
+      showToast('✅ Guardado correctamente');
+      // Log to historial
+      if (supabase) {
+        await supabase.from('historial_cambios').insert({
+          usuario_nombre: currentPerfil?.nombre || 'Admin',
+          accion: 'EDICIÓN_DIRECTA',
+          tabla_afectada: 'obligaciones',
+          registro_id: rec._db_id,
+          valor_anterior: { [field]: originalValue },
+          valor_nuevo: { [field]: newValue },
+          descripcion: rec.empresa + ' · ' + rec.impuesto + ' · campo: ' + field
+        });
+      }
+    }
+  }
+  renderAll();
+}
+
+function editableCell(rowId, field, value, extraStyle) {
+  const isAdmin = currentPerfil?.rol === 'admin';
+  if (!isAdmin) return `<td>${value || '—'}</td>`;
+  return `<td style="cursor:pointer;${extraStyle||''}" 
+    onclick="startEdit('${escH(rowId)}','${field}','${escH(String(value||''))}',this)"
+    title="Clic para editar">${value || '<span style="color:var(--text3);font-style:italic">editar</span>'}</td>`;
+}
+
+// ── BOOT ─────────────────────────────────────────────
+(async () => {
+  // Try to init Supabase
+  await initSB();
+
+  // Show offline tip if no Supabase
+  if (!SB_READY) {
+    document.getElementById('offline-tip').style.display = 'block';
+  }
+
+  // If Supabase connected, check for existing session
+  if (supabase) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        currentUser   = session.user;
+        currentPerfil = await getSBPerfil(currentUser.id);
+        await enterApp();
+        return;
+      }
+    } catch(e) { console.warn('Session check error:', e); }
+  }
+
+  // Show login screen (already visible by default)
+})();
+</script>
+</body>
+</html>
