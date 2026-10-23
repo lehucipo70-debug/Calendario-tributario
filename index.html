@@ -27,7 +27,7 @@
   --azul: #2563eb; --azul-suave: #e8f0fe;
 
   /* Series de gráficas (validadas para daltonismo, orden fijo) */
-  --serie-ok: #008300; --serie-tarde: #eda100; --serie-curso: #2a78d6; --serie-vencida: #e34948;
+  --serie-ok: #008300; --serie-tarde: #eda100; --serie-pendiente: #71717a; --serie-curso: #2a78d6; --serie-vencida: #e34948;
   --nivel-excelente: #008300; --nivel-bueno: #2a78d6; --nivel-regular: #eda100; --nivel-bajo: #e34948; --nivel-na: #c4c4cc;
 
   /* Prioridades */
@@ -42,7 +42,9 @@
   /* Vidrio de las tablas (tema claro): esmerilado blanco con color detrás */
   --vidrio-borde: rgba(255,255,255,.95); --vidrio-anim: none;
   --vidrio-sombra: 0 0 0 1px rgba(9,9,11,.07), 0 24px 50px -20px rgba(9,9,11,.22), 0 8px 20px rgba(9,9,11,.05);
-  --vidrio-fondo: rgba(255,255,255,.72); --vidrio-filo: #ffffff; --vidrio-reflejo: rgba(255,255,255,.6);
+  --vidrio-fondo: rgba(255,255,255,.45); --vidrio-filo: #ffffff; --vidrio-reflejo: rgba(255,255,255,.6);
+  --vidrio-destello: linear-gradient(135deg, rgba(255,255,255,.75), rgba(255,255,255,.18) 38%, rgba(255,255,255,0) 62%);
+  --vidrio-luz-a: rgba(165,180,252,.45); --vidrio-luz-b: rgba(186,230,253,.5);
   --vidrio-cab: rgba(244,244,245,.6); --vidrio-linea-cab: rgba(9,9,11,.07); --vidrio-texto-cab: #27272a;
   --vidrio-linea: rgba(9,9,11,.06); --vidrio-hover: rgba(255,255,255,.9); --vidrio-brillo-barra: none;
 }
@@ -58,7 +60,7 @@
     --ambar: #fbbf24; --ambar-suave: rgba(251,191,36,.12);
     --rojo: #fb7185; --rojo-suave: rgba(251,113,133,.13);
     --azul: #93c5fd; --azul-suave: rgba(147,197,253,.13);
-    --serie-ok: #199e70; --serie-tarde: #c98500; --serie-curso: #3987e5; --serie-vencida: #e66767;
+    --serie-ok: #199e70; --serie-tarde: #c98500; --serie-pendiente: #52525b; --serie-curso: #3987e5; --serie-vencida: #e66767;
     --nivel-excelente: #199e70; --nivel-bueno: #3987e5; --nivel-regular: #c98500; --nivel-bajo: #e66767; --nivel-na: #3f3f46;
     --p-urgente: #fb7185; --p-alta: #fb923c; --p-media: #a5b4fc; --p-baja: #8e8e98;
     --sombra: none; --sombra-2: 0 12px 30px rgba(0,0,0,.45); --sombra-3: 0 24px 60px rgba(0,0,0,.65);
@@ -66,7 +68,7 @@
     --vidrio-borde: linear-gradient(120deg, rgba(255,77,109,.85), rgba(255,255,255,.10) 30%, rgba(255,255,255,.04) 55%, rgba(109,40,217,.8) 80%, rgba(255,138,61,.8));
     --vidrio-anim: flujo 9s ease infinite;
     --vidrio-sombra: 0 30px 80px rgba(0,0,0,.5);
-    --vidrio-fondo: rgba(18,18,22,.84); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.07);
+    --vidrio-fondo: rgba(24,24,30,.6); --vidrio-destello: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.04) 35%, rgba(255,255,255,0) 60%); --vidrio-luz-a: rgba(148,163,184,.22); --vidrio-luz-b: rgba(129,140,248,.18); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.07);
     --vidrio-cab: transparent; --vidrio-linea-cab: rgba(255,255,255,.10); --vidrio-texto-cab: #e4e4e7;
     --vidrio-linea: rgba(255,255,255,.06); --vidrio-hover: linear-gradient(90deg, rgba(255,77,109,.10), rgba(255,255,255,.03) 60%);
     --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.6);
@@ -83,7 +85,7 @@
   --ambar: #fbbf24; --ambar-suave: rgba(251,191,36,.12);
   --rojo: #fb7185; --rojo-suave: rgba(251,113,133,.13);
   --azul: #93c5fd; --azul-suave: rgba(147,197,253,.13);
-  --serie-ok: #199e70; --serie-tarde: #c98500; --serie-curso: #3987e5; --serie-vencida: #e66767;
+  --serie-ok: #199e70; --serie-tarde: #c98500; --serie-pendiente: #52525b; --serie-curso: #3987e5; --serie-vencida: #e66767;
   --nivel-excelente: #199e70; --nivel-bueno: #3987e5; --nivel-regular: #c98500; --nivel-bajo: #e66767; --nivel-na: #3f3f46;
   --p-urgente: #fb7185; --p-alta: #fb923c; --p-media: #a5b4fc; --p-baja: #8e8e98;
   --sombra: none; --sombra-2: 0 12px 30px rgba(0,0,0,.45); --sombra-3: 0 24px 60px rgba(0,0,0,.65);
@@ -91,7 +93,7 @@
   --vidrio-borde: linear-gradient(120deg, rgba(255,77,109,.85), rgba(255,255,255,.10) 30%, rgba(255,255,255,.04) 55%, rgba(109,40,217,.8) 80%, rgba(255,138,61,.8));
   --vidrio-anim: flujo 9s ease infinite;
   --vidrio-sombra: 0 30px 80px rgba(0,0,0,.5);
-  --vidrio-fondo: rgba(18,18,22,.84); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.07);
+  --vidrio-fondo: rgba(24,24,30,.6); --vidrio-destello: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.04) 35%, rgba(255,255,255,0) 60%); --vidrio-luz-a: rgba(148,163,184,.22); --vidrio-luz-b: rgba(129,140,248,.18); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.07);
   --vidrio-cab: transparent; --vidrio-linea-cab: rgba(255,255,255,.10); --vidrio-texto-cab: #e4e4e7;
   --vidrio-linea: rgba(255,255,255,.06); --vidrio-hover: linear-gradient(90deg, rgba(255,77,109,.10), rgba(255,255,255,.03) 60%);
   --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.6);
@@ -403,7 +405,9 @@ body[data-vista="inicio"] .titulo-vista { position: absolute; width: 1px; height
   background: var(--vidrio-borde); background-size: 220% 220%; animation: var(--vidrio-anim);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
-.vidrio-interior { position: relative; border-radius: calc(var(--r) + 4px); overflow: hidden; background: var(--vidrio-fondo);
+.vidrio::before { content: ''; position: absolute; inset: -24px -12px; z-index: -1; pointer-events: none; filter: blur(30px);
+  background: radial-gradient(560px 260px at 25% 90px, var(--vidrio-luz-a), transparent 70%), radial-gradient(520px 280px at 78% 220px, var(--vidrio-luz-b), transparent 70%); }
+.vidrio-interior { position: relative; border-radius: calc(var(--r) + 4px); overflow: hidden; background: var(--vidrio-destello), var(--vidrio-fondo);
   backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%); box-shadow: inset 0 1px 0 var(--vidrio-filo); }
 .vidrio-interior::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 120px; pointer-events: none; background: linear-gradient(180deg, var(--vidrio-reflejo), transparent); }
 .vidrio-interior > * { position: relative; }
@@ -924,9 +928,12 @@ const Metricas = (() => {
     }
   }
 
-  // Fecha con la que una tarea "pertenece" a un periodo: su vencimiento o, si no tiene, su creación.
+  // Fecha con la que una tarea "pertenece" a un periodo: si está completada, el día en que se
+  // completó (entregar antes de tiempo cuenta en el mes en que se hizo); si no, su vencimiento
+  // o, sin fecha límite, su creación.
   function fechaReferencia(t) {
-    return t.fecha_vencimiento || U.fechaDeTimestamp(t.created_at);
+    const completada = estaCompletada(t) ? U.fechaDeTimestamp(t.completada_at) : null;
+    return completada || t.fecha_vencimiento || U.fechaDeTimestamp(t.created_at);
   }
 
   function enRango(t, rango) {
@@ -942,7 +949,7 @@ const Metricas = (() => {
   }
 
   function calcular(tareas, hoy) {
-    const r = { total: tareas.length, completadas: 0, aTiempo: 0, tarde: 0, conFecha: 0, vencidas: 0, enCurso: 0, porVencer: 0, diasTotales: 0, diasMuestras: 0 };
+    const r = { total: tareas.length, completadas: 0, aTiempo: 0, tarde: 0, conFecha: 0, vencidas: 0, pendientes: 0, enCurso: 0, porVencer: 0, diasTotales: 0, diasMuestras: 0 };
     for (const t of tareas) {
       const est = estadoEfectivo(t, hoy);
       if (est === 'completada') {
@@ -954,7 +961,8 @@ const Metricas = (() => {
       } else if (est === 'vencida') {
         r.vencidas++;
       } else {
-        r.enCurso++;
+        // Abiertas sin vencer: "pendiente" aún no se empieza; en progreso y en revisión sí están en curso.
+        est === 'pendiente' ? r.pendientes++ : r.enCurso++;
         if (porVencer(t, hoy)) r.porVencer++;
       }
     }
@@ -988,7 +996,7 @@ const Metricas = (() => {
   }
 
   function resumenEquipo(filas) {
-    const s = { total: 0, completadas: 0, aTiempo: 0, conFecha: 0, vencidas: 0, enCurso: 0, porVencer: 0 };
+    const s = { total: 0, completadas: 0, aTiempo: 0, conFecha: 0, vencidas: 0, pendientes: 0, enCurso: 0, porVencer: 0 };
     for (const f of filas) for (const k in s) s[k] += f[k];
     const evaluables = s.completadas + s.vencidas;
     s.cumplimiento = evaluables ? s.completadas / evaluables : null;
@@ -2213,6 +2221,7 @@ Vistas.rendimiento = {
   SEGMENTOS: [
     { clave: 'completadasOk', label: 'Completadas', color: 'var(--serie-ok)', icono: '✓' },
     { clave: 'tarde', label: 'Completadas con retraso', color: 'var(--serie-tarde)', icono: '◷' },
+    { clave: 'pendientes', label: 'Pendientes', color: 'var(--serie-pendiente)', icono: '○' },
     { clave: 'enCurso', label: 'En curso', color: 'var(--serie-curso)', icono: '▷' },
     { clave: 'vencidas', label: 'Vencidas', color: 'var(--serie-vencida)', icono: '⚠' },
   ],
@@ -2240,7 +2249,7 @@ Vistas.rendimiento = {
         <div class="segmentado" role="group" aria-label="Periodo">
           ${this.PERIODOS.map(([v, l]) => `<button class="${periodo === v ? 'on' : ''}" data-accion="periodo" data-valor="${v}">${l}</button>`).join('')}
         </div>
-        <span class="muted mini">${equipo ? 'Todo el equipo' : 'Tus indicadores personales'} · por fecha límite de la tarea</span>
+        <span class="muted mini">${equipo ? 'Todo el equipo' : 'Tus indicadores personales'} · completadas por fecha de entrega, abiertas por fecha límite</span>
       </div>
 
       <div class="kpis kpis-5">
@@ -2268,17 +2277,17 @@ Vistas.rendimiento = {
         </header>
         <div class="tabla-scroll"><table class="tabla tabla-rend">
           <thead><tr><th>Colaborador</th><th class="num">Tareas</th><th class="num">Completadas</th><th class="num">Cumplimiento</th><th class="num">Puntualidad</th>
-            <th class="num">En curso</th><th class="num">Vencidas</th><th class="num">Días prom.</th><th>Índice</th></tr></thead>
+            <th class="num">Pendientes</th><th class="num">En curso</th><th class="num">Vencidas</th><th class="num">Días prom.</th><th>Índice</th></tr></thead>
           <tbody>${filas.map(f => {
             return `<tr class="fila-click" data-accion="ver-colaborador" data-id="${f.colaborador ? f.clave : ''}" title="Ver tareas de ${Util.esc(f.nombre)}">
               <td><span class="celda-colab">${UI.avatar(f.colaborador || { nombre: f.nombre }, 24)} ${Util.esc(f.nombre)}</span></td>
               <td class="num">${f.total}</td><td class="num">${f.completadas}</td>
               <td class="num">${pct(f.cumplimiento)}</td><td class="num">${pct(f.puntualidad)}</td>
-              <td class="num">${f.enCurso}</td><td class="num ${f.vencidas ? 'txt-rojo' : ''}">${f.vencidas}</td>
+              <td class="num">${f.pendientes}</td><td class="num">${f.enCurso}</td><td class="num ${f.vencidas ? 'txt-rojo' : ''}">${f.vencidas}</td>
               <td class="num">${f.diasPromedio === null ? '—' : f.diasPromedio.toFixed(1)}</td>
               <td>${UI.nivel(f.indice, { texto: true })}</td>
             </tr>`;
-          }).join('') || `<tr><td colspan="9" class="centrado muted pad">Sin datos en este periodo</td></tr>`}</tbody>
+          }).join('') || `<tr><td colspan="10" class="centrado muted pad">Sin datos en este periodo</td></tr>`}</tbody>
         </table></div>
       </div></section>`;
   },
