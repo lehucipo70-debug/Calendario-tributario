@@ -42,7 +42,7 @@
   /* Vidrio de las tablas (tema claro): esmerilado blanco con color detrás */
   --vidrio-borde: rgba(255,255,255,.95); --vidrio-anim: none;
   --vidrio-sombra: 0 0 0 1px rgba(9,9,11,.07), 0 24px 50px -20px rgba(9,9,11,.22), 0 8px 20px rgba(9,9,11,.05);
-  --vidrio-fondo: rgba(255,255,255,.45); --vidrio-filo: #ffffff; --vidrio-reflejo: rgba(255,255,255,.6);
+  --vidrio-fondo: rgba(255,255,255,.4); --vidrio-filo: #ffffff; --vidrio-reflejo: rgba(255,255,255,.6);
   --vidrio-destello: linear-gradient(135deg, rgba(255,255,255,.75), rgba(255,255,255,.18) 38%, rgba(255,255,255,0) 62%);
   --vidrio-luz-a: rgba(165,180,252,.45); --vidrio-luz-b: rgba(186,230,253,.5);
   --vidrio-cab: rgba(244,244,245,.6); --vidrio-linea-cab: rgba(9,9,11,.07); --vidrio-texto-cab: #27272a;
@@ -68,7 +68,7 @@
     --vidrio-borde: linear-gradient(120deg, rgba(255,77,109,.85), rgba(255,255,255,.10) 30%, rgba(255,255,255,.04) 55%, rgba(109,40,217,.8) 80%, rgba(255,138,61,.8));
     --vidrio-anim: flujo 9s ease infinite;
     --vidrio-sombra: 0 30px 80px rgba(0,0,0,.5);
-    --vidrio-fondo: rgba(24,24,30,.6); --vidrio-destello: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.04) 35%, rgba(255,255,255,0) 60%); --vidrio-luz-a: rgba(148,163,184,.22); --vidrio-luz-b: rgba(129,140,248,.18); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.07);
+    --vidrio-fondo: rgba(20,20,26,.42); --vidrio-destello: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.04) 35%, rgba(255,255,255,0) 60%); --vidrio-luz-a: rgba(148,163,184,.22); --vidrio-luz-b: rgba(129,140,248,.18); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.07);
     --vidrio-cab: transparent; --vidrio-linea-cab: rgba(255,255,255,.10); --vidrio-texto-cab: #e4e4e7;
     --vidrio-linea: rgba(255,255,255,.06); --vidrio-hover: linear-gradient(90deg, rgba(255,77,109,.10), rgba(255,255,255,.03) 60%);
     --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.6);
@@ -93,7 +93,7 @@
   --vidrio-borde: linear-gradient(120deg, rgba(255,77,109,.85), rgba(255,255,255,.10) 30%, rgba(255,255,255,.04) 55%, rgba(109,40,217,.8) 80%, rgba(255,138,61,.8));
   --vidrio-anim: flujo 9s ease infinite;
   --vidrio-sombra: 0 30px 80px rgba(0,0,0,.5);
-  --vidrio-fondo: rgba(24,24,30,.6); --vidrio-destello: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.04) 35%, rgba(255,255,255,0) 60%); --vidrio-luz-a: rgba(148,163,184,.22); --vidrio-luz-b: rgba(129,140,248,.18); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.07);
+  --vidrio-fondo: rgba(20,20,26,.42); --vidrio-destello: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.04) 35%, rgba(255,255,255,0) 60%); --vidrio-luz-a: rgba(148,163,184,.22); --vidrio-luz-b: rgba(129,140,248,.18); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.07);
   --vidrio-cab: transparent; --vidrio-linea-cab: rgba(255,255,255,.10); --vidrio-texto-cab: #e4e4e7;
   --vidrio-linea: rgba(255,255,255,.06); --vidrio-hover: linear-gradient(90deg, rgba(255,77,109,.10), rgba(255,255,255,.03) 60%);
   --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.6);
@@ -408,7 +408,7 @@ body[data-vista="inicio"] .titulo-vista { position: absolute; width: 1px; height
 .vidrio::before { content: ''; position: absolute; inset: -24px -12px; z-index: -1; pointer-events: none; filter: blur(30px);
   background: radial-gradient(560px 260px at 25% 90px, var(--vidrio-luz-a), transparent 70%), radial-gradient(520px 280px at 78% 220px, var(--vidrio-luz-b), transparent 70%); }
 .vidrio-interior { position: relative; border-radius: calc(var(--r) + 4px); overflow: hidden; background: var(--vidrio-destello), var(--vidrio-fondo);
-  backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%); box-shadow: inset 0 1px 0 var(--vidrio-filo); }
+  backdrop-filter: blur(5px) saturate(160%); -webkit-backdrop-filter: blur(5px) saturate(160%); box-shadow: inset 0 1px 0 var(--vidrio-filo); }
 .vidrio-interior::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 120px; pointer-events: none; background: linear-gradient(180deg, var(--vidrio-reflejo), transparent); }
 .vidrio-interior > * { position: relative; }
 .vidrio-interior > .panel-cab { padding: 18px 20px 4px; }
@@ -2249,7 +2249,7 @@ Vistas.rendimiento = {
         <div class="segmentado" role="group" aria-label="Periodo">
           ${this.PERIODOS.map(([v, l]) => `<button class="${periodo === v ? 'on' : ''}" data-accion="periodo" data-valor="${v}">${l}</button>`).join('')}
         </div>
-        <span class="muted mini">${equipo ? 'Todo el equipo' : 'Tus indicadores personales'} · completadas por fecha de entrega, abiertas por fecha límite</span>
+        <span class="muted mini">${equipo ? 'Todo el equipo' : 'Tus indicadores personales'} · ${this.alcance(periodo, hoy)}</span>
       </div>
 
       <div class="kpis kpis-5">
@@ -2290,6 +2290,13 @@ Vistas.rendimiento = {
           }).join('') || `<tr><td colspan="10" class="centrado muted pad">Sin datos en este periodo</td></tr>`}</tbody>
         </table></div>
       </div></section>`;
+  },
+
+  // Qué tareas entran en el periodo elegido, dicho en palabras.
+  alcance(periodo, hoy) {
+    if (periodo === 'todo') return 'todas las tareas';
+    const { desde, hasta } = Metricas.rangoPeriodo(periodo, hoy);
+    return `del ${Util.fmtFecha(desde)} al ${Util.fmtFecha(hasta)}: tareas que vencen o se completaron en esas fechas`;
   },
 
   // Barras horizontales apiladas; la longitud es proporcional al total (escala común).
@@ -3136,7 +3143,7 @@ const App = {
     tablero: { agrupar: 'estado' },
     lista: { orden: 'fecha_vencimiento', dir: 1, limite: CONFIG.LIMITE_LISTA },
     cal: { modo: 'mes', ref: Util.hoyISO() },
-    rend: { periodo: 'mes' },
+    rend: { periodo: 'todo' },
   },
 
   // ── Consultas sobre el estado ──────────────────────────────────────
