@@ -63,7 +63,7 @@ const TareaModal = {
                 <datalist id="lista-empresas">${[...new Set(App.estado.tareas.map(x => x.empresa).filter(Boolean))].sort().slice(0, 300).map(e => `<option value="${Util.esc(e)}">`).join('')}</datalist></label>
             </div>
             <label class="campo-ancho">Descripción
-              <textarea name="descripcion" rows="3" ${dis} placeholder="Detalles, instrucciones, enlaces…">${Util.esc(t.descripcion || '')}</textarea></label>
+              <textarea name="descripcion" rows="3" maxlength="10000" ${dis} placeholder="Detalles, instrucciones, enlaces…">${Util.esc(t.descripcion || '')}</textarea></label>
 
             <div class="bloque">
               <div class="bloque-cab"><strong>Lista de verificación</strong><span class="muted mini" id="check-resumen"></span></div>
@@ -114,8 +114,8 @@ const TareaModal = {
     if (!ul) return;
     const dis = this._editable ? '' : 'disabled';
     ul.innerHTML = this.checklist.map(i => `<li class="${i.hecho ? 'hecho' : ''}">
-        <label><input type="checkbox" data-check="${i.id}" ${i.hecho ? 'checked' : ''} ${dis}> <span>${Util.esc(i.texto)}</span></label>
-        ${this._editable ? `<button type="button" class="btn-icono btn-sm" data-accion="check-quitar" data-item="${i.id}" aria-label="Quitar paso">✕</button>` : ''}
+        <label><input type="checkbox" data-check="${Util.esc(i.id)}" ${i.hecho ? 'checked' : ''} ${dis}> <span>${Util.esc(i.texto)}</span></label>
+        ${this._editable ? `<button type="button" class="btn-icono btn-sm" data-accion="check-quitar" data-item="${Util.esc(i.id)}" aria-label="Quitar paso">✕</button>` : ''}
       </li>`).join('') || '<li class="muted mini">Sin pasos. Divide la tarea en pasos para medir el avance automáticamente.</li>';
     const hechos = this.checklist.filter(i => i.hecho).length;
     document.getElementById('check-resumen').textContent = this.checklist.length ? `${hechos}/${this.checklist.length} · ${Util.pct(hechos, this.checklist.length)}%` : '';
@@ -190,6 +190,7 @@ const TareaModal = {
       const input = document.getElementById('check-input');
       const texto = input?.value.trim();
       if (!texto) return;
+      if (TareaModal.checklist.length >= 100) { UI.toast('Máximo 100 pasos por tarea.', { tipo: 'error' }); return; }
       TareaModal.checklist.push({ id: Util.uid(), texto, hecho: false });
       input.value = '';
       TareaModal._pintarChecklist();

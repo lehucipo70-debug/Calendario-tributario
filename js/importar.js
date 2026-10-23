@@ -36,6 +36,8 @@ const Importador = (() => {
   function mapearEstado(v) {
     const s = U.normalizar(v);
     if (!s) return 'pendiente';
+    // Negaciones primero: "No presentado", "Sin terminar" o "Incompleto" NO son tareas hechas.
+    if (/(^| )(NO|SIN|FALTA|FALTAN)( |$)|INCOMPLET/.test(s)) return 'pendiente';
     if (/COMPLET|PRESENTAD|HECH|TERMINAD|FINALIZAD|CERRAD|^SI$|^OK$/.test(s)) return 'completada';
     if (/REVISI/.test(s)) return 'en_revision';
     if (/PROGRES|CURSO|PROCESO/.test(s)) return 'en_progreso';
@@ -64,21 +66,27 @@ const Importador = (() => {
 
   // hojas: [{ nombre, filas: [[celda, …], …] }] → { tareas, log }
   function filasATareas(hojas, colaboradores) {
-    const porNombre = new Map();
+    // Nombre completo exacto; un nombre suelto ("Ana") solo si hay una sola persona con él.
+    // Nunca por coincidencia parcial: "Carlos Pérez" no es "Carlos Ruiz".
+    const sinEspacios = x => U.normalizar(x).replace(/\s+/g, ' ');
+    const porNombre = new Map(), porPrimero = new Map();
     for (const c of colaboradores) {
-      porNombre.set(U.normalizar(c.nombre), c);
-      const primero = U.normalizar(c.nombre).split(' ')[0];
-      if (primero && !porNombre.has(primero)) porNombre.set(primero, c);
+      const n = sinEspacios(c.nombre);
+      if (!n) continue;
+      porNombre.set(n, c);
+      const primero = n.split(' ')[0];
+      porPrimero.set(primero, porPrimero.has(primero) ? null : c);
     }
     const asignar = nombre => {
-      const n = U.normalizar(nombre);
+      const n = sinEspacios(nombre);
       if (!n) return { asignado_a: null, asignado_nombre: null };
-      const c = porNombre.get(n) || porNombre.get(n.split(' ')[0]);
-      return c ? { asignado_a: c.id, asignado_nombre: null } : { asignado_a: null, asignado_nombre: nombre.trim() };
+      const c = porNombre.get(n) || (!n.includes(' ') ? porPrimero.get(n) : null);
+      return c ? { asignado_a: c.id, asignado_nombre: null } : { asignado_a: null, asignado_nombre: String(nombre).trim().slice(0, 200) };
     };
 
     const tareas = [], log = [];
     const sinCoincidencia = new Set();
+    const vistas = new Map(); // filas idénticas en el archivo: cada una es una tarea distinta
 
     for (const hoja of hojas) {
       const filas = hoja.filas || [];
@@ -120,8 +128,8 @@ const Importador = (() => {
         const empresa = val('empresa');
         const colab = val('colaborador');
         const base = {
-          empresa: empresa || null,
-          descripcion: val('descripcion') || null,
+          empresa: empresa.slice(0, 200) || null,
+          descripcion: val('descripcion').slice(0, 10000) || null,
           ...asignar(colab),
         };
         if (colab && !base.asignado_a) sinCoincidencia.add(colab);
@@ -131,14 +139,18 @@ const Importador = (() => {
           const t = {
             ...base, titulo: titulo.slice(0, 300), fecha_vencimiento: fecha, estado,
             prioridad: mapearPrioridad(val('prioridad')) || extra.prioridad || 'media',
-            categoria: val('categoria') || extra.categoria || 'Otro',
+            categoria: (val('categoria') || extra.categoria || 'Otro').slice(0, 60),
             fecha_inicio: col.fecha_inicio >= 0 ? U.parsearFecha(f[col.fecha_inicio]) : null,
             progreso: estado === 'completada' ? 100 : 0,
             checklist: [], etiquetas: [],
             // Lo importado como completado se toma como entregado en su fecha límite.
             completada_at: estado === 'completada' && fecha ? U.deISO(fecha).toISOString() : null,
           };
-          t.origen_ref = 'xls:' + huella([hoja.nombre, t.titulo, empresa, fecha, colab].join('|'));
+          // Misma clave que antes (lo ya importado no se duplica); solo las repeticiones llevan #n.
+          const clave = [hoja.nombre, t.titulo, empresa, fecha, colab].join('|');
+          const repetida = (vistas.get(clave) || 0) + 1;
+          vistas.set(clave, repetida);
+          t.origen_ref = 'xls:' + huella(repetida > 1 ? clave + '|#' + repetida : clave);
           tareas.push(t);
           n++;
         };

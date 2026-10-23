@@ -43,3 +43,74 @@ create policy "actividad_leer" on public.tarea_actividad for select to authentic
 drop policy if exists "actividad_crear" on public.tarea_actividad;
 create policy "actividad_crear" on public.tarea_actividad for insert to authenticated
   with check (autor_id = auth.uid());
+
+-- ═══════════════════════════════════════════════════════════════════
+-- REGLAS QUE NADIE PUEDE SALTARSE DESDE LA API
+-- Las políticas deciden QUIÉN toca una fila; estos triggers deciden QUÉ
+-- columnas puede cambiar. Sin ellos, una colaboradora con su clave podría
+-- apropiarse de tareas ajenas (cambiando creado_por) y borrarlas.
+-- En el SQL Editor (sin usuario conectado) no aplican.
+-- ═══════════════════════════════════════════════════════════════════
+create or replace function public.tareas_proteger()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then return new; end if;
+  if tg_op = 'INSERT' then
+    new.creado_por := auth.uid();
+    -- Solo un administrador (al importar) puede fijar cuándo se completó.
+    if not public.es_admin() then
+      new.completada_at := case when new.estado = 'completada' then now() end;
+    end if;
+  else
+    new.id := old.id;
+    new.creado_por := old.creado_por;
+    new.origen_ref := old.origen_ref;
+    if not public.es_admin() and new.asignado_a is not null
+       and new.asignado_a is distinct from old.asignado_a and new.asignado_a <> auth.uid() then
+      raise exception 'Solo un administrador puede asignar tareas a otros colaboradores.' using errcode = '42501';
+    end if;
+  end if;
+  return new;
+end $$;
+
+-- Se llama "tareas_zz_…" para correr después de tareas_antes_de_guardar (orden alfabético).
+drop trigger if exists tareas_zz_proteger on public.tareas;
+create trigger tareas_zz_proteger
+  before insert or update on public.tareas
+  for each row execute function public.tareas_proteger();
+
+-- El autor de un comentario es siempre quien está conectado, con su nombre del perfil.
+create or replace function public.actividad_autor()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then return new; end if;
+  new.autor_id := auth.uid();
+  new.autor_nombre := coalesce(
+    (select nombre from public.perfiles where id = auth.uid()),
+    (select email from auth.users where id = auth.uid()));
+  return new;
+end $$;
+
+drop trigger if exists actividad_autor on public.tarea_actividad;
+create trigger actividad_autor
+  before insert on public.tarea_actividad
+  for each row execute function public.actividad_autor();
+
+-- Nadie se cambia el rol a sí mismo: solo un administrador cambia roles,
+-- aunque `perfiles` tenga una política de "editar mi propio perfil".
+create or replace function public.perfiles_proteger()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null or public.es_admin() then return new; end if;
+  if tg_op = 'INSERT' then
+    new.rol := 'colaborador';
+  elsif new.rol is distinct from old.rol or new.id is distinct from old.id then
+    raise exception 'Solo un administrador puede cambiar roles.' using errcode = '42501';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists perfiles_proteger on public.perfiles;
+create trigger perfiles_proteger
+  before insert or update on public.perfiles
+  for each row execute function public.perfiles_proteger();

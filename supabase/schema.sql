@@ -36,6 +36,23 @@ create table if not exists public.tareas (
   updated_at        timestamptz not null default now()
 );
 
+-- Límites: una checklist que no es lista o un texto de varios MB rompen la página
+-- para todo el equipo. NOT VALID: se exige en lo nuevo sin revisar filas viejas.
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'tareas_limites') then
+    alter table public.tareas add constraint tareas_limites check (
+      jsonb_typeof(checklist) = 'array'
+      and octet_length(checklist::text) <= 50000
+      and char_length(coalesce(descripcion, '')) <= 10000
+      and char_length(coalesce(categoria, '')) <= 60
+      and char_length(coalesce(empresa, '')) <= 200
+      and char_length(coalesce(asignado_nombre, '')) <= 200
+      and cardinality(etiquetas) <= 20
+    ) not valid;
+  end if;
+end $$;
+
 create index if not exists tareas_asignado_idx    on public.tareas (asignado_a);
 create index if not exists tareas_vencimiento_idx on public.tareas (fecha_vencimiento);
 create index if not exists tareas_estado_idx      on public.tareas (estado);

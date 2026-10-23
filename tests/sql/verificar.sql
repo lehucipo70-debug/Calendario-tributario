@@ -88,11 +88,11 @@ begin
   if n <> 1 then raise exception 'Ana debía poder borrar su propia tarea'; end if;
 
   insert into public.tarea_actividad (tarea_id, texto, autor_nombre) values ('11111111-0000-0000-0000-000000000002', 'Avance', 'Ana');
-  begin
-    insert into public.tarea_actividad (tarea_id, texto, autor_id) values ('11111111-0000-0000-0000-000000000002', 'falso', '00000000-0000-0000-0000-00000000000a');
+  -- Si intenta comentar a nombre de otro, el comentario queda a nombre de ella.
+  insert into public.tarea_actividad (tarea_id, texto, autor_id) values ('11111111-0000-0000-0000-000000000002', 'falso', '00000000-0000-0000-0000-00000000000a');
+  if (select autor_id from public.tarea_actividad where texto = 'falso') <> '00000000-0000-0000-0000-0000000000a1' then
     raise exception 'Ana no debía comentar a nombre de otro';
-  exception when insufficient_privilege then null;
-  end;
+  end if;
   raise notice 'OK permisos colaborador';
 end $$;
 

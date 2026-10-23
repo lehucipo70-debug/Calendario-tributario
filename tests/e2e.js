@@ -134,7 +134,9 @@ async function pruebasDemo(navegador, base) {
     igual(t.fecha_vencimiento, hoyISO(), 'fecha de la captura rápida');
     igual(t.asignado_a, 'u-admin', 'asignada a quien la crea');
     await page.locator('.panel', { hasText: '◷ Hoy' }).locator('.tarjeta', { hasText: 'Llamar al banco' }).waitFor();
-    igual(await page.evaluate(() => document.activeElement?.closest('[data-captura]') !== null), true, 'el foco vuelve a la captura');
+    // El foco vuelve tras dos repintados: se espera en vez de mirarlo una sola vez.
+    await page.waitForFunction(() => document.activeElement?.closest('[data-captura]') !== null, null, { timeout: 3000 })
+      .catch(() => { throw new Error('el foco no volvió a la captura'); });
   });
 
   await paso('crea una tarea completa desde la ventana (asignada, con pasos)', async () => {

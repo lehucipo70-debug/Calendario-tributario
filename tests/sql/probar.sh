@@ -19,5 +19,7 @@ for i in 1 2; do
   "${PSQL[@]}" -f "$RAIZ/supabase/permisos-ejemplo.sql"
   "${PSQL[@]}" -f "$RAIZ/supabase/migrar-obligaciones.sql"
 done
-PGOPTIONS= "${PSQL[@]}" -f "$RAIZ/tests/sql/verificar.sql" 2>&1 | sed 's/^psql:.*NOTICE:  /  /'
+for f in verificar ataques; do
+  PGOPTIONS= "${PSQL[@]}" -f "$RAIZ/tests/sql/$f.sql" 2>&1 | sed 's/^psql:.*NOTICE:  /  /'
+done
 echo "SQL: todas las verificaciones pasaron"

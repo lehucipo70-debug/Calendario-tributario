@@ -3,9 +3,10 @@
   "private": true,
   "description": "Planner de tareas del equipo con rendimiento por colaborador (HTML + Supabase).",
   "scripts": {
-    "test": "node --test tests/unit.test.js && node tests/e2e.js",
+    "test": "node --test tests/unit.test.js && node tests/e2e.js && node tests/robustez.js",
     "test:unit": "node --test tests/unit.test.js",
     "test:e2e": "node tests/e2e.js",
+    "test:robustez": "node tests/robustez.js",
     "test:sql": "bash tests/sql/probar.sh",
     "serve": "npx http-server -p 8080 -c-1 .",
     "empaquetar": "node scripts/empaquetar.js"

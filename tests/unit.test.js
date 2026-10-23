@@ -182,9 +182,46 @@ test('reimportar el mismo archivo genera las mismas referencias (no duplica)', (
 
 test('mapeo de estados y prioridades', () => {
   assert.equal(Importador.mapearEstado('Presentado'), 'completada');
+  assert.equal(Importador.mapearEstado('Presentado por Juan'), 'completada');
   assert.equal(Importador.mapearEstado('EN REVISIÓN'), 'en_revision');
   assert.equal(Importador.mapearEstado('en curso'), 'en_progreso');
   assert.equal(Importador.mapearEstado(''), 'pendiente');
   assert.equal(Importador.mapearPrioridad('Crítica'), 'urgente');
   assert.equal(Importador.mapearPrioridad(''), null);
+});
+
+test('parsearFecha rechaza días que no existen (un solo 31/02 hacía fallar el lote entero)', () => {
+  for (const v of ['31/02/2026', '2026-02-30', '45/13/2026', '2026-13-01', '0001-01-01']) assert.equal(Util.parsearFecha(v), null, v);
+  assert.equal(Util.parsearFecha('29/02/2028'), '2028-02-29');
+  assert.equal(Util.parsearFecha('30/04/2026'), '2026-04-30');
+});
+
+test('importar: estados negados no quedan como completados', () => {
+  for (const v of ['No presentado', 'NO PRESENTADA', 'Sin presentar', 'No completada', 'Incompleto', 'Falta presentar', 'Por presentar']) {
+    assert.equal(Importador.mapearEstado(v), 'pendiente', v);
+  }
+  assert.equal(Importador.mapearEstado('Presentado'), 'completada');
+  assert.equal(Importador.mapearEstado('Presentado por Juan'), 'completada');
+});
+
+test('importar: un nombre parecido nunca se asigna a otra persona', () => {
+  const colabs = [{ id: 'ana-g', nombre: 'Ana Gómez' }, { id: 'ana-r', nombre: 'Ana Ruiz' }, { id: 'carlos', nombre: 'Carlos Ruiz' }];
+  const filas = [['TAREA', 'COLABORADOR', 'FECHA'], ['T1', 'Ana Martínez', '2026-11-01'], ['T2', 'Ana', '2026-11-01'],
+    ['T3', 'Carlos Pérez', '2026-11-01'], ['T4', 'Ana Ruiz', '2026-11-01'], ['T5', 'carlos', '2026-11-01'], ['T6', '  ANA   GOMEZ ', '2026-11-01']];
+  const r = Object.fromEntries(Importador.filasATareas([{ nombre: 'P', filas }], colabs).tareas.map(x => [x.titulo, x]));
+  assert.equal(r.T1.asignado_a, null); assert.equal(r.T1.asignado_nombre, 'Ana Martínez');
+  assert.equal(r.T2.asignado_a, null, '"Ana" es ambiguo: hay dos');
+  assert.equal(r.T3.asignado_a, null); assert.equal(r.T3.asignado_nombre, 'Carlos Pérez');
+  assert.equal(r.T4.asignado_a, 'ana-r');
+  assert.equal(r.T5.asignado_a, 'carlos', 'un solo Carlos: el nombre suelto sirve');
+  assert.equal(r.T6.asignado_a, 'ana-g');
+});
+
+test('importar: dos filas idénticas son dos tareas, y reimportar no duplica', () => {
+  const filas = [['TAREA', 'EMPRESA', 'FECHA'], ['Conciliación', 'ACME', '2026-11-01'], ['Conciliación', 'ACME', '2026-11-01']];
+  const a = Importador.filasATareas([{ nombre: 'P', filas }], []).tareas;
+  const b = Importador.filasATareas([{ nombre: 'P', filas }], []).tareas;
+  assert.equal(a.length, 2);
+  assert.notEqual(a[0].origen_ref, a[1].origen_ref);
+  assert.deepEqual(a.map(x => x.origen_ref), b.map(x => x.origen_ref));
 });

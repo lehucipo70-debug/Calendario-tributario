@@ -85,13 +85,14 @@ Flujo: un evento del usuario → una acción de `App` → `Datos` (Supabase o de
 
 ```bash
 npm install
-npm test            # unitarias + navegador (Chromium)
+npm test            # unitarias + navegador + robustez (Chromium)
 npm run test:sql    # scripts SQL contra un PostgreSQL local temporal
 ```
 
 - **Unitarias** (`tests/unit.test.js`): métricas, fechas y conversión de Excel a tareas.
 - **Navegador** (`tests/e2e.js`): recorre todas las vistas como administrador, colaboradora y en celular, y prueba el modo Supabase contra un servidor simulado (inicio de sesión, más de 1000 tareas, permisos denegados, tablas faltantes). Guarda capturas en `tests/capturas/`.
-- **SQL** (`tests/sql/`): ejecuta `schema.sql`, `permisos-ejemplo.sql` y la migración dos veces cada uno, y verifica la migración, el trigger de completado y los permisos por rol.
+- **Robustez** (`tests/robustez.js`): carga tareas dañadas o maliciosas (checklist inválida, HTML en los textos, fechas extremas, colaborador borrado, textos de 2 MB) y comprueba que ninguna vista se rompa ni ejecute código.
+- **SQL** (`tests/sql/`): ejecuta `schema.sql`, `permisos-ejemplo.sql` y la migración dos veces cada uno, y verifica la migración, el trigger de completado y los permisos por rol. `ataques.sql` intenta, como colaboradora y directo por la API, borrar tareas ajenas, suplantar al creador o al autor de un comentario, reasignar tareas, inventar fechas de completado, guardar datos inválidos y ascenderse a administradora: todo debe quedar bloqueado.
 
 ## Microsoft Teams
 

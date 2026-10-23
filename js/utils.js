@@ -94,6 +94,16 @@ const Util = {
     return d.toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   },
 
+  // 'AAAA-MM-DD' si es un día que existe (31/02 o mes 13 → null), entre 1900 y 2200.
+  // Una sola fecha imposible haría fallar el lote completo al guardar en la base de datos.
+  fechaValida(iso) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+    if (!m) return null;
+    const [a, mes, dia] = [+m[1], +m[2], +m[3]];
+    const d = new Date(a, mes - 1, dia);
+    return a >= 1900 && a <= 2200 && d.getFullYear() === a && d.getMonth() === mes - 1 && d.getDate() === dia ? iso : null;
+  },
+
   // Convierte casi cualquier valor de celda de Excel a 'AAAA-MM-DD'.
   parsearFecha(v) {
     if (v == null || v === '') return null;
@@ -111,11 +121,11 @@ const Util = {
       return null;
     }
     const s = String(v).trim();
-    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return Util.fechaValida(s.substring(0, 10));
     const p = s.split(/[\/\-.]/);
     if (p.length === 3 && p.every(x => /^\d+$/.test(x))) {
-      if (p[2].length === 4) return p[2] + '-' + p[1].padStart(2, '0') + '-' + p[0].padStart(2, '0');
-      if (p[0].length === 4) return p[0] + '-' + p[1].padStart(2, '0') + '-' + p[2].padStart(2, '0');
+      if (p[2].length === 4) return Util.fechaValida(p[2] + '-' + p[1].padStart(2, '0') + '-' + p[0].padStart(2, '0'));
+      if (p[0].length === 4) return Util.fechaValida(p[0] + '-' + p[1].padStart(2, '0') + '-' + p[2].padStart(2, '0'));
     }
     if (!/[a-zA-Z]/.test(s)) return null; // números sueltos nunca son fechas
     const d = new Date(s);

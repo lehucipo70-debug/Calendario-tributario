@@ -25,6 +25,15 @@ class ErrorDatos extends Error {
 const CAMPOS_TAREA = ['titulo', 'descripcion', 'asignado_a', 'asignado_nombre', 'empresa', 'categoria', 'prioridad', 'estado',
   'fecha_inicio', 'fecha_vencimiento', 'progreso', 'checklist', 'etiquetas', 'completada_at', 'origen_ref'];
 
+// Una checklist dañada (guardada por la API sin pasar por la página) no debe
+// romper las vistas: se descartan los pasos que no son objetos y se completan id y texto.
+function normalizarChecklist(lista) {
+  if (!Array.isArray(lista)) return [];
+  return lista
+    .filter(i => i && typeof i === 'object' && !Array.isArray(i))
+    .map((i, n) => ({ id: typeof i.id === 'string' && i.id ? i.id : 'paso-' + n, texto: String(i.texto ?? ''), hecho: i.hecho === true }));
+}
+
 function normalizarTarea(t) {
   return {
     ...t,
@@ -32,7 +41,7 @@ function normalizarTarea(t) {
     estado: t.estado || 'pendiente',
     prioridad: t.prioridad || 'media',
     progreso: Number(t.progreso) || 0,
-    checklist: Array.isArray(t.checklist) ? t.checklist : [],
+    checklist: normalizarChecklist(t.checklist),
     etiquetas: Array.isArray(t.etiquetas) ? t.etiquetas : [],
   };
 }
@@ -61,7 +70,8 @@ class SupabaseStore {
 
   _error(error, accion) {
     const msg = error?.message || String(error);
-    const faltaEsquema = error?.code === '42P01' || error?.code === 'PGRST205' || /does not exist|could not find the table/i.test(msg);
+    // Solo tablas faltantes: "column … does not exist" u otros errores no deben decir que faltan las tablas.
+    const faltaEsquema = error?.code === '42P01' || error?.code === 'PGRST205' || /relation .* does not exist|could not find the table/i.test(msg);
     if (faltaEsquema) return new ErrorDatos('Falta crear las tablas del planner en Supabase (ejecuta supabase/schema.sql).', { codigo: error.code, original: error, faltaEsquema });
     if (error?.code === 'PGRST116' || error?.code === '42501' || /row-level security|permission denied/i.test(msg)) {
       return new ErrorDatos('No tienes permiso para ' + accion + '.', { codigo: error.code, original: error });
