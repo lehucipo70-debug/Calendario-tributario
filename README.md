@@ -40,3 +40,7 @@ Los avisos llegan mientras la página esté abierta, aunque esté en otra pesta�
 ## Modo demo
 
 Abre la página con `?demo` al final de la dirección para probarla con datos de ejemplo guardados solo en el navegador.
+
+## Actualización de los datos
+
+Los cambios de otras personas llegan al momento por el tiempo real de Supabase (la tabla `tareas` debe estar en la publicación `supabase_realtime`: **Database → Publications**). Además, la página se resincroniza sola cada `SEGUNDOS_REFRESCO` segundos, al volver a la pestaña y al reconectarse, para recuperar los cambios que el tiempo real no entrega (por ejemplo, mientras el equipo estuvo suspendido).

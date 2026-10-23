@@ -643,6 +643,7 @@ const CONFIG = {
 
   DIAS_ALERTA: 3,          // "por vencer" = vence dentro de N días
   MINUTOS_AVISOS: 30,      // cada cuánto se revisan los vencimientos para los avisos de escritorio
+  SEGUNDOS_REFRESCO: 60,   // cada cuánto se resincronizan las tareas en segundo plano (respaldo del tiempo real)
   SEMANAS_TENDENCIA: 12,   // semanas en la gráfica de tendencia
   LIMITE_LISTA: 300,       // filas visibles en la vista Lista antes de "Ver más"
   FONDO_EN_APP: 0.6,       // intensidad de la ola de partículas dentro de la aplicación (0 = sin fondo, 1 = como en el inicio)
@@ -3127,7 +3128,7 @@ const App = {
     const base = { estado: 'pendiente', prioridad: 'media', categoria: 'Otro', asignado_a: Permisos.uid, ...datos };
     if (base.estado === 'completada') { base.progreso = 100; base.completada_at ??= new Date().toISOString(); }
     const t = await Datos.crearTarea(base);
-    if (!this.tarea(t.id)) this.estado.tareas.push(t);
+    if (!this.tarea(t.id)) { this.estado.tareas.push(t); this._version++; }
     this._registrar(t.id, 'creacion', 'Creó la tarea');
     if (t.asignado_a && t.asignado_a !== Permisos.uid) this._notificarAsignacion(t);
     this.render();
@@ -3154,6 +3155,7 @@ const App = {
     const antes = structuredClone(t);
     const { enviar, local } = this._derivar(t, cambios);
     Object.assign(t, enviar, local);
+    this._version++;
     this.render();
     try {
       const guardada = await Datos.actualizarTarea(id, enviar);
@@ -3184,6 +3186,7 @@ const App = {
     try {
       await Datos.eliminarTarea(id);
       this.estado.tareas = this.estado.tareas.filter(x => x.id !== id);
+      this._version++;
       this.render();
       UI.toast('Tarea eliminada');
       return true;
@@ -3219,6 +3222,7 @@ const App = {
   _reemplazar(t) {
     const i = this.estado.tareas.findIndex(x => x.id === t.id);
     if (i >= 0) this.estado.tareas[i] = t; else this.estado.tareas.push(t);
+    this._version++;
   },
 
   // ── Seguimiento (bitácora de cada tarea) ──────────────────────────
@@ -3266,6 +3270,11 @@ const App = {
     const activo = document.activeElement;
     const filtroActivo = activo?.dataset?.filtro;
     const cursor = filtroActivo ? activo.selectionStart : null;
+    // Y lo que se esté escribiendo en la captura rápida (un cambio remoto repinta la vista).
+    const captura = main.querySelector('[data-captura] input:not(:disabled)');
+    const textoCaptura = captura?.value || '';
+    const focoCaptura = !!captura && activo === captura;
+    this._hoyPintado = Util.hoyISO();
 
     this._pintarNav();
     const v = Vistas[this.estado.vista];
@@ -3281,6 +3290,11 @@ const App = {
     if (filtroActivo) {
       const el = main.querySelector(`[data-filtro="${filtroActivo}"]`);
       if (el) { el.focus(); if (cursor !== null && el.setSelectionRange) el.setSelectionRange(cursor, cursor); }
+    }
+    const nuevaCaptura = main.querySelector('[data-captura] input');
+    if (nuevaCaptura && (textoCaptura || focoCaptura)) {
+      nuevaCaptura.value = textoCaptura;
+      if (focoCaptura) nuevaCaptura.focus();
     }
   },
 
@@ -3306,7 +3320,10 @@ const App = {
     document.getElementById('main').innerHTML = '<div class="cargando">Cargando tareas…</div>';
     await this.cargar();
     this._pintarUsuario(); // de nuevo: el color del avatar depende de la lista de colaboradores
+    this._conexiones = 0;
     Datos.suscribir((evento, nueva, anterior, conectado) => this._alCambiar(evento, nueva, anterior, conectado));
+    clearInterval(this._temporizadorRefresco);
+    this._temporizadorRefresco = setInterval(() => this.refrescar(), CONFIG.SEGUNDOS_REFRESCO * 1000);
     const desdeHash = location.hash.replace('#/', '');
     this.ir(Vistas[desdeHash] ? desdeHash : 'inicio');
     Avisos.iniciar();
@@ -3330,6 +3347,40 @@ const App = {
     }
   },
 
+  // Resincronización silenciosa. El tiempo real no basta: pierde los cambios hechos
+  // mientras el canal estuvo caído (suspensión, wifi) y, por las políticas RLS, no
+  // avisa cuando una tarea deja de ser visible (p. ej. se reasigna a otra persona).
+  // Solo repinta si los datos (o el día) cambiaron.
+  _version: 0,            // sube con cada cambio local o remoto aplicado al estado
+  _refrescando: false,
+  _ultimoRefresco: 0,
+  async refrescar({ forzar = false } = {}) {
+    if (!this.estado.perfil || this._refrescando || document.hidden) return;
+    if (!forzar && Date.now() - this._ultimoRefresco < 10000) return;
+    this._refrescando = true;
+    this._ultimoRefresco = Date.now();
+    const version = this._version;
+    const perfil = this.estado.perfil;
+    try {
+      const [colabs, tareas] = await Promise.all([Datos.colaboradores().catch(() => null), Datos.tareas()]);
+      // Si mientras tanto hubo cambios (propios o en tiempo real), estos datos ya son viejos.
+      if (version !== this._version || this.estado.perfil !== perfil) return;
+      let cambio = JSON.stringify(tareas) !== JSON.stringify(this.estado.tareas);
+      if (cambio) this.estado.tareas = tareas;
+      if (colabs?.length) {
+        if (!colabs.some(c => c.id === perfil.id)) colabs.push({ ...perfil });
+        colabs.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+        if (JSON.stringify(colabs) !== JSON.stringify(this.estado.colaboradores)) { this.estado.colaboradores = colabs; cambio = true; }
+      }
+      if (this.estado.errorCarga) { this.estado.errorCarga = null; cambio = true; }
+      if (cambio || this._hoyPintado !== Util.hoyISO()) this.render();
+    } catch (e) {
+      console.warn('[refresco]', e.message);
+    } finally {
+      this._refrescando = false;
+    }
+  },
+
   async sincronizar() {
     await this.cargar();
     this.render();
@@ -3338,6 +3389,7 @@ const App = {
 
   async salir() {
     Avisos.detener();
+    clearInterval(this._temporizadorRefresco);
     await Datos.logout();
     this.estado.perfil = null;
     this.estado.tareas = [];
@@ -3356,14 +3408,19 @@ const App = {
       this.estado.conectado = conectado;
       const punto = document.getElementById('punto-conexion');
       if (punto) { punto.classList.toggle('off', !conectado); punto.title = conectado ? 'Conectado en tiempo real' : 'Sin conexión en tiempo real'; }
+      // Al reconectar se recupera lo que cambió mientras el canal estuvo caído.
+      if (conectado && this._conexiones++ > 0) this.refrescar({ forzar: true });
       return;
     }
     if (evento === 'recargar') { this.cargar().then(() => this.render()); return; }
     if (evento === 'DELETE' && anterior?.id) this.estado.tareas = this.estado.tareas.filter(t => t.id !== anterior.id);
     else if (nueva) {
-      Avisos.alCambiarRemoto(evento, nueva, this.tarea(nueva.id));
-      this._reemplazar(nueva);
+      const previa = this.tarea(nueva.id);
+      Avisos.alCambiarRemoto(evento, nueva, previa);
+      // Se combina con la tarea conocida: el evento puede omitir columnas que no cambiaron.
+      this._reemplazar(previa ? { ...previa, ...nueva } : nueva);
     }
+    this._version++;
     this.render();
   },
 
@@ -3488,6 +3545,10 @@ document.addEventListener('keydown', e => {
     TareaModal.abrirNueva();
   }
 });
+
+// Al volver a la pestaña o a la ventana se resincroniza (refrescar limita la frecuencia).
+document.addEventListener('visibilitychange', () => { if (!document.hidden) App.refrescar(); });
+window.addEventListener('focus', () => App.refrescar());
 
 window.addEventListener('hashchange', () => {
   const v = location.hash.replace('#/', '');
