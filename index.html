@@ -404,7 +404,7 @@ body[data-vista="inicio"] .titulo-vista { position: absolute; width: 1px; height
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
 /* Luces de aurora (violeta, cian y rosa) que se mueven despacio detrás del vidrio */
-.vidrio::before { content: ''; position: absolute; inset: -40px -20px; z-index: -1; pointer-events: none; filter: blur(60px);
+.vidrio::before { content: ''; position: absolute; inset: -40px 0; z-index: -1; pointer-events: none; filter: blur(60px);
   background: radial-gradient(600px 420px at 12% 60px, var(--vidrio-luz-a), transparent 70%), radial-gradient(560px 420px at 88% 260px, var(--vidrio-luz-b), transparent 70%), radial-gradient(480px 360px at 50% 560px, var(--vidrio-luz-c), transparent 70%);
   animation: deriva 24s ease-in-out infinite alternate; }
 .vidrio-interior { position: relative; border-radius: calc(var(--r) + 4px); overflow: hidden; background: var(--vidrio-fondo);
