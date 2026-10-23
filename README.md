@@ -27,6 +27,16 @@ En **Administración → Seleccionar archivo Excel**. La primera fila debe tener
 - **RESPONSABLE** se asocia con el nombre del perfil (basta el primer nombre). Crea el perfil **antes** de importar; si no existe, la tarea queda sin asignar.
 - Importar el mismo archivo otra vez no duplica tareas.
 
+## Avisos de escritorio
+
+La campana de la barra superior activa los avisos del navegador (cada persona los activa en su equipo; el navegador pide permiso la primera vez):
+
+- **Vencimientos**: al entrar y cada 30 minutos avisa de tus tareas vencidas, que vencen hoy o en los próximos días (`DIAS_ALERTA`). Cada tarea avisa una vez al día.
+- **Asignaciones**: cuando otra persona te asigna una tarea, llega el aviso al momento.
+- Al hacer clic en el aviso se abre la tarea.
+
+Los avisos llegan mientras la página esté abierta, aunque esté en otra pestaña o minimizada. Si se bloquearon, se vuelven a permitir desde el candado junto a la dirección de la página.
+
 ## Modo demo
 
 Abre la página con `?demo` al final de la dirección para probarla con datos de ejemplo guardados solo en el navegador.
