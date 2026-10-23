@@ -46,6 +46,7 @@
   --vidrio-luz-a: rgba(167,139,250,.5); --vidrio-luz-b: rgba(103,232,249,.42); --vidrio-luz-c: rgba(244,114,182,.32);
   --vidrio-texto-cab: #3f3f46; --vidrio-fila: rgba(255,255,255,.55); --vidrio-fila-borde: rgba(255,255,255,.9);
   --vidrio-hover: rgba(255,255,255,.85); --vidrio-brillo-barra: none;
+  --nc-violeta: #7c3aed; --nc-amarillo: #d97706; --nc-azul: #2563eb; --nc-verde: #16a34a; --nc-rosa: #db2777; --nc-gris: #71717a;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -70,6 +71,7 @@
     --vidrio-luz-a: rgba(124,58,237,.55); --vidrio-luz-b: rgba(6,182,212,.45); --vidrio-luz-c: rgba(236,72,153,.32);
     --vidrio-texto-cab: #c7cbe8; --vidrio-fila: rgba(255,255,255,.04); --vidrio-fila-borde: rgba(255,255,255,.07);
     --vidrio-hover: rgba(255,255,255,.09); --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.5);
+    --nc-violeta: #a78bfa; --nc-amarillo: #fbbf24; --nc-azul: #60a5fa; --nc-verde: #4ade80; --nc-rosa: #f472b6; --nc-gris: #a1a1aa;
   }
 }
 :root[data-theme="dark"] {
@@ -94,6 +96,7 @@
   --vidrio-luz-a: rgba(124,58,237,.55); --vidrio-luz-b: rgba(6,182,212,.45); --vidrio-luz-c: rgba(236,72,153,.32);
   --vidrio-texto-cab: #c7cbe8; --vidrio-fila: rgba(255,255,255,.04); --vidrio-fila-borde: rgba(255,255,255,.07);
   --vidrio-hover: rgba(255,255,255,.09); --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.5);
+  --nc-violeta: #a78bfa; --nc-amarillo: #fbbf24; --nc-azul: #60a5fa; --nc-verde: #4ade80; --nc-rosa: #f472b6; --nc-gris: #a1a1aa;
 }
 
 /* ── Base ─────────────────────────────────────────────────────────── */
@@ -523,6 +526,96 @@ body[data-vista="inicio"] .titulo-vista { position: absolute; width: 1px; height
 .panel > p, .panel > ul { margin-bottom: 10px; }
 .imp-log { font-size: 12px; color: var(--text2); max-height: 200px; overflow-y: auto; line-height: 1.7; }
 
+/* ── Notas (bloc personal) ────────────────────────────────────────── */
+.panel-vidrio { background: var(--vidrio-fondo); border: 1px solid var(--vidrio-fila-borde); border-radius: calc(var(--r) + 4px);
+  backdrop-filter: blur(24px) saturate(150%); -webkit-backdrop-filter: blur(24px) saturate(150%); box-shadow: inset 0 1px 0 var(--vidrio-filo), var(--vidrio-sombra); }
+.notas { position: relative; isolation: isolate; display: grid; grid-template-columns: 220px minmax(260px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; align-content: start; min-height: calc(100vh - 200px); }
+/* Luces de aurora detrás del bloc (las mismas de las tablas de vidrio) */
+.notas::before { content: ''; position: absolute; inset: -20px 0; z-index: -1; pointer-events: none; filter: blur(60px);
+  background: radial-gradient(520px 420px at 8% 30%, var(--vidrio-luz-a), transparent 70%), radial-gradient(560px 460px at 92% 40%, var(--vidrio-luz-b), transparent 70%), radial-gradient(480px 360px at 50% 100%, var(--vidrio-luz-c), transparent 70%);
+  animation: deriva 24s ease-in-out infinite alternate; }
+.notas-carpetas { display: flex; flex-direction: column; gap: 12px; position: sticky; top: calc(var(--alto-barra) + 16px); }
+.notas-nueva { padding: 12px; }
+.notas-nueva svg { width: 16px; height: 16px; }
+.notas-menu { padding: 10px; display: flex; flex-direction: column; gap: 2px; }
+.notas-etiqueta { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text2); padding: 6px 10px; }
+.notas-carpeta { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 0; border-radius: 12px; background: none; color: var(--text2); font-weight: 500; text-align: left; }
+.notas-carpeta span:first-of-type { flex: 1; }
+.notas-carpeta:hover { background: var(--vidrio-fila); color: var(--text); }
+.notas-carpeta.on { background: var(--vidrio-hover); color: var(--text); box-shadow: inset 0 0 0 1px var(--vidrio-fila-borde); }
+.notas-num { font-size: 12px; color: var(--text2); }
+.notas-privado { display: flex; align-items: center; gap: 8px; padding: 12px 14px; font-size: 12px; color: var(--text2); border-radius: 18px; }
+.notas-privado svg { flex-shrink: 0; }
+.notas-lista { padding: 14px; display: flex; flex-direction: column; gap: 10px; max-height: calc(100vh - var(--alto-barra) - 120px); position: sticky; top: calc(var(--alto-barra) + 16px); }
+.notas-busqueda { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 12px; background: var(--vidrio-fila); border: 1px solid var(--vidrio-fila-borde); color: var(--text2); }
+.notas-busqueda input { flex: 1; border: 0; background: transparent; padding: 10px 0; box-shadow: none; }
+.notas-titulo-lista { font-size: 14px; padding: 2px 4px; }
+.notas-titulo-lista span { font-family: Inter, sans-serif; font-weight: 500; color: var(--text2); }
+.notas-tarjetas { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding: 2px; margin: -2px; }
+.nota-tarjeta { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 12px 14px; border-radius: 16px; text-align: left; color: var(--text);
+  background: var(--nota-fondo, var(--vidrio-fila)); border: 1px solid var(--vidrio-fila-borde); transition: transform .15s ease, background .15s ease, border-color .15s ease; }
+.nota-tarjeta:hover { transform: translateY(-2px); background: var(--vidrio-hover); }
+.nota-tarjeta.on { border-color: var(--nc); box-shadow: 0 0 0 1px color-mix(in srgb, var(--nc) 45%, transparent); }
+.nota-tarjeta-cab { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.nota-tarjeta-cab strong { flex: 1; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nota-punto { width: 10px; height: 10px; border-radius: 50%; background: var(--nc); box-shadow: 0 0 10px var(--nc); flex-shrink: 0; }
+.nota-marcas { display: inline-flex; gap: 4px; }
+.nota-marcas svg { width: 14px; height: 14px; }
+.nota-marca-fija { color: var(--nc-violeta); fill: currentColor; }
+.nota-marca-fav { color: var(--ambar); fill: currentColor; }
+.nota-resumen { font-size: 12.5px; color: var(--text2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.nota-fecha { font-size: 11.5px; color: var(--text3); }
+/* Colores de nota: punto y, en tema claro, un tinte pastel en la tarjeta */
+.nc-violeta { --nc: var(--nc-violeta); } .nc-amarillo { --nc: var(--nc-amarillo); } .nc-azul { --nc: var(--nc-azul); }
+.nc-verde { --nc: var(--nc-verde); } .nc-rosa { --nc: var(--nc-rosa); } .nc-gris { --nc: var(--nc-gris); }
+:root[data-theme="light"] .nota-tarjeta { --nota-fondo: color-mix(in srgb, var(--nc) 16%, rgba(255,255,255,.7)); }
+.notas-editor { min-height: calc(100vh - var(--alto-barra) - 120px); display: flex; flex-direction: column; overflow: hidden; }
+.nota-cab { display: flex; align-items: center; gap: 8px; padding: 16px 18px 10px; }
+.nota-volver { display: none; font-size: 22px; }
+.nota-titulo { flex: 1; min-width: 0; border: 0; background: transparent; box-shadow: none !important; padding: 4px 2px; font-family: Unbounded, Inter, sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -.6px; color: var(--text); }
+.nota-titulo::placeholder { color: var(--text3); }
+.nota-titulo:focus-visible { outline: none; }
+.nota-cab .btn-icono { padding: 0; }
+.nota-cab .btn-icono.nota-on-fija { color: var(--nc-violeta); border-color: color-mix(in srgb, var(--nc-violeta) 50%, var(--borde)); }
+.nota-cab .btn-icono.nota-on-fav { color: var(--ambar); border-color: color-mix(in srgb, var(--ambar) 50%, var(--borde)); }
+.nota-herramientas { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 0 14px; padding: 6px 10px; border-radius: 14px; background: var(--vidrio-fila); border: 1px solid var(--vidrio-fila-borde); }
+.nota-herramientas .btn-icono { width: 32px; height: 32px; padding: 0; border-color: transparent; background: transparent; }
+.nota-herramientas .btn-icono:hover { background: var(--vidrio-hover); }
+.nota-herramientas .btn-icono svg { width: 16px; height: 16px; flex-shrink: 0; }
+.nota-sep { width: 1px; height: 22px; background: var(--vidrio-fila-borde); margin: 0 6px; }
+.nota-color { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; background: var(--nc); padding: 0; }
+.nota-color.on { border-color: var(--text); }
+.nota-aviso { margin: 0 18px; padding: 10px 14px; border-radius: 12px; background: var(--ambar-suave); color: var(--ambar); font-size: 13px; }
+.nota-cuerpo { flex: 1; padding: 20px 26px 32px; max-width: 820px; font-size: 15px; line-height: 1.7; outline: none; overflow-wrap: anywhere; }
+.nota-cuerpo:empty::before { content: attr(data-placeholder); color: var(--text3); }
+.nota-cuerpo h2 { font-size: 18px; margin: 14px 0 6px; }
+.nota-cuerpo ul, .nota-cuerpo ol { padding-left: 24px; margin: 4px 0; }
+.nota-cuerpo a { color: var(--acento-texto); }
+.nota-cuerpo ul.casillas { list-style: none; padding-left: 4px; }
+.nota-cuerpo ul.casillas > li { position: relative; padding-left: 28px; }
+.nota-cuerpo ul.casillas > li::before { content: ''; position: absolute; left: 0; top: .32em; width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--text3); cursor: pointer; }
+.nota-cuerpo ul.casillas > li[data-hecho]::before { background: var(--nc-violeta); border-color: var(--nc-violeta); box-shadow: inset 0 0 0 3px var(--bg2); }
+.nota-cuerpo ul.casillas > li[data-hecho] { text-decoration: line-through; color: var(--text3); }
+.notas-vacio { margin: auto; }
+.notas-vacio svg { color: var(--text3); margin-bottom: 6px; }
+@media (max-width: 1100px) { .notas { grid-template-columns: minmax(240px, 320px) minmax(0, 1fr); } .notas-carpetas { grid-column: 1 / -1; position: static; flex-direction: row; flex-wrap: wrap; align-items: stretch; }
+  .notas-menu { flex-direction: row; flex-wrap: wrap; flex: 1; } .notas-etiqueta, .notas-privado { display: none; } .notas-nueva { width: auto; align-self: center; } }
+@media (max-width: 760px) {
+  .notas { grid-template-columns: minmax(0, 1fr); }
+  .notas-carpetas { flex-direction: column; min-width: 0; }
+  .notas-nueva { width: 100%; align-self: stretch; }
+  .notas-menu { flex: none; width: 100%; flex-wrap: nowrap; overflow-x: auto; padding: 6px; min-width: 0; }
+  .notas-carpeta { white-space: nowrap; flex-shrink: 0; }
+  .notas-lista { position: static; max-height: none; }
+  .nota-cab { flex-wrap: wrap; }
+  .nota-titulo { order: 5; flex-basis: 100%; font-size: 20px; }
+  .notas.con-nota .notas-carpetas, .notas.con-nota .notas-lista { display: none; }
+  .notas:not(.con-nota) .notas-editor { display: none; }
+  .nota-volver { display: inline-flex; }
+  .notas-editor { min-height: 70vh; }
+  .nota-cuerpo { padding: 16px 18px 28px; }
+}
+
 /* ── Modal ────────────────────────────────────────────────────────── */
 .capa-modal { position: fixed; inset: 0; z-index: 100; background: rgba(9,9,11,.6); backdrop-filter: blur(6px); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px 16px; overflow-y: auto; }
 .modal { width: 100%; background: var(--bg2); border: 1px solid var(--borde); border-radius: var(--r-lg); box-shadow: var(--sombra-3); padding: 22px 24px; animation: aparecer .16s ease; }
@@ -679,6 +772,7 @@ const CONFIG = {
     tareas: 'tareas',
     actividad: 'tarea_actividad',
     perfiles: 'perfiles',
+    notas: 'notas',
   },
 
   // ── Microsoft Teams (opcional) ────────────────────────────────────
@@ -1244,6 +1338,24 @@ class SupabaseStore {
     return data;
   }
 
+  // ── Notas personales (RLS: cada usuario solo ve y escribe las suyas) ──
+  async notas() {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.notas).select('*').order('updated_at', { ascending: false });
+    if (error) throw this._error(error, 'leer tus notas');
+    return data || [];
+  }
+
+  async guardarNota(n) {
+    const fila = { id: n.id, titulo: n.titulo, contenido: n.contenido, color: n.color, fijada: n.fijada, favorita: n.favorita, archivada: n.archivada, eliminada_at: n.eliminada_at, updated_at: n.updated_at };
+    const { error } = await this.sb.from(CONFIG.TABLAS.notas).upsert(fila);
+    if (error) throw this._error(error, 'guardar la nota');
+  }
+
+  async borrarNota(id) {
+    const { error } = await this.sb.from(CONFIG.TABLAS.notas).delete().eq('id', id);
+    if (error) throw this._error(error, 'borrar la nota');
+  }
+
   async importarTareas(lista, alAvanzar) {
     let hechas = 0;
     const filas = lista.map(t => ({ ...limpiarParaGuardar(t), creado_por: this.usuario?.id }));
@@ -1345,6 +1457,18 @@ class LocalStore {
     this._guardar();
     return a;
   }
+
+  async notas() { return (this.db.notas || []).filter(n => n.usuario_id === this.perfil?.id).map(n => ({ ...n })); }
+
+  async guardarNota(n) {
+    this.db.notas ||= [];
+    const i = this.db.notas.findIndex(x => x.id === n.id);
+    const fila = { ...n, usuario_id: this.perfil?.id };
+    if (i >= 0) this.db.notas[i] = fila; else this.db.notas.push(fila);
+    this._guardar();
+  }
+
+  async borrarNota(id) { this.db.notas = (this.db.notas || []).filter(n => n.id !== id); this._guardar(); }
 
   async importarTareas(lista, alAvanzar) {
     const refs = new Set(this.db.tareas.map(t => t.origen_ref).filter(Boolean));
@@ -2517,6 +2641,424 @@ Vistas.admin = {
 
 </script>
 <script>
+/* ── js/vistas/notas.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// VISTA: NOTAS — bloc de notas personal (cada usuario ve solo las suyas)
+// La vista se conserva entre repintados (persistente) para no perder lo
+// que se está escribiendo cuando llega un cambio de tareas en tiempo real.
+// Guardado automático con espera corta; la tabla y su RLS: supabase/notas.sql
+// ═══════════════════════════════════════════════════════════════════
+
+const NOTA_COLORES = [
+  { id: 'violeta', label: 'Violeta' }, { id: 'amarillo', label: 'Amarillo' }, { id: 'azul', label: 'Azul' },
+  { id: 'verde', label: 'Verde' }, { id: 'rosa', label: 'Rosa' }, { id: 'gris', label: 'Gris' },
+];
+
+const NOTA_CARPETAS = [
+  { id: 'todas', label: 'Todas las notas', icono: 'M5 4h10l4 4v12H5zM14 4v5h5' },
+  { id: 'favoritas', label: 'Favoritas', icono: 'M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z' },
+  { id: 'recientes', label: 'Recientes', icono: 'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z' },
+  { id: 'archivadas', label: 'Archivadas', icono: 'M3 4h18v4H3zM5 8v12h14V8M10 12h4' },
+  { id: 'papelera', label: 'Papelera', icono: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13' },
+];
+
+const Notas = {
+  raiz: null,
+  lista: [],
+  cargada: false,
+  error: null,
+  carpeta: 'todas',
+  busqueda: '',
+  actualId: null,
+  pendientes: new Map(),   // id → temporizador de guardado
+  estadoGuardado: '',
+
+  // ── Ciclo de vida ─────────────────────────────────────────────────
+  reiniciar() {
+    this.guardarTodo();
+    this.raiz?.remove();
+    Object.assign(this, { raiz: null, lista: [], cargada: false, error: null, carpeta: 'todas', busqueda: '', actualId: null, estadoGuardado: '' });
+  },
+
+  montar(main) {
+    if (!this.raiz) this._crearRaiz();
+    main.appendChild(this.raiz);
+    if (!this.cargada) this.cargar();
+  },
+
+  async cargar() {
+    this.error = null;
+    try {
+      this.lista = await Datos.notas();
+    } catch (e) {
+      console.error(e);
+      this.error = e;
+    }
+    this.cargada = true;
+    this.pintar();
+  },
+
+  // ── Consultas ─────────────────────────────────────────────────────
+  nota(id) { return this.lista.find(n => n.id === id); },
+
+  texto(html) {
+    const d = document.createElement('div');
+    d.innerHTML = Notas.limpiar(html || '').replace(/<\/?(div|p|li|h2|h3|ul|ol)\b[^>]*>|<br\s*\/?>/gi, ' $&');
+    return (d.textContent || '').replace(/\s+/g, ' ').trim();
+  },
+
+  enCarpeta(n, carpeta) {
+    const borrada = !!n.eliminada_at;
+    switch (carpeta) {
+      case 'papelera': return borrada;
+      case 'archivadas': return !borrada && n.archivada;
+      case 'favoritas': return !borrada && !n.archivada && n.favorita;
+      case 'recientes': return !borrada && (Date.now() - new Date(n.updated_at).getTime()) < 7 * 864e5;
+      default: return !borrada && !n.archivada;
+    }
+  },
+
+  visibles() {
+    const q = Util.normalizar(this.busqueda);
+    return this.lista
+      .filter(n => this.enCarpeta(n, this.carpeta))
+      .filter(n => !q || Util.normalizar(n.titulo + ' ' + this.texto(n.contenido) + ' ' + (n.color || '')).includes(q))
+      .sort((a, b) => (b.fijada - a.fijada) || String(b.updated_at).localeCompare(String(a.updated_at)));
+  },
+
+  hace(ts) {
+    const s = (Date.now() - new Date(ts).getTime()) / 1000;
+    if (s < 60) return 'Hace un momento';
+    if (s < 3600) return `Hace ${Math.floor(s / 60)} min`;
+    if (s < 86400) return `Hace ${Math.floor(s / 3600)} h`;
+    const d = Math.floor(s / 86400);
+    if (d < 7) return d === 1 ? 'Ayer' : `Hace ${d} días`;
+    return Util.fmtFecha(String(ts).slice(0, 10));
+  },
+
+  // Solo se conserva el formato que ofrece la barra; todo lo demás se quita.
+  limpiar(html) {
+    const doc = new DOMParser().parseFromString('<div>' + (html || '') + '</div>', 'text/html');
+    const permitidos = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'H2', 'H3', 'P', 'DIV', 'BR', 'UL', 'OL', 'LI', 'A']);
+    const recorrer = nodo => {
+      for (const hijo of [...nodo.childNodes]) {
+        if (hijo.nodeType === Node.TEXT_NODE) continue;
+        if (hijo.nodeType !== Node.ELEMENT_NODE) { hijo.remove(); continue; }
+        if (['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'TEMPLATE'].includes(hijo.tagName)) { hijo.remove(); continue; }
+        recorrer(hijo);
+        if (!permitidos.has(hijo.tagName)) { hijo.replaceWith(...hijo.childNodes); continue; }
+        for (const a of [...hijo.attributes]) {
+          const ok = (hijo.tagName === 'A' && a.name === 'href' && /^(https?:|mailto:)/i.test(a.value.trim()))
+            || (hijo.tagName === 'UL' && a.name === 'class' && a.value === 'casillas')
+            || (hijo.tagName === 'LI' && a.name === 'data-hecho' && a.value === '1');
+          if (!ok) hijo.removeAttribute(a.name);
+        }
+        if (hijo.tagName === 'A') { hijo.setAttribute('target', '_blank'); hijo.setAttribute('rel', 'noopener noreferrer'); }
+      }
+    };
+    recorrer(doc.body.firstChild);
+    return doc.body.firstChild.innerHTML;
+  },
+
+  // ── Cambios ───────────────────────────────────────────────────────
+  async nueva() {
+    const ahora = new Date().toISOString();
+    const n = { id: Util.uid(), titulo: '', contenido: '', color: 'violeta', fijada: false, favorita: false, archivada: false, eliminada_at: null, created_at: ahora, updated_at: ahora };
+    this.lista.unshift(n);
+    if (this.carpeta !== 'todas' && this.carpeta !== 'recientes') this.carpeta = 'todas';
+    this.busqueda = '';
+    this.actualId = n.id;
+    this.raiz.classList.add('con-nota');
+    this.pintar();
+    this.raiz.querySelector('.nota-titulo')?.focus();
+    await this.guardar(n.id, { inmediato: true });
+  },
+
+  cambiar(id, cambios, { repintar = true } = {}) {
+    const n = this.nota(id);
+    if (!n) return;
+    Object.assign(n, cambios, { updated_at: new Date().toISOString() });
+    if (repintar) this.pintar();
+    this.guardar(id);
+  },
+
+  guardar(id, { inmediato = false } = {}) {
+    clearTimeout(this.pendientes.get(id));
+    this._estado('Guardando…');
+    const hacer = async () => {
+      this.pendientes.delete(id);
+      const n = this.nota(id);
+      if (!n) return;
+      try {
+        await Datos.guardarNota({ ...n, contenido: this.limpiar(n.contenido) });
+        if (!this.pendientes.size) this._estado('Guardado · ' + this.hace(n.updated_at).toLowerCase());
+      } catch (e) {
+        console.error(e);
+        this._estado('No se pudo guardar');
+        UI.toast(e.message, { tipo: 'error' });
+      }
+    };
+    if (inmediato) return hacer();
+    this.pendientes.set(id, setTimeout(hacer, 700));
+  },
+
+  guardarTodo() {
+    for (const id of [...this.pendientes.keys()]) this.guardar(id, { inmediato: true });
+  },
+
+  async borrarParaSiempre(id) {
+    if (!confirm('¿Borrar esta nota para siempre? No se puede deshacer.')) return;
+    try {
+      await Datos.borrarNota(id);
+      this.lista = this.lista.filter(n => n.id !== id);
+      if (this.actualId === id) this.actualId = null;
+      this.pintar();
+    } catch (e) { UI.toast(e.message, { tipo: 'error' }); }
+  },
+
+  _estado(txt) {
+    this.estadoGuardado = txt;
+    const el = this.raiz?.querySelector('.nota-guardado');
+    if (el) el.textContent = txt;
+  },
+
+  // ── Interfaz ──────────────────────────────────────────────────────
+  _crearRaiz() {
+    const r = document.createElement('div');
+    r.className = 'notas';
+    r.addEventListener('click', e => this._alClic(e));
+    r.addEventListener('input', e => this._alEscribir(e));
+    r.addEventListener('keydown', e => this._alTecla(e));
+    r.addEventListener('paste', e => this._alPegar(e));
+    this.raiz = r;
+  },
+
+  _svg(d, extra = '') { return `<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}><path d="${d}"/></svg>`; },
+
+  pintar() {
+    if (!this.raiz) return;
+    const visibles = this.visibles();
+    if (this.actualId && !this.nota(this.actualId)) this.actualId = null;
+    const n = this.nota(this.actualId);
+    const cuenta = c => this.lista.filter(x => this.enCarpeta(x, c)).length;
+    const carpeta = NOTA_CARPETAS.find(c => c.id === this.carpeta);
+    const enfocado = document.activeElement;
+    const buscando = enfocado?.classList?.contains('notas-buscar');
+
+    this.raiz.innerHTML = `
+      <aside class="notas-carpetas">
+        <button class="btn btn-primario ancho notas-nueva" data-n="nueva">${this._svg('M12 5v14M5 12h14')} Nueva nota</button>
+        <nav class="panel-vidrio notas-menu" aria-label="Carpetas">
+          <div class="notas-etiqueta">Carpetas</div>
+          ${NOTA_CARPETAS.map(c => `<button class="notas-carpeta ${c.id === this.carpeta ? 'on' : ''}" data-n="carpeta" data-c="${c.id}" ${c.id === this.carpeta ? 'aria-current="true"' : ''}>
+            ${this._svg(c.icono)}<span>${c.label}</span><span class="notas-num">${cuenta(c.id)}</span></button>`).join('')}
+        </nav>
+        <p class="panel-vidrio notas-privado">${this._svg('M7 11V7a5 5 0 0 1 10 0v4M5 11h14v10H5z')} Solo tú ves tus notas.</p>
+      </aside>
+
+      <section class="panel-vidrio notas-lista" aria-label="Lista de notas">
+        <label class="notas-busqueda">${this._svg('M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4')}
+          <input type="search" class="notas-buscar" placeholder="Buscar en tus notas" aria-label="Buscar notas" value="${Util.esc(this.busqueda)}"></label>
+        <h3 class="notas-titulo-lista">${carpeta.label} <span>(${visibles.length})</span></h3>
+        <div class="notas-tarjetas">
+          ${this.error ? '' : !this.cargada ? '<p class="muted pad">Cargando notas…</p>' : visibles.length ? visibles.map(x => `
+            <button class="nota-tarjeta nc-${Util.esc(x.color || 'violeta')} ${x.id === this.actualId ? 'on' : ''}" data-n="abrir" data-id="${Util.esc(x.id)}">
+              <span class="nota-tarjeta-cab"><span class="nota-punto"></span><strong>${Util.esc(x.titulo || 'Sin título')}</strong>
+                <span class="nota-marcas">${x.fijada ? this._svg('M9 3h6l-1 6 4 3v2H6v-2l4-3zM12 14v7', 'class="nota-marca-fija"') : ''}${x.favorita ? this._svg('M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z', 'class="nota-marca-fav"') : ''}</span></span>
+              <span class="nota-resumen">${Util.esc(this.texto(x.contenido).slice(0, 160)) || '<em>Nota vacía</em>'}</span>
+              <span class="nota-fecha">${this.hace(x.updated_at)}</span>
+            </button>`).join('') : `<p class="muted pad">${this.busqueda ? 'Ninguna nota coincide con la búsqueda.' : this.carpeta === 'papelera' ? 'La papelera está vacía.' : 'Aún no hay notas aquí.'}</p>`}
+        </div>
+      </section>
+
+      <section class="panel-vidrio notas-editor" aria-label="Editor de notas">
+        ${this.error ? this._errorHtml() : n ? this._editorHtml(n) : `
+          <div class="vacio notas-vacio">${this._svg('M5 4h10l4 4v12H5zM14 4v5h5M8 13h8M8 17h5', 'width="40" height="40"')}
+            <h3>Tu bloc de notas</h3><p>Elige una nota de la lista o crea una nueva.</p>
+            <button class="btn btn-primario" data-n="nueva">＋ Nueva nota</button></div>`}
+      </section>`;
+
+    if (buscando) {
+      const b = this.raiz.querySelector('.notas-buscar');
+      b.focus(); b.setSelectionRange(b.value.length, b.value.length);
+    }
+  },
+
+  _errorHtml() {
+    const falta = this.error?.faltaEsquema;
+    return `<div class="vacio notas-vacio"><h3>${falta ? 'Falta activar las notas en Supabase' : 'No se pudieron cargar las notas'}</h3>
+      <p>${falta ? 'El administrador debe ejecutar una sola vez el archivo <code>supabase/notas.sql</code> en el SQL Editor de Supabase.' : Util.esc(this.error?.message || '')}</p>
+      <button class="btn" data-n="reintentar">Reintentar</button></div>`;
+  },
+
+  _editorHtml(n) {
+    const enPapelera = !!n.eliminada_at;
+    const herr = [
+      ['bold', 'Negrita', 'M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z'],
+      ['italic', 'Cursiva', 'M14 5h-4M14 19h-4M14 5l-4 14'],
+      ['underline', 'Subrayado', 'M7 4v7a5 5 0 0 0 10 0V4M5 20h14'],
+      ['titulo', 'Título', 'M5 5v14M15 5v14M5 12h10M19 10v9'],
+      ['insertUnorderedList', 'Viñetas', 'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01'],
+      ['insertOrderedList', 'Numeración', 'M10 6h10M10 12h10M10 18h10M4 5h1v4M4 15h2l-2 3h2'],
+      ['casillas', 'Casillas', 'M4 4h7v7H4zM6 7.5l1.5 1.5 2.5-3M14 7h6M4 14h7v7H4zM14 17h6'],
+      ['enlace', 'Enlace', 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'],
+    ];
+    const botones = enPapelera ? `
+        <button class="btn btn-sm" data-n="restaurar">Restaurar</button>
+        <button class="btn btn-sm btn-peligro" data-n="borrar">Borrar para siempre</button>` : `
+        <button class="btn-icono ${n.fijada ? 'nota-on-fija' : ''}" data-n="fijar" aria-pressed="${n.fijada}" aria-label="${n.fijada ? 'Desfijar nota' : 'Fijar nota'}" title="${n.fijada ? 'Desfijar' : 'Fijar arriba'}">${this._svg('M9 3h6l-1 6 4 3v2H6v-2l4-3zM12 14v7', n.fijada ? 'fill="currentColor"' : '')}</button>
+        <button class="btn-icono ${n.favorita ? 'nota-on-fav' : ''}" data-n="favorita" aria-pressed="${n.favorita}" aria-label="${n.favorita ? 'Quitar de favoritas' : 'Marcar como favorita'}" title="Favorita">${this._svg('M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z', n.favorita ? 'fill="currentColor"' : '')}</button>
+        <button class="btn-icono" data-n="archivar" aria-label="${n.archivada ? 'Sacar del archivo' : 'Archivar nota'}" title="${n.archivada ? 'Desarchivar' : 'Archivar'}">${this._svg('M3 4h18v4H3zM5 8v12h14V8M10 12h4')}</button>
+        <button class="btn-icono" data-n="papelera" aria-label="Mover a la papelera" title="Mover a la papelera">${this._svg('M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13')}</button>`;
+    return `
+      <header class="nota-cab">
+        <button class="btn-icono nota-volver" data-n="volver" aria-label="Volver a la lista">‹</button>
+        <input class="nota-titulo" value="${Util.esc(n.titulo)}" placeholder="Sin título" aria-label="Título de la nota" maxlength="200" ${enPapelera ? 'readonly' : ''}>
+        ${botones}
+      </header>
+      ${enPapelera ? '<p class="nota-aviso">Esta nota está en la papelera. Restáurala para editarla.</p>' : `
+      <div class="nota-herramientas" role="toolbar" aria-label="Formato">
+        ${herr.map(([cmd, label, d]) => `<button class="btn-icono btn-sm" data-n="formato" data-cmd="${cmd}" aria-label="${label}" title="${label}">${this._svg(d)}</button>`).join('')}
+        <span class="nota-sep"></span>
+        ${NOTA_COLORES.map(c => `<button class="nota-color nc-${c.id} ${n.color === c.id ? 'on' : ''}" data-n="color" data-color="${c.id}" aria-label="Color ${c.label.toLowerCase()}" aria-pressed="${n.color === c.id}" title="${c.label}"></button>`).join('')}
+        <span class="separador"></span>
+        <span class="nota-guardado mini muted" aria-live="polite">${Util.esc(this.estadoGuardado || 'Guardado · ' + this.hace(n.updated_at).toLowerCase())}</span>
+      </div>`}
+      <div class="nota-cuerpo" ${enPapelera ? '' : 'contenteditable="true"'} role="textbox" aria-multiline="true" aria-label="Contenido de la nota" data-placeholder="Escribe aquí…">${this.limpiar(n.contenido)}</div>`;
+  },
+
+  // ── Eventos ───────────────────────────────────────────────────────
+  _alClic(e) {
+    const cuerpo = e.target.closest('.nota-cuerpo');
+    // Casillas: clic a la izquierda del renglón marca o desmarca
+    const li = e.target.closest('.nota-cuerpo ul.casillas > li');
+    if (li && cuerpo?.isContentEditable && e.clientX - li.getBoundingClientRect().left < 26) {
+      e.preventDefault();
+      li.toggleAttribute('data-hecho');
+      if (li.hasAttribute('data-hecho')) li.setAttribute('data-hecho', '1');
+      this._guardarCuerpo();
+      return;
+    }
+    // Enlaces dentro de la nota: Ctrl/Cmd + clic los abre
+    const a = e.target.closest('.nota-cuerpo a[href]');
+    if (a && (e.ctrlKey || e.metaKey)) { e.preventDefault(); window.open(a.href, '_blank', 'noopener'); return; }
+
+    const b = e.target.closest('[data-n]');
+    if (!b) return;
+    e.preventDefault();
+    const n = this.nota(this.actualId);
+    switch (b.dataset.n) {
+      case 'nueva': this.nueva(); break;
+      case 'carpeta': this.carpeta = b.dataset.c; this.pintar(); break;
+      case 'abrir':
+        this.guardarTodo();
+        this.actualId = b.dataset.id; this.estadoGuardado = '';
+        this.raiz.classList.add('con-nota');
+        this.pintar();
+        break;
+      case 'volver': this.raiz.classList.remove('con-nota'); break;
+      case 'reintentar': this.cargada = false; this.pintar(); this.cargar(); break;
+      case 'fijar': n && this.cambiar(n.id, { fijada: !n.fijada }); break;
+      case 'favorita': n && this.cambiar(n.id, { favorita: !n.favorita }); break;
+      case 'archivar':
+        if (!n) break;
+        this.cambiar(n.id, { archivada: !n.archivada });
+        UI.toast(n.archivada ? 'Nota archivada' : 'Nota sacada del archivo');
+        break;
+      case 'papelera':
+        if (!n) break;
+        this.cambiar(n.id, { eliminada_at: new Date().toISOString() }, { repintar: false });
+        this.actualId = null; this.raiz.classList.remove('con-nota'); this.pintar();
+        UI.toast('Nota movida a la papelera', { deshacer: () => this.cambiar(n.id, { eliminada_at: null }) });
+        break;
+      case 'restaurar': n && this.cambiar(n.id, { eliminada_at: null }); break;
+      case 'borrar': n && this.borrarParaSiempre(n.id); break;
+      case 'color': n && this.cambiar(n.id, { color: b.dataset.color }); break;
+      case 'formato': this._formato(b.dataset.cmd); break;
+    }
+  },
+
+  _formato(cmd) {
+    const cuerpo = this.raiz.querySelector('.nota-cuerpo');
+    if (!cuerpo) return;
+    cuerpo.focus();
+    if (cmd === 'titulo') {
+      const actual = document.queryCommandValue('formatBlock').toLowerCase();
+      document.execCommand('formatBlock', false, actual === 'h2' ? 'div' : 'h2');
+    } else if (cmd === 'casillas') {
+      const sel = getSelection();
+      let ul = sel.anchorNode && (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement)?.closest('ul');
+      if (!ul || !cuerpo.contains(ul)) {
+        document.execCommand('insertUnorderedList');
+        ul = (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement)?.closest('ul');
+      }
+      if (ul && cuerpo.contains(ul)) ul.classList.toggle('casillas');
+    } else if (cmd === 'enlace') {
+      const url = prompt('Dirección del enlace (https://…)');
+      if (url && /^(https?:\/\/|mailto:)/i.test(url.trim())) document.execCommand('createLink', false, url.trim());
+      else if (url) UI.toast('El enlace debe empezar por https:// o mailto:', { tipo: 'error' });
+    } else {
+      document.execCommand(cmd);
+    }
+    this._guardarCuerpo();
+  },
+
+  _guardarCuerpo() {
+    const n = this.nota(this.actualId);
+    const cuerpo = this.raiz.querySelector('.nota-cuerpo');
+    if (!n || !cuerpo) return;
+    this.cambiar(n.id, { contenido: cuerpo.innerHTML }, { repintar: false });
+    this._refrescarTarjeta(n);
+  },
+
+  _alEscribir(e) {
+    if (e.target.classList.contains('notas-buscar')) { this.busqueda = e.target.value; this.pintar(); return; }
+    const n = this.nota(this.actualId);
+    if (!n) return;
+    if (e.target.classList.contains('nota-titulo')) {
+      this.cambiar(n.id, { titulo: e.target.value }, { repintar: false });
+      this._refrescarTarjeta(n);
+    } else if (e.target.classList.contains('nota-cuerpo')) {
+      this._guardarCuerpo();
+    }
+  },
+
+  _alTecla(e) {
+    if (e.target.classList.contains('nota-titulo') && e.key === 'Enter') { e.preventDefault(); this.raiz.querySelector('.nota-cuerpo')?.focus(); }
+  },
+
+  // Al pegar se conserva solo el texto (sin estilos de otras páginas)
+  _alPegar(e) {
+    if (!e.target.closest('.nota-cuerpo')) return;
+    e.preventDefault();
+    document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
+  },
+
+  // Actualiza la tarjeta de la nota en la lista sin repintar el editor
+  _refrescarTarjeta(n) {
+    const t = this.raiz.querySelector(`.nota-tarjeta[data-id="${CSS.escape(n.id)}"]`);
+    if (!t) return;
+    t.querySelector('strong').textContent = n.titulo || 'Sin título';
+    t.querySelector('.nota-resumen').textContent = this.texto(n.contenido).slice(0, 160) || 'Nota vacía';
+    t.querySelector('.nota-fecha').textContent = this.hace(n.updated_at);
+  },
+};
+
+addEventListener('beforeunload', () => Notas.guardarTodo());
+
+Vistas.notas = {
+  titulo: 'Notas',
+  icono: '📝',
+  orden: 7,
+  visible: () => true,
+  persistente: true,
+  nodo: () => Notas.raiz,
+  render: () => '',
+  montar: main => Notas.montar(main),
+};
+
+</script>
+<script>
 /* ── js/tarea-modal.js ── */
 // ═══════════════════════════════════════════════════════════════════
 // VENTANA DE TAREA — crear, editar, lista de verificación y seguimiento
@@ -3361,6 +3903,8 @@ const App = {
     document.body.dataset.vista = this.estado.vista;
     if (this.estado.errorCarga) {
       main.innerHTML = Vistas.inicio.errorCarga(this.estado.errorCarga);
+    } else if (v.persistente && v.nodo?.() && main.firstElementChild === v.nodo()) {
+      // La vista se actualiza sola: repintarla borraría lo que se está escribiendo.
     } else {
       main.innerHTML = v.render();
       v.montar?.(main);
@@ -3426,6 +3970,7 @@ const App = {
 
   async salir() {
     Avisos.detener();
+    Notas.reiniciar();
     await Datos.logout();
     this.estado.perfil = null;
     this.estado.tareas = [];
