@@ -168,8 +168,10 @@ textarea { width: 100%; resize: vertical; }
 
 /* ── Login ────────────────────────────────────────────────────────── */
 .login { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; overflow: hidden;
-  background: radial-gradient(1000px 460px at 50% 115%, rgba(255,77,109,.26), transparent 65%), radial-gradient(900px 520px at 100% 0%, rgba(109,40,217,.16), transparent 55%), var(--bg); }
-#login-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  background: radial-gradient(1000px 460px at 50% 115%, rgba(255,77,109,.26), transparent 65%), radial-gradient(900px 520px at 100% 0%, rgba(109,40,217,.16), transparent 55%); }
+/* Fondo animado (ola de partículas) detrás de todo: inicio de sesión y aplicación */
+#fondo-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.app { position: relative; z-index: 1; }
 .login-caja { position: relative; width: 100%; max-width: 380px; padding: 36px 30px; border-radius: var(--r-lg); text-align: center;
   background: color-mix(in srgb, var(--bg2) 82%, transparent); backdrop-filter: blur(10px); border: 1px solid var(--borde); box-shadow: var(--sombra-3); }
 .login-logo { justify-content: center; font-size: 26px; margin: 0 0 6px; }
@@ -545,10 +547,10 @@ input[type="range"] { accent-color: var(--acento); padding: 0; border: none; box
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 </head>
 <body>
+<canvas id="fondo-canvas" aria-hidden="true"></canvas>
 
 <!-- ═════════════ INICIO DE SESIÓN ═════════════ -->
 <div id="login" class="login" hidden>
-  <canvas id="login-canvas" aria-hidden="true"></canvas>
   <div class="login-caja">
     <div class="login-logo marca" aria-hidden="true">planner<span class="marca-punto">●</span></div>
     <h1>Planner del Equipo</h1>
@@ -643,6 +645,7 @@ const CONFIG = {
   MINUTOS_AVISOS: 30,      // cada cuánto se revisan los vencimientos para los avisos de escritorio
   SEMANAS_TENDENCIA: 12,   // semanas en la gráfica de tendencia
   LIMITE_LISTA: 300,       // filas visibles en la vista Lista antes de "Ver más"
+  FONDO_EN_APP: 0.6,       // intensidad de la ola de partículas dentro de la aplicación (0 = sin fondo, 1 = como en el inicio)
 };
 
 const ESTADOS = [
@@ -2908,12 +2911,12 @@ const Login = {
     this.el('login').hidden = false;
     this.el('demo-tip').hidden = Datos.modo !== 'demo';
     this.formulario('entrar');
-    Escena3D.iniciar();
+    Escena3D.iniciar(1);
   },
 
   ocultar() {
     this.el('login').hidden = true;
-    Escena3D.detener();
+    Escena3D.iniciar(CONFIG.FONDO_EN_APP);
   },
 
   formulario(cual) {
@@ -2959,9 +2962,10 @@ const Login = {
   },
 };
 
-// Fondo del inicio de sesión: una malla de puntos en perspectiva que ondula
-// como el mar (violeta → coral → naranja) y estrellas que titilan arriba.
-// Canvas 2D: no necesita librerías.
+// Fondo animado: una malla de puntos en perspectiva que ondula como el mar
+// (violeta → coral → naranja) y estrellas que titilan arriba. Está detrás de
+// todo: a plena intensidad en el inicio de sesión y más tenue dentro de la
+// aplicación (CONFIG.FONDO_EN_APP). Canvas 2D: no necesita librerías.
 const Escena3D = {
   s: null,
 
@@ -2973,9 +2977,12 @@ const Escena3D = {
     this.s = null;
   },
 
-  iniciar() {
-    this.detener();
-    const canvas = document.getElementById('login-canvas');
+  // intensidad: 0 = apagado, 1 = como en el inicio de sesión. Si ya está
+  // corriendo, solo cambia la intensidad (con transición suave).
+  iniciar(intensidad = 1) {
+    if (intensidad <= 0) { this.detener(); document.getElementById('fondo-canvas')?.getContext('2d')?.clearRect(0, 0, innerWidth, innerHeight); return; }
+    if (this.s) { this.s.objetivo = intensidad; if (this.s.quieto) { this.s.k = intensidad; this.s.dibujar(0); } return; }
+    const canvas = document.getElementById('fondo-canvas');
     const ctx = canvas?.getContext('2d');
     if (!ctx) return;
     const quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2998,11 +3005,12 @@ const Escena3D = {
 
     const dibujar = t => {
       ctx.clearRect(0, 0, w, h);
+      const k = s.k;
       const oscuro = document.documentElement.dataset.theme === 'dark';
       cx += (mx - cx) * 0.04; cy += (my - cy) * 0.04;
 
       for (const e of estrellas) {
-        ctx.globalAlpha = (oscuro ? 0.55 : 0.35) * (0.3 + 0.7 * Math.abs(Math.sin(e.f + t * e.v)));
+        ctx.globalAlpha = k * (oscuro ? 0.55 : 0.35) * (0.3 + 0.7 * Math.abs(Math.sin(e.f + t * e.v)));
         ctx.fillStyle = oscuro ? '#fda4af' : '#e11d48';
         ctx.beginPath(); ctx.arc(e.x * w - cx * 20, e.y * h - cy * 12, e.r, 0, 6.283); ctx.fill();
       }
@@ -3025,7 +3033,7 @@ const Escena3D = {
           const y = Math.sin(xw * 0.9 + t * 1.2) * Math.cos(z * 1.4 + t * 0.8) * 0.6 + Math.sin(xw * 0.4 - z * 0.9 + t * 0.6) * 0.4;
           const py = horizonte + piso * prof - y * amplitud * (0.35 + prof * 0.65);
           const r = (0.9 + prof * 2.6) * (1 + y * 0.3);
-          ctx.globalAlpha = Math.max(0.1, Math.min(1, (0.4 + prof * 0.6) * (0.8 + y * 0.3)));
+          ctx.globalAlpha = k * Math.max(0.1, Math.min(1, (0.4 + prof * 0.6) * (0.8 + y * 0.3)));
           ctx.fillStyle = `rgb(${colores[Math.max(0, Math.min(40, Math.round((px / w) * 40)))]})`;
           ctx.beginPath(); ctx.arc(px, py, Math.max(r, 0.4), 0, 6.283); ctx.fill();
         }
@@ -3034,7 +3042,7 @@ const Escena3D = {
       ctx.globalAlpha = 1;
     };
 
-    const s = { onMouse, onResize, frame: 0 };
+    const s = { onMouse, onResize, frame: 0, k: intensidad, objetivo: intensidad, quieto, dibujar, n: 0 };
     this.s = s;
     addEventListener('resize', onResize);
     onResize();
@@ -3043,6 +3051,9 @@ const Escena3D = {
     const t0 = performance.now();
     const animar = ahora => {
       s.frame = requestAnimationFrame(animar);
+      s.k += (s.objetivo - s.k) * 0.05;
+      // Dentro de la aplicación basta con 30 cuadros por segundo: ahorra batería.
+      if (s.objetivo < 1 && Math.abs(s.objetivo - s.k) < 0.01 && (s.n++ & 1)) return;
       dibujar((ahora - t0) / 1000);
     };
     s.frame = requestAnimationFrame(animar);
