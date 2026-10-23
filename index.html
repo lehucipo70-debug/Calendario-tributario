@@ -1592,8 +1592,31 @@ const Avisos = {
     try { localStorage.setItem(this.CLAVE_VISTOS, JSON.stringify(vistos)); } catch { /* sin almacenamiento */ }
   },
 
-  // Cambio en tiempo real hecho por otra persona: ¿me asignaron una tarea?
+  // Cambio en tiempo real hecho por otra persona.
   alCambiarRemoto(evento, nueva, previa) {
+    this._avisarAsignacion(evento, nueva, previa);
+    this._avisarActividad(evento, nueva, previa);
+  },
+
+  // Administradores (y quien creó la tarea) se enteran cuando un colaborador crea una tarea o le
+  // cambia el estado. Los cambios propios no avisan: la copia local ya trae el estado nuevo
+  // antes de que llegue el eco en tiempo real.
+  _avisarActividad(evento, nueva, previa) {
+    if (!nueva || !Permisos.uid || nueva.asignado_a === Permisos.uid) return;
+    if (!Permisos.esAdmin() && nueva.creado_por !== Permisos.uid) return;
+    const quien = App.colaboradorDe(nueva)?.nombre || 'Un colaborador';
+    const detalle = `${nueva.titulo}${nueva.empresa ? ' · ' + nueva.empresa : ''}`;
+    const estado = id => ESTADOS.find(e => e.id === id)?.label || id;
+    if (evento === 'INSERT' && !previa && nueva.creado_por !== Permisos.uid) {
+      this.mostrar(`🆕 ${quien} tiene una tarea nueva`, detalle, { tag: 'nueva-' + nueva.id, tareaId: nueva.id });
+    } else if (evento === 'UPDATE' && previa && previa.estado !== nueva.estado) {
+      const titulo = nueva.estado === 'completada' ? `✅ ${quien} completó una tarea` : `🔄 ${quien} actualizó una tarea`;
+      this.mostrar(titulo, `${detalle}\n${estado(previa.estado)} → ${estado(nueva.estado)}`, { tag: 'estado-' + nueva.id, tareaId: nueva.id });
+    }
+  },
+
+  // ¿Me asignaron una tarea?
+  _avisarAsignacion(evento, nueva, previa) {
     if (!nueva || !Permisos.uid || nueva.asignado_a !== Permisos.uid) return;
     if (previa?.asignado_a === Permisos.uid) return;          // ya era mía (o el cambio lo hice yo)
     if (evento === 'INSERT' && nueva.creado_por === Permisos.uid) return;
