@@ -40,13 +40,12 @@
   --r: 20px; --r-lg: 28px;
   --alto-barra: 68px;
   /* Vidrio de las tablas (tema claro): esmerilado blanco con color detrás */
-  --vidrio-borde: rgba(255,255,255,.95); --vidrio-anim: none;
-  --vidrio-sombra: 0 0 0 1px rgba(9,9,11,.07), 0 24px 50px -20px rgba(9,9,11,.22), 0 8px 20px rgba(9,9,11,.05);
-  --vidrio-fondo: rgba(255,255,255,.4); --vidrio-filo: #ffffff; --vidrio-reflejo: rgba(255,255,255,.6);
-  --vidrio-destello: linear-gradient(135deg, rgba(255,255,255,.75), rgba(255,255,255,.18) 38%, rgba(255,255,255,0) 62%);
-  --vidrio-luz-a: rgba(165,180,252,.45); --vidrio-luz-b: rgba(186,230,253,.5);
-  --vidrio-cab: rgba(244,244,245,.6); --vidrio-linea-cab: rgba(9,9,11,.07); --vidrio-texto-cab: #27272a;
-  --vidrio-linea: rgba(9,9,11,.06); --vidrio-hover: rgba(255,255,255,.9); --vidrio-brillo-barra: none;
+  --vidrio-borde: rgba(255,255,255,.9); --vidrio-anim: none;
+  --vidrio-sombra: 0 0 0 1px rgba(9,9,11,.06), 0 24px 60px -24px rgba(9,9,11,.25);
+  --vidrio-fondo: rgba(255,255,255,.35); --vidrio-filo: #ffffff; --vidrio-reflejo: rgba(255,255,255,.5);
+  --vidrio-luz-a: rgba(167,139,250,.5); --vidrio-luz-b: rgba(103,232,249,.42); --vidrio-luz-c: rgba(244,114,182,.32);
+  --vidrio-texto-cab: #3f3f46; --vidrio-fila: rgba(255,255,255,.55); --vidrio-fila-borde: rgba(255,255,255,.9);
+  --vidrio-hover: rgba(255,255,255,.85); --vidrio-brillo-barra: none;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -64,14 +63,13 @@
     --nivel-excelente: #199e70; --nivel-bueno: #3987e5; --nivel-regular: #c98500; --nivel-bajo: #e66767; --nivel-na: #3f3f46;
     --p-urgente: #fb7185; --p-alta: #fb923c; --p-media: #a5b4fc; --p-baja: #8e8e98;
     --sombra: none; --sombra-2: 0 12px 30px rgba(0,0,0,.45); --sombra-3: 0 24px 60px rgba(0,0,0,.65);
-    /* Vidrio de las tablas (tema oscuro): borde de luz en degradado */
-    --vidrio-borde: linear-gradient(120deg, rgba(255,77,109,.85), rgba(255,255,255,.10) 30%, rgba(255,255,255,.04) 55%, rgba(109,40,217,.8) 80%, rgba(255,138,61,.8));
-    --vidrio-anim: flujo 9s ease infinite;
-    --vidrio-sombra: 0 30px 80px rgba(0,0,0,.5);
-    --vidrio-fondo: rgba(20,20,26,.42); --vidrio-destello: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.04) 35%, rgba(255,255,255,0) 60%); --vidrio-luz-a: rgba(148,163,184,.22); --vidrio-luz-b: rgba(129,140,248,.18); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.07);
-    --vidrio-cab: transparent; --vidrio-linea-cab: rgba(255,255,255,.10); --vidrio-texto-cab: #e4e4e7;
-    --vidrio-linea: rgba(255,255,255,.06); --vidrio-hover: linear-gradient(90deg, rgba(255,77,109,.10), rgba(255,255,255,.03) 60%);
-    --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.6);
+    /* Vidrio de las tablas (tema oscuro): estilo Aurora Glass */
+    --vidrio-borde: rgba(255,255,255,.10); --vidrio-anim: none;
+    --vidrio-sombra: 0 24px 60px rgba(0,0,0,.35);
+    --vidrio-fondo: rgba(255,255,255,.05); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.05);
+    --vidrio-luz-a: rgba(124,58,237,.55); --vidrio-luz-b: rgba(6,182,212,.45); --vidrio-luz-c: rgba(236,72,153,.32);
+    --vidrio-texto-cab: #c7cbe8; --vidrio-fila: rgba(255,255,255,.04); --vidrio-fila-borde: rgba(255,255,255,.07);
+    --vidrio-hover: rgba(255,255,255,.09); --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.5);
   }
 }
 :root[data-theme="dark"] {
@@ -89,14 +87,13 @@
   --nivel-excelente: #199e70; --nivel-bueno: #3987e5; --nivel-regular: #c98500; --nivel-bajo: #e66767; --nivel-na: #3f3f46;
   --p-urgente: #fb7185; --p-alta: #fb923c; --p-media: #a5b4fc; --p-baja: #8e8e98;
   --sombra: none; --sombra-2: 0 12px 30px rgba(0,0,0,.45); --sombra-3: 0 24px 60px rgba(0,0,0,.65);
-  /* Vidrio de las tablas (tema oscuro): borde de luz en degradado */
-  --vidrio-borde: linear-gradient(120deg, rgba(255,77,109,.85), rgba(255,255,255,.10) 30%, rgba(255,255,255,.04) 55%, rgba(109,40,217,.8) 80%, rgba(255,138,61,.8));
-  --vidrio-anim: flujo 9s ease infinite;
-  --vidrio-sombra: 0 30px 80px rgba(0,0,0,.5);
-  --vidrio-fondo: rgba(20,20,26,.42); --vidrio-destello: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.04) 35%, rgba(255,255,255,0) 60%); --vidrio-luz-a: rgba(148,163,184,.22); --vidrio-luz-b: rgba(129,140,248,.18); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.07);
-  --vidrio-cab: transparent; --vidrio-linea-cab: rgba(255,255,255,.10); --vidrio-texto-cab: #e4e4e7;
-  --vidrio-linea: rgba(255,255,255,.06); --vidrio-hover: linear-gradient(90deg, rgba(255,77,109,.10), rgba(255,255,255,.03) 60%);
-  --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.6);
+  /* Vidrio de las tablas (tema oscuro): estilo Aurora Glass */
+  --vidrio-borde: rgba(255,255,255,.10); --vidrio-anim: none;
+  --vidrio-sombra: 0 24px 60px rgba(0,0,0,.35);
+  --vidrio-fondo: rgba(255,255,255,.05); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.05);
+  --vidrio-luz-a: rgba(124,58,237,.55); --vidrio-luz-b: rgba(6,182,212,.45); --vidrio-luz-c: rgba(236,72,153,.32);
+  --vidrio-texto-cab: #c7cbe8; --vidrio-fila: rgba(255,255,255,.04); --vidrio-fila-borde: rgba(255,255,255,.07);
+  --vidrio-hover: rgba(255,255,255,.09); --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.5);
 }
 
 /* ── Base ─────────────────────────────────────────────────────────── */
@@ -120,6 +117,7 @@ kbd { font-family: inherit; font-size: 11px; border: 1px solid var(--borde); bor
 @keyframes brillo { 0% { transform: translateX(-120%); } 60%, 100% { transform: translateX(260%); } }
 @keyframes girar { to { transform: rotate(360deg); } }
 @keyframes trazo { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes deriva { from { transform: translate(-4%, -3%); } to { transform: translate(4%, 3%); } }
 @keyframes flujo { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
@@ -398,24 +396,31 @@ body[data-vista="inicio"] .titulo-vista { position: absolute; width: 1px; height
 .fila-hecha .enlace-tarea { text-decoration: line-through; color: var(--text2); }
 .fila-vencida td:first-child { box-shadow: inset 3px 0 0 var(--rojo); }
 
-/* ── Tablas con efecto vidrio (los valores cambian por tema en los tokens --vidrio-*) ── */
+/* ── Tablas con efecto vidrio, estilo Aurora Glass (los valores cambian por tema en los tokens --vidrio-*) ── */
 .vidrio { position: relative; isolation: isolate; padding: 1px; border-radius: calc(var(--r) + 5px); box-shadow: var(--vidrio-sombra); }
-/* El degradado va solo en el contorno de 1px (la máscara recorta el centro); si cubriera todo el fondo, se transparentaría a través del vidrio */
+/* Borde fino de 1px (la máscara recorta el centro para que no tiña el vidrio) */
 .vidrio::after { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; border-radius: inherit; padding: 1px;
   background: var(--vidrio-borde); background-size: 220% 220%; animation: var(--vidrio-anim);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
-.vidrio::before { content: ''; position: absolute; inset: -24px -12px; z-index: -1; pointer-events: none; filter: blur(30px);
-  background: radial-gradient(560px 260px at 25% 90px, var(--vidrio-luz-a), transparent 70%), radial-gradient(520px 280px at 78% 220px, var(--vidrio-luz-b), transparent 70%); }
-.vidrio-interior { position: relative; border-radius: calc(var(--r) + 4px); overflow: hidden; background: var(--vidrio-destello), var(--vidrio-fondo);
-  backdrop-filter: blur(5px) saturate(160%); -webkit-backdrop-filter: blur(5px) saturate(160%); box-shadow: inset 0 1px 0 var(--vidrio-filo); }
+/* Luces de aurora (violeta, cian y rosa) que se mueven despacio detrás del vidrio */
+.vidrio::before { content: ''; position: absolute; inset: -40px 0; z-index: -1; pointer-events: none; filter: blur(60px);
+  background: radial-gradient(600px 420px at 12% 60px, var(--vidrio-luz-a), transparent 70%), radial-gradient(560px 420px at 88% 260px, var(--vidrio-luz-b), transparent 70%), radial-gradient(480px 360px at 50% 560px, var(--vidrio-luz-c), transparent 70%);
+  animation: deriva 24s ease-in-out infinite alternate; }
+.vidrio-interior { position: relative; border-radius: calc(var(--r) + 4px); overflow: hidden; background: var(--vidrio-fondo);
+  backdrop-filter: blur(24px) saturate(150%); -webkit-backdrop-filter: blur(24px) saturate(150%); box-shadow: inset 0 1px 0 var(--vidrio-filo); }
 .vidrio-interior::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 120px; pointer-events: none; background: linear-gradient(180deg, var(--vidrio-reflejo), transparent); }
 .vidrio-interior > * { position: relative; }
-.vidrio-interior > .panel-cab { padding: 18px 20px 4px; }
-.vidrio .tabla th { background: var(--vidrio-cab); border-bottom-color: var(--vidrio-linea-cab); color: var(--vidrio-texto-cab); padding: 13px 14px; }
-.vidrio .tabla td { border-bottom-color: var(--vidrio-linea); padding: 10px 14px; transition: background .2s; }
+.vidrio-interior > .panel-cab { padding: 18px 20px 0; }
+.vidrio .tabla-scroll { padding: 2px 14px 12px; }
+/* Cada fila es una pieza de cristal separada */
+.vidrio .tabla { border-collapse: separate; border-spacing: 0 8px; }
+.vidrio .tabla th { background: transparent; border-bottom: 0; color: var(--vidrio-texto-cab); padding: 12px 14px 0; }
+.vidrio .tabla td { background: var(--vidrio-fila); border-top: 1px solid var(--vidrio-fila-borde); border-bottom: 1px solid var(--vidrio-fila-borde); padding: 11px 14px; transition: background .2s; }
+.vidrio .tabla tr:last-child td { border-bottom: 1px solid var(--vidrio-fila-borde); }
+.vidrio .tabla td:first-child { border-left: 1px solid var(--vidrio-fila-borde); border-radius: 16px 0 0 16px; }
+.vidrio .tabla td:last-child { border-right: 1px solid var(--vidrio-fila-borde); border-radius: 0 16px 16px 0; }
 .vidrio .tabla tbody tr:hover td { background: var(--vidrio-hover); }
-.vidrio .tabla tbody tr:not(.fila-vencida):hover td:first-child { box-shadow: inset 3px 0 0 var(--acento); }
 .vidrio .barra-progreso { background: color-mix(in srgb, var(--text) 10%, transparent); }
 .vidrio .barra-progreso span { box-shadow: var(--vidrio-brillo-barra); }
 .celda-colab { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
