@@ -39,6 +39,13 @@
   --sombra: 0 1px 2px rgba(9,9,11,.04); --sombra-2: 0 12px 30px rgba(9,9,11,.08); --sombra-3: 0 24px 60px rgba(9,9,11,.18);
   --r: 20px; --r-lg: 28px;
   --alto-barra: 68px;
+  /* Vidrio de las tablas (tema claro): esmerilado blanco con color detrás */
+  --vidrio-borde: rgba(255,255,255,.95); --vidrio-anim: none;
+  --vidrio-sombra: 0 0 0 1px rgba(9,9,11,.06), 0 30px 70px -20px rgba(76,29,149,.35), 0 10px 24px rgba(9,9,11,.06);
+  --vidrio-luz-1: rgba(251,113,133,.6); --vidrio-luz-2: rgba(167,139,250,.6); --vidrio-luz-3: rgba(251,146,60,.5);
+  --vidrio-fondo: rgba(255,255,255,.4); --vidrio-filo: #ffffff; --vidrio-reflejo: rgba(255,255,255,.35);
+  --vidrio-cab: rgba(255,255,255,.5); --vidrio-linea-cab: rgba(255,255,255,.8); --vidrio-texto-cab: #27272a;
+  --vidrio-linea: rgba(255,255,255,.65); --vidrio-hover: rgba(255,255,255,.55); --vidrio-brillo-barra: none;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -56,6 +63,15 @@
     --nivel-excelente: #199e70; --nivel-bueno: #3987e5; --nivel-regular: #c98500; --nivel-bajo: #e66767; --nivel-na: #3f3f46;
     --p-urgente: #fb7185; --p-alta: #fb923c; --p-media: #a5b4fc; --p-baja: #8e8e98;
     --sombra: none; --sombra-2: 0 12px 30px rgba(0,0,0,.45); --sombra-3: 0 24px 60px rgba(0,0,0,.65);
+    /* Vidrio de las tablas (tema oscuro): borde de luz en degradado */
+    --vidrio-borde: linear-gradient(120deg, rgba(255,77,109,.85), rgba(255,255,255,.10) 30%, rgba(255,255,255,.04) 55%, rgba(109,40,217,.8) 80%, rgba(255,138,61,.8));
+    --vidrio-anim: flujo 9s ease infinite;
+    --vidrio-sombra: 0 30px 80px rgba(0,0,0,.5), 0 0 40px rgba(255,77,109,.10);
+    --vidrio-luz-1: rgba(255,77,109,.2); --vidrio-luz-2: rgba(109,40,217,.3); --vidrio-luz-3: rgba(255,138,61,.16);
+    --vidrio-fondo: rgba(16,16,20,.76); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.07);
+    --vidrio-cab: transparent; --vidrio-linea-cab: rgba(255,255,255,.10); --vidrio-texto-cab: #e4e4e7;
+    --vidrio-linea: rgba(255,255,255,.06); --vidrio-hover: linear-gradient(90deg, rgba(255,77,109,.10), rgba(255,255,255,.03) 60%);
+    --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.6);
   }
 }
 :root[data-theme="dark"] {
@@ -73,6 +89,15 @@
   --nivel-excelente: #199e70; --nivel-bueno: #3987e5; --nivel-regular: #c98500; --nivel-bajo: #e66767; --nivel-na: #3f3f46;
   --p-urgente: #fb7185; --p-alta: #fb923c; --p-media: #a5b4fc; --p-baja: #8e8e98;
   --sombra: none; --sombra-2: 0 12px 30px rgba(0,0,0,.45); --sombra-3: 0 24px 60px rgba(0,0,0,.65);
+  /* Vidrio de las tablas (tema oscuro): borde de luz en degradado */
+  --vidrio-borde: linear-gradient(120deg, rgba(255,77,109,.85), rgba(255,255,255,.10) 30%, rgba(255,255,255,.04) 55%, rgba(109,40,217,.8) 80%, rgba(255,138,61,.8));
+  --vidrio-anim: flujo 9s ease infinite;
+  --vidrio-sombra: 0 30px 80px rgba(0,0,0,.5), 0 0 40px rgba(255,77,109,.10);
+  --vidrio-luz-1: rgba(255,77,109,.2); --vidrio-luz-2: rgba(109,40,217,.3); --vidrio-luz-3: rgba(255,138,61,.16);
+  --vidrio-fondo: rgba(16,16,20,.76); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.07);
+  --vidrio-cab: transparent; --vidrio-linea-cab: rgba(255,255,255,.10); --vidrio-texto-cab: #e4e4e7;
+  --vidrio-linea: rgba(255,255,255,.06); --vidrio-hover: linear-gradient(90deg, rgba(255,77,109,.10), rgba(255,255,255,.03) 60%);
+  --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.6);
 }
 
 /* ── Base ─────────────────────────────────────────────────────────── */
@@ -96,6 +121,8 @@ kbd { font-family: inherit; font-size: 11px; border: 1px solid var(--borde); bor
 @keyframes brillo { 0% { transform: translateX(-120%); } 60%, 100% { transform: translateX(260%); } }
 @keyframes girar { to { transform: rotate(360deg); } }
 @keyframes trazo { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes flujo { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+@keyframes deriva { from { transform: translate(-3%, -2%); } to { transform: translate(3%, 2%); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
 .muted { color: var(--text2); }
@@ -365,11 +392,32 @@ body[data-vista="inicio"] .titulo-vista { position: absolute; width: 1px; height
 .tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
 .th-orden { border: none; background: none; font: inherit; text-transform: inherit; letter-spacing: inherit; color: inherit; }
 .th-orden.on { color: var(--acento-texto); }
-.td-titulo { display: flex; align-items: center; gap: 8px; min-width: 260px; }
+.td-titulo { min-width: 260px; }
+/* La celda sigue siendo de tabla (con display:flex sus líneas no coincidían con las demás columnas) */
+.td-titulo-in { display: flex; align-items: center; gap: 8px; }
 .enlace-tarea { border: none; background: none; text-align: left; font-weight: 600; color: var(--text); }
 .enlace-tarea:hover { color: var(--acento-texto); text-decoration: underline; }
 .fila-hecha .enlace-tarea { text-decoration: line-through; color: var(--text2); }
 .fila-vencida td:first-child { box-shadow: inset 3px 0 0 var(--rojo); }
+
+/* ── Tablas con efecto vidrio (los valores cambian por tema en los tokens --vidrio-*) ── */
+.vidrio { position: relative; isolation: isolate; padding: 1px; border-radius: calc(var(--r) + 5px);
+  background: var(--vidrio-borde); background-size: 220% 220%; animation: var(--vidrio-anim); box-shadow: var(--vidrio-sombra); }
+.vidrio::before { content: ''; position: absolute; inset: -30px -10px; z-index: -1; pointer-events: none; filter: blur(40px);
+  /* Tamaño fijo y cerca del encabezado: en tablas largas no tiñe todo el bloque */
+  background: radial-gradient(520px 300px at 22% 160px, var(--vidrio-luz-1), transparent 70%), radial-gradient(500px 320px at 78% 300px, var(--vidrio-luz-2), transparent 70%), radial-gradient(420px 220px at 50% 0, var(--vidrio-luz-3), transparent 70%);
+  animation: deriva 26s ease-in-out infinite alternate; }
+.vidrio-interior { position: relative; border-radius: calc(var(--r) + 4px); overflow: hidden; background: var(--vidrio-fondo);
+  backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%); box-shadow: inset 0 1px 0 var(--vidrio-filo); }
+.vidrio-interior::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 120px; pointer-events: none; background: linear-gradient(180deg, var(--vidrio-reflejo), transparent); }
+.vidrio-interior > * { position: relative; }
+.vidrio-interior > .panel-cab { padding: 18px 20px 4px; }
+.vidrio .tabla th { background: var(--vidrio-cab); border-bottom-color: var(--vidrio-linea-cab); color: var(--vidrio-texto-cab); padding: 13px 14px; }
+.vidrio .tabla td { border-bottom-color: var(--vidrio-linea); padding: 10px 14px; transition: background .2s; }
+.vidrio .tabla tbody tr:hover td { background: var(--vidrio-hover); }
+.vidrio .tabla tbody tr:not(.fila-vencida):hover td:first-child { box-shadow: inset 3px 0 0 var(--acento); }
+.vidrio .barra-progreso { background: color-mix(in srgb, var(--text) 10%, transparent); }
+.vidrio .barra-progreso span { box-shadow: var(--vidrio-brillo-barra); }
 .celda-colab { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
 .sel-estado { padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; border: none; }
 .barra-progreso { width: 90px; height: 6px; background: var(--bg3); border-radius: 6px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 6px; }
@@ -1964,11 +2012,11 @@ Vistas.lista = {
       const puede = Permisos.editarTarea(t);
       const c = App.colaboradorDe(t);
       return `<tr class="fila ${ef === 'vencida' ? 'fila-vencida' : ''} ${t.estado === 'completada' ? 'fila-hecha' : ''}">
-        <td class="td-titulo">
+        <td class="td-titulo"><div class="td-titulo-in">
           ${puede ? `<button class="check ${t.estado === 'completada' ? 'on' : ''}" data-accion="completar" data-id="${t.id}" aria-label="Completar">✓</button>` : ''}
           <button class="enlace-tarea" data-accion="abrir-tarea" data-id="${t.id}">${Util.esc(t.titulo)}</button>
           ${t.categoria ? `<span class="chip chip-suave">${Util.esc(t.categoria)}</span>` : ''}
-        </td>
+        </div></td>
         <td><span class="celda-colab">${UI.avatar(t, 22)} ${Util.esc(c?.nombre || 'Sin asignar')}</span></td>
         <td class="muted">${Util.esc(t.empresa || '—')}</td>
         <td>${UI.prioridad(t.prioridad)}</td>
@@ -1988,11 +2036,11 @@ Vistas.lista = {
         <span class="separador"></span>
         <button class="btn btn-sm" data-accion="exportar">⬇ Exportar a Excel</button>
       </div>
-      <div class="tarjeta-tabla">
+      <div class="vidrio"><div class="vidrio-interior">
         ${todas.length ? `<div class="tabla-scroll"><table class="tabla"><thead><tr>${cab}</tr></thead><tbody>${cuerpo}</tbody></table></div>` :
           UI.vacio('🔎', 'Sin tareas', 'No hay tareas con estos filtros.', '<button class="btn btn-primario" data-accion="nueva-tarea">＋ Nueva tarea</button>')}
         ${todas.length > filas.length ? `<div class="centrado pad"><button class="btn" data-accion="ver-mas">Ver ${Math.min(CONFIG.LIMITE_LISTA, todas.length - filas.length)} más</button></div>` : ''}
-      </div>`;
+      </div></div>`;
   },
 
   acciones: {
@@ -2218,7 +2266,7 @@ Vistas.rendimiento = {
         </section>
       </div>
 
-      <section class="panel mt">
+      <section class="vidrio mt"><div class="vidrio-interior">
         <header class="panel-cab"><h3>Tabla de rendimiento</h3>
           <span class="muted mini" title="Cumplimiento = completadas ÷ (completadas + vencidas). Puntualidad = completadas a tiempo ÷ completadas con fecha límite.">ⓘ Índice = 50 % cumplimiento + 50 % puntualidad</span>
         </header>
@@ -2236,7 +2284,7 @@ Vistas.rendimiento = {
             </tr>`;
           }).join('') || `<tr><td colspan="9" class="centrado muted pad">Sin datos en este periodo</td></tr>`}</tbody>
         </table></div>
-      </section>`;
+      </div></section>`;
   },
 
   // Barras horizontales apiladas; la longitud es proporcional al total (escala común).
