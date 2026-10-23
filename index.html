@@ -1,0 +1,3308 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planner del Equipo</title>
+<meta name="description" content="Planner de tareas del equipo: tablero, lista, calendario y rendimiento por colaborador.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   PLANNER DEL EQUIPO — estilos
+   Tokens de color arriba (claro y oscuro); componentes debajo.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  color-scheme: light;
+  --bg: #f6f5fb; --bg2: #ffffff; --bg3: #f0edf8; --borde: #e6e2f0;
+  --text: #211f2e; --text2: #5c5972; --text3: #8d8aa1;
+  --acento: #6f5fe0; --acento-2: #8b7cff; --acento-suave: #efecfc; --acento-texto: #5847c9;
+  --verde: #15803d; --verde-suave: #e6f6ec;
+  --ambar: #a16207; --ambar-suave: #fdf3dc;
+  --rojo: #c8102e; --rojo-suave: #fdecef;
+  --azul: #2563eb; --azul-suave: #e8f0fe;
+
+  /* Series de gráficas (validadas para daltonismo, orden fijo) */
+  --serie-ok: #008300; --serie-tarde: #eda100; --serie-curso: #2a78d6; --serie-vencida: #e34948;
+  --nivel-excelente: #008300; --nivel-bueno: #2a78d6; --nivel-regular: #eda100; --nivel-bajo: #e34948; --nivel-na: #b9b6c9;
+
+  /* Prioridades */
+  --p-urgente: #c8102e; --p-alta: #ea580c; --p-media: #6f5fe0; --p-baja: #8d8aa1;
+
+  --sombra: 0 1px 2px rgba(33,31,46,.06), 0 1px 1px rgba(33,31,46,.03);
+  --sombra-2: 0 8px 22px rgba(33,31,46,.08), 0 1px 3px rgba(33,31,46,.05);
+  --sombra-3: 0 24px 60px rgba(33,31,46,.18);
+  --r: 12px; --r-lg: 18px;
+  --lateral: 232px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #070910; --bg2: #0f1322; --bg3: #171c30; --borde: rgba(237,238,242,.09);
+    --text: #f1f0f4; --text2: #a3a9bd; --text3: #6d7590;
+    --acento: #8b7cff; --acento-2: #a497ff; --acento-suave: rgba(139,124,255,.16); --acento-texto: #c3baff;
+    --verde: #4ade80; --verde-suave: rgba(74,222,128,.12);
+    --ambar: #fbbf24; --ambar-suave: rgba(251,191,36,.12);
+    --rojo: #fb7185; --rojo-suave: rgba(251,113,133,.13);
+    --azul: #60a5fa; --azul-suave: rgba(96,165,250,.13);
+    --serie-ok: #199e70; --serie-tarde: #c98500; --serie-curso: #3987e5; --serie-vencida: #e66767;
+    --nivel-excelente: #199e70; --nivel-bueno: #3987e5; --nivel-regular: #c98500; --nivel-bajo: #e66767; --nivel-na: #4a5168;
+    --p-urgente: #fb7185; --p-alta: #fb923c; --p-media: #a497ff; --p-baja: #6d7590;
+    --sombra: 0 1px 2px rgba(0,0,0,.4); --sombra-2: 0 8px 22px rgba(0,0,0,.45); --sombra-3: 0 24px 60px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #070910; --bg2: #0f1322; --bg3: #171c30; --borde: rgba(237,238,242,.09);
+  --text: #f1f0f4; --text2: #a3a9bd; --text3: #6d7590;
+  --acento: #8b7cff; --acento-2: #a497ff; --acento-suave: rgba(139,124,255,.16); --acento-texto: #c3baff;
+  --verde: #4ade80; --verde-suave: rgba(74,222,128,.12);
+  --ambar: #fbbf24; --ambar-suave: rgba(251,191,36,.12);
+  --rojo: #fb7185; --rojo-suave: rgba(251,113,133,.13);
+  --azul: #60a5fa; --azul-suave: rgba(96,165,250,.13);
+  --serie-ok: #199e70; --serie-tarde: #c98500; --serie-curso: #3987e5; --serie-vencida: #e66767;
+  --nivel-excelente: #199e70; --nivel-bueno: #3987e5; --nivel-regular: #c98500; --nivel-bajo: #e66767; --nivel-na: #4a5168;
+  --p-urgente: #fb7185; --p-alta: #fb923c; --p-media: #a497ff; --p-baja: #6d7590;
+  --sombra: 0 1px 2px rgba(0,0,0,.4); --sombra-2: 0 8px 22px rgba(0,0,0,.45); --sombra-3: 0 24px 60px rgba(0,0,0,.6);
+}
+
+/* ── Base ─────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+html { -webkit-font-smoothing: antialiased; }
+body {
+  font-family: Inter, 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 14px; line-height: 1.5;
+  color: var(--text); background: var(--bg);
+}
+h1, h2, h3, h4, .kpi-valor { font-family: Sora, Inter, sans-serif; letter-spacing: -.2px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; border-radius: 6px; }
+::selection { background: var(--acento); color: #fff; }
+code { font-family: 'Cascadia Code', Consolas, monospace; font-size: .9em; background: var(--bg3); padding: 1px 5px; border-radius: 5px; }
+kbd { font-family: inherit; font-size: 11px; border: 1px solid var(--borde); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--bg2); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+.muted { color: var(--text2); }
+.mini { font-size: 12px; }
+.pad { padding: 12px; }
+.mt { margin-top: 16px; }
+.centrado { text-align: center; }
+.ancho { width: 100%; }
+.separador { flex: 1; }
+.txt-rojo { color: var(--rojo); }
+.txt-ambar { color: var(--ambar); }
+
+/* ── Botones y controles ──────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 14px; border-radius: 999px; border: 1px solid var(--borde); background: var(--bg2);
+  color: var(--text2); font-weight: 600; font-size: 13px; transition: background .15s, border-color .15s, transform .15s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--bg3); color: var(--text); }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+.btn-primario { background: linear-gradient(90deg, var(--acento), var(--acento-2)); border-color: transparent; color: #fff; box-shadow: 0 6px 16px rgba(111,95,224,.28); }
+.btn-primario:hover { color: #fff; background: linear-gradient(90deg, var(--acento), var(--acento-2)); transform: translateY(-1px); }
+.btn-peligro { color: var(--rojo); }
+.btn-peligro:hover { background: var(--rojo-suave); color: var(--rojo); border-color: var(--rojo); }
+.btn-icono {
+  width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  border-radius: 10px; border: 1px solid var(--borde); background: var(--bg2); color: var(--text2); font-size: 16px;
+}
+.btn-icono:hover { background: var(--bg3); color: var(--text); }
+.btn-icono.btn-sm { width: 26px; height: 26px; font-size: 13px; border-radius: 8px; }
+
+input, select, textarea {
+  padding: 8px 11px; border-radius: 10px; border: 1px solid var(--borde); background: var(--bg2);
+  outline: none; transition: border-color .15s, box-shadow .15s; min-width: 0;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--acento); box-shadow: 0 0 0 3px var(--acento-suave); }
+input:disabled, select:disabled, textarea:disabled { background: var(--bg3); color: var(--text2); }
+textarea { width: 100%; resize: vertical; }
+
+.segmentado { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border-radius: 999px; background: var(--bg3); flex-wrap: wrap; }
+.segmentado button { border: none; background: transparent; padding: 5px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: var(--text2); }
+.segmentado button.on { background: var(--bg2); color: var(--acento-texto); box-shadow: var(--sombra); }
+.seg-etiqueta { font-size: 12px; color: var(--text3); padding: 0 6px 0 8px; }
+
+/* ── Chips ────────────────────────────────────────────────────────── */
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; line-height: 1.6; }
+.chip-suave { background: var(--bg3); color: var(--text2); font-weight: 500; }
+.prio-urgente { background: var(--rojo-suave); color: var(--p-urgente); }
+.prio-alta { background: color-mix(in srgb, var(--p-alta) 14%, transparent); color: var(--p-alta); }
+.prio-media { background: var(--acento-suave); color: var(--acento-texto); }
+.prio-baja { background: var(--bg3); color: var(--text2); }
+.est-pendiente { background: var(--bg3); color: var(--text2); }
+.est-en_progreso { background: var(--azul-suave); color: var(--azul); }
+.est-en_revision { background: var(--ambar-suave); color: var(--ambar); }
+.est-completada { background: var(--verde-suave); color: var(--verde); }
+.est-vencida { background: var(--rojo-suave); color: var(--rojo); }
+.nivel { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 12.5px; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.nivel small { font-weight: 500; font-size: 11px; }
+.nivel-excelente { background: var(--verde-suave); color: var(--verde); }
+.nivel-bueno { background: var(--azul-suave); color: var(--azul); }
+.nivel-regular { background: var(--ambar-suave); color: var(--ambar); }
+.nivel-bajo { background: var(--rojo-suave); color: var(--rojo); }
+.nivel-na { background: var(--bg3); color: var(--text3); }
+
+.avatar { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 700; flex-shrink: 0; letter-spacing: 0; box-shadow: 0 0 0 2px var(--bg2); }
+
+/* ── Login ────────────────────────────────────────────────────────── */
+.login { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; overflow: hidden;
+  background: radial-gradient(1100px 600px at 15% -10%, rgba(111,95,224,.10), transparent 60%), radial-gradient(900px 500px at 100% 100%, rgba(184,130,63,.07), transparent 55%), var(--bg); }
+#login-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.login-caja { position: relative; width: 100%; max-width: 360px; padding: 32px 28px; border-radius: var(--r-lg); text-align: center;
+  background: color-mix(in srgb, var(--bg2) 82%, transparent); backdrop-filter: blur(10px); border: 1px solid var(--borde); box-shadow: var(--sombra-3); }
+.login-logo { font-size: 40px; }
+.login h1 { font-size: 21px; margin-top: 6px; }
+.login-sub { color: var(--text2); font-size: 13px; margin: 2px 0 18px; }
+.login form { display: flex; flex-direction: column; gap: 12px; text-align: left; }
+.login label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; font-weight: 600; color: var(--text2); }
+.login .btn-primario { padding: 11px; font-size: 14px; margin-top: 4px; }
+.login-link { background: none; border: none; color: var(--acento-texto); font-size: 12px; text-decoration: underline; align-self: center; }
+.login-demo { background: var(--acento-suave); color: var(--acento-texto); border-radius: 10px; padding: 10px 12px; font-size: 12px; margin-bottom: 14px; text-align: left; }
+.login-msg { border-radius: 10px; padding: 9px 12px; font-size: 13px; margin-bottom: 12px; text-align: left; }
+.login-msg.error { background: var(--rojo-suave); color: var(--rojo); }
+.login-msg.ok { background: var(--verde-suave); color: var(--verde); }
+
+/* ── Estructura ───────────────────────────────────────────────────── */
+.lateral {
+  position: fixed; inset: 0 auto 0 0; width: var(--lateral); z-index: 30; display: flex; flex-direction: column; gap: 14px;
+  padding: 18px 14px; background: var(--bg2); border-right: 1px solid var(--borde); overflow-y: auto;
+}
+.marca { display: flex; align-items: center; gap: 10px; padding: 0 6px; }
+.marca-icono { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; font-size: 18px; background: linear-gradient(135deg, var(--acento), var(--acento-2)); box-shadow: 0 6px 16px rgba(111,95,224,.3); }
+.marca strong { display: block; font-family: Sora, sans-serif; font-size: 15px; }
+.marca span { font-size: 11.5px; color: var(--text3); }
+.btn-nueva { padding: 10px; }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav button { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: none; background: transparent; border-radius: 10px; color: var(--text2); font-weight: 600; text-align: left; }
+.nav button:hover { background: var(--bg3); color: var(--text); }
+.nav button.activo { background: var(--acento-suave); color: var(--acento-texto); }
+.nav-icono { width: 22px; text-align: center; }
+.nav-texto { flex: 1; }
+.nav-badge { background: var(--rojo); color: #fff; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 0 7px; line-height: 18px; }
+.lateral-pie { margin-top: auto; padding: 0 6px; }
+.capa-menu { display: none; }
+
+.contenido { margin-left: var(--lateral); min-height: 100vh; }
+.barra-sup {
+  position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; height: 60px; padding: 0 24px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--borde);
+}
+.barra-sup h1 { font-size: 18px; }
+.menu-movil { display: none; }
+.usuario { display: flex; align-items: center; gap: 8px; padding-left: 6px; }
+.usuario-info { display: flex; flex-direction: column; line-height: 1.25; font-size: 12px; }
+.usuario-info span { color: var(--text3); font-size: 11px; }
+.punto-conexion { width: 8px; height: 8px; border-radius: 50%; background: var(--verde); }
+.punto-conexion.off { background: var(--text3); }
+.main { padding: 22px 24px 48px; max-width: 1500px; }
+.cargando { padding: 60px; text-align: center; color: var(--text2); }
+
+/* ── Paneles, KPIs y rejillas ─────────────────────────────────────── */
+.panel { background: var(--bg2); border: 1px solid var(--borde); border-radius: var(--r); padding: 16px; box-shadow: var(--sombra); min-width: 0; }
+.panel-cab { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.panel-cab h3 { font-size: 14.5px; }
+.contador { background: var(--bg3); color: var(--text2); font-size: 12px; font-weight: 700; border-radius: 999px; padding: 0 8px; line-height: 20px; }
+.contador.rojo { background: var(--rojo-suave); color: var(--rojo); }
+.contador.ambar { background: var(--ambar-suave); color: var(--ambar); }
+.contador.azul { background: var(--azul-suave); color: var(--azul); }
+.rejilla-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.rejilla-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.rejilla-graficas { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; }
+
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+.kpis-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.kpi { display: flex; align-items: center; gap: 12px; background: var(--bg2); border: 1px solid var(--borde); border-radius: var(--r); padding: 14px 16px; box-shadow: var(--sombra); }
+.kpi-icono { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; font-size: 16px; flex-shrink: 0; }
+.kpi-valor { font-size: 24px; font-weight: 700; line-height: 1.1; }
+.kpi-etiqueta { font-size: 12px; color: var(--text2); }
+.kpi-rojo .kpi-icono { background: var(--rojo-suave); color: var(--rojo); }
+.kpi-ambar .kpi-icono { background: var(--ambar-suave); color: var(--ambar); }
+.kpi-azul .kpi-icono { background: var(--azul-suave); color: var(--azul); }
+.kpi-verde .kpi-icono { background: var(--verde-suave); color: var(--verde); }
+.kpi-violeta .kpi-icono { background: var(--acento-suave); color: var(--acento-texto); }
+
+.vacio { text-align: center; padding: 56px 20px; color: var(--text2); }
+.vacio-icono { font-size: 40px; margin-bottom: 8px; }
+.vacio h3 { color: var(--text); margin-bottom: 6px; }
+.vacio p { max-width: 520px; margin: 0 auto 16px; }
+
+/* ── Inicio ───────────────────────────────────────────────────────── */
+.hero {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 16px;
+  padding: 22px 24px; border-radius: var(--r-lg); border: 1px solid var(--borde);
+  background: linear-gradient(120deg, var(--acento-suave), transparent 70%), var(--bg2); box-shadow: var(--sombra);
+}
+.hero > div:first-child { flex: 1; min-width: 260px; }
+.hero h2 { font-size: 22px; margin-bottom: 4px; }
+.hero-fecha { color: var(--acento-texto); font-weight: 600; font-size: 12.5px; }
+.captura-rapida { margin-top: 14px; max-width: 560px; }
+.captura-rapida input { width: 100%; padding: 11px 14px; border-radius: 12px; font-size: 14px; }
+.anillo { position: relative; display: flex; flex-direction: column; align-items: center; }
+.anillo svg circle { transition: stroke-dasharray .6s ease; }
+.anillo-centro { position: absolute; top: 0; height: 118px; width: 118px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.anillo-centro strong { font-family: Sora, sans-serif; font-size: 26px; line-height: 1; }
+.anillo-centro span { font-size: 11px; color: var(--text2); margin-top: 3px; }
+.anillo-etiqueta { font-size: 11.5px; color: var(--text2); margin-top: 4px; }
+
+.lista-tarjetas { display: flex; flex-direction: column; gap: 8px; }
+.fila-tarjetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.equipo-mini { display: flex; flex-direction: column; }
+.equipo-fila { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border: none; background: none; border-bottom: 1px solid var(--borde); text-align: left; border-radius: 8px; }
+.equipo-fila:hover { background: var(--bg3); }
+.equipo-fila:last-child { border-bottom: none; }
+.equipo-nombre { font-weight: 600; min-width: 140px; }
+.equipo-fila .muted { flex: 1; font-size: 12.5px; }
+
+/* ── Tarjeta de tarea ─────────────────────────────────────────────── */
+.tarjeta {
+  position: relative; background: var(--bg2); border: 1px solid var(--borde); border-left: 3px solid var(--p-media);
+  border-radius: 10px; padding: 10px 12px; cursor: pointer; box-shadow: var(--sombra); transition: box-shadow .15s, transform .15s, opacity .15s;
+}
+.tarjeta:hover { box-shadow: var(--sombra-2); transform: translateY(-1px); }
+.tarjeta[draggable="true"] { cursor: grab; }
+.tarjeta.arrastrando, .ev.arrastrando { opacity: .4; }
+.prio-borde-urgente { border-left-color: var(--p-urgente); }
+.prio-borde-alta { border-left-color: var(--p-alta); }
+.prio-borde-media { border-left-color: var(--p-media); }
+.prio-borde-baja { border-left-color: var(--p-baja); }
+.tarjeta.hecha { opacity: .62; }
+.tarjeta.hecha .tarjeta-titulo { text-decoration: line-through; }
+.tarjeta-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-right: 28px; }
+.tarjeta-titulo { font-family: Inter, sans-serif; font-size: 13.5px; font-weight: 600; margin: 7px 0 3px; line-height: 1.35; word-break: break-word; }
+.tarjeta-empresa { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tarjeta-pie { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 12px; }
+.pie-der { display: inline-flex; align-items: center; gap: 8px; }
+.fecha { color: var(--text2); white-space: nowrap; }
+.fecha.vencida { color: var(--rojo); font-weight: 600; }
+.fecha.pronto { color: var(--ambar); font-weight: 600; }
+.mini-barra { height: 4px; border-radius: 4px; background: var(--bg3); margin-top: 8px; overflow: hidden; }
+.mini-barra span { display: block; height: 100%; background: var(--acento); border-radius: 4px; }
+.check {
+  width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--text3); background: var(--bg2); color: transparent;
+  font-size: 12px; font-weight: 700; display: inline-grid; place-items: center; flex-shrink: 0; transition: all .15s;
+}
+.tarjeta .check { position: absolute; top: 9px; right: 9px; }
+.check:hover { border-color: var(--verde); color: var(--verde); }
+.check.on { background: var(--verde); border-color: var(--verde); color: #fff; }
+
+/* ── Barra de filtros ─────────────────────────────────────────────── */
+.barra-filtros { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.barra-filtros input[type="search"] { flex: 1; min-width: 200px; max-width: 360px; }
+.barra-vista { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+
+/* ── Tablero ──────────────────────────────────────────────────────── */
+.tablero { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(270px, 1fr); gap: 14px; overflow-x: auto; padding-bottom: 8px; align-items: start; }
+.columna { background: var(--bg3); border-radius: var(--r); padding: 10px; min-height: 200px; border: 2px dashed transparent; transition: border-color .15s, background .15s; }
+.columna.sobre, .dia.sobre, .semana-dia.sobre { border-color: var(--acento); background: var(--acento-suave); }
+.columna-cab { display: flex; align-items: center; gap: 8px; padding: 2px 4px 10px; }
+.columna-cab h3 { font-family: Inter, sans-serif; font-size: 13.5px; font-weight: 700; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.columna.est-completada .columna-cab h3 { color: var(--verde); }
+.columna.est-en_progreso .columna-cab h3 { color: var(--azul); }
+.columna.est-en_revision .columna-cab h3 { color: var(--ambar); }
+.columna.prio-urgente, .columna.prio-alta, .columna.prio-media, .columna.prio-baja { background: var(--bg3); }
+.columna-cuerpo { display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 250px); overflow-y: auto; padding: 2px; }
+.columna-vacia { text-align: center; color: var(--text3); font-size: 12px; padding: 24px 8px; border: 1px dashed var(--borde); border-radius: 10px; }
+
+/* ── Lista (tabla) ────────────────────────────────────────────────── */
+.tarjeta-tabla { background: var(--bg2); border: 1px solid var(--borde); border-radius: var(--r); box-shadow: var(--sombra); overflow: hidden; }
+.tabla-scroll { overflow-x: auto; }
+.tabla { width: 100%; border-collapse: collapse; }
+.tabla th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--text2); padding: 10px 12px; border-bottom: 1px solid var(--borde); background: var(--bg3); white-space: nowrap; }
+.tabla td { padding: 9px 12px; border-bottom: 1px solid var(--borde); font-size: 13px; vertical-align: middle; }
+.tabla tbody tr:hover td { background: color-mix(in srgb, var(--bg3) 60%, transparent); }
+.tabla tr:last-child td { border-bottom: none; }
+.tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
+.th-orden { border: none; background: none; font: inherit; text-transform: inherit; letter-spacing: inherit; color: inherit; }
+.th-orden.on { color: var(--acento-texto); }
+.td-titulo { display: flex; align-items: center; gap: 8px; min-width: 260px; }
+.enlace-tarea { border: none; background: none; text-align: left; font-weight: 600; color: var(--text); }
+.enlace-tarea:hover { color: var(--acento-texto); text-decoration: underline; }
+.fila-hecha .enlace-tarea { text-decoration: line-through; color: var(--text2); }
+.fila-vencida td:first-child { box-shadow: inset 3px 0 0 var(--rojo); }
+.celda-colab { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.sel-estado { padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; border: none; }
+.barra-progreso { width: 90px; height: 6px; background: var(--bg3); border-radius: 6px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 6px; }
+.barra-progreso span { display: block; height: 100%; background: var(--acento); border-radius: 6px; transition: width .3s; }
+.barra-progreso.grande { width: 100%; height: 8px; margin: 10px 0; }
+.fila-click { cursor: pointer; }
+
+/* ── Calendario ───────────────────────────────────────────────────── */
+.cal-barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.cal-nav { display: flex; align-items: center; gap: 8px; }
+.cal-titulo { font-size: 19px; margin-left: 8px; }
+.leyenda { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 10px; font-size: 12px; color: var(--text2); }
+.leyenda-item { display: inline-flex; align-items: center; gap: 6px; }
+.muestra { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.mes { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); background: var(--bg2); border: 1px solid var(--borde); border-radius: var(--r); overflow: hidden; box-shadow: var(--sombra); }
+.mes-cab { padding: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text2); text-align: center; background: var(--bg3); border-bottom: 1px solid var(--borde); }
+.dia { min-height: 118px; padding: 6px; border-right: 1px solid var(--borde); border-bottom: 1px solid var(--borde); display: flex; flex-direction: column; gap: 3px; cursor: pointer; border-width: 0 1px 1px 0; transition: background .15s; min-width: 0; outline: 2px dashed transparent; outline-offset: -3px; }
+.dia:nth-child(7n) { border-right: none; }
+.dia:hover { background: color-mix(in srgb, var(--acento-suave) 50%, transparent); }
+.dia.sobre { outline-color: var(--acento); }
+.dia.finde, .mes-cab.finde, .semana-dia.finde { background: color-mix(in srgb, var(--bg3) 45%, var(--bg2)); }
+.dia.fuera .dia-num { color: var(--text3); }
+.dia.fuera { background: color-mix(in srgb, var(--bg3) 30%, var(--bg2)); }
+.dia-cab { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+.dia-num { font-size: 12.5px; font-weight: 600; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; }
+.es-hoy .dia-num { background: var(--acento); color: #fff; }
+.dia-carga { font-size: 10.5px; font-weight: 700; color: var(--text2); background: var(--bg3); border-radius: 999px; padding: 0 6px; }
+.ev {
+  display: flex; align-items: center; gap: 5px; width: 100%; padding: 3px 6px; border-radius: 6px; border: none; text-align: left;
+  font-size: 11.5px; font-weight: 500; background: var(--bg3); color: var(--text); min-width: 0;
+}
+.ev:hover { box-shadow: 0 0 0 1px var(--acento); }
+.ev[draggable="true"] { cursor: grab; }
+.ev-punto { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1.5px var(--bg2); }
+.ev-prio { font-size: 9px; }
+.ev-texto { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev-vencida { background: var(--rojo-suave); color: var(--rojo); }
+.ev-completada { opacity: .6; }
+.ev-completada .ev-texto { text-decoration: line-through; }
+.ev-en_progreso { background: var(--azul-suave); }
+.ev-en_revision { background: var(--ambar-suave); }
+.ev-muestra { display: inline-flex; width: auto; cursor: default; }
+.ev-mas { border: none; background: none; color: var(--acento-texto); font-size: 11.5px; font-weight: 600; text-align: left; padding: 1px 6px; }
+.semana { display: grid; grid-template-columns: repeat(7, minmax(150px, 1fr)); gap: 8px; overflow-x: auto; padding-bottom: 6px; }
+.semana-dia { background: var(--bg2); border: 2px dashed transparent; border-radius: var(--r); min-height: 360px; display: flex; flex-direction: column; box-shadow: var(--sombra); outline: 1px solid var(--borde); }
+.semana-dia header { display: flex; align-items: center; gap: 6px; padding: 10px; border-bottom: 1px solid var(--borde); }
+.semana-dia .dia-nombre { font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text2); }
+.semana-dia header .btn-icono { margin-left: auto; }
+.semana-cuerpo { padding: 8px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.semana-dia.es-hoy { outline: 2px solid var(--acento); }
+
+/* ── Rendimiento (gráficas) ───────────────────────────────────────── */
+.grafica-barras { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+.barra-fila { display: grid; grid-template-columns: 130px minmax(0, 1fr) 34px; align-items: center; gap: 10px; }
+.barra-nombre { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.barra-pista { display: flex; gap: 2px; height: 22px; }
+.seg { display: flex; align-items: center; justify-content: center; min-width: 3px; height: 100%; transition: filter .15s; }
+.seg:first-child { border-radius: 4px 0 0 4px; }
+.seg:last-child { border-radius: 0 4px 4px 0; }
+.seg:only-child { border-radius: 4px; }
+.seg:hover { filter: brightness(1.12); }
+.seg-num { font-size: 11px; font-weight: 700; color: #fff; text-shadow: 0 0 2px rgba(0,0,0,.35); }
+.barra-total { font-size: 12.5px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.grafica-linea { width: 100%; height: auto; display: block; }
+.grafica-linea .grid { stroke: var(--borde); stroke-width: 1; }
+.grafica-linea .eje { fill: var(--text3); font-size: 11px; }
+.grafica-linea .linea { fill: none; stroke: var(--serie-curso); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.grafica-linea .area { fill: var(--serie-curso); opacity: .1; }
+.grafica-linea .punto { fill: var(--serie-curso); stroke: var(--bg2); stroke-width: 2; opacity: 0; transition: opacity .1s; }
+.grafica-linea .guia { stroke: var(--text3); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; }
+.grafica-linea .banda:hover .punto, .grafica-linea .banda:hover .guia { opacity: 1; }
+.grafica-linea .valor-final { fill: var(--text); font-size: 12px; font-weight: 700; }
+.tooltip {
+  position: fixed; top: 0; left: 0; z-index: 200; pointer-events: none; max-width: 280px;
+  background: var(--text); color: var(--bg2); font-size: 12px; font-weight: 500; padding: 6px 10px; border-radius: 8px; box-shadow: var(--sombra-2);
+}
+
+/* ── Colaboradores ────────────────────────────────────────────────── */
+.rejilla-colabs { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+.colab { background: var(--bg2); border: 1px solid var(--borde); border-radius: var(--r); padding: 16px; box-shadow: var(--sombra); display: flex; flex-direction: column; gap: 12px; }
+.colab-cab { display: flex; align-items: center; gap: 12px; }
+.colab-nombre { flex: 1; min-width: 0; }
+.colab-nombre h3 { font-size: 15px; }
+.colab-nombre span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.colab-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
+.colab-stats div { background: var(--bg3); border-radius: 10px; padding: 6px 2px; }
+.colab-stats strong { display: block; font-family: Sora, sans-serif; font-size: 18px; }
+.colab-stats span { font-size: 11px; color: var(--text2); }
+.carga { height: 6px; background: var(--bg3); border-radius: 6px; overflow: hidden; }
+.carga span { display: block; height: 100%; border-radius: 6px; }
+.colab-pie { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* ── Admin ────────────────────────────────────────────────────────── */
+.lista-ayuda { margin: 8px 0 10px 18px; color: var(--text2); font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+.datos-sistema { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin-bottom: 14px; font-size: 13px; }
+.datos-sistema dt { color: var(--text2); }
+.fila-botones { display: flex; gap: 8px; flex-wrap: wrap; }
+.panel > p, .panel > ul { margin-bottom: 10px; }
+.imp-log { font-size: 12px; color: var(--text2); max-height: 200px; overflow-y: auto; line-height: 1.7; }
+
+/* ── Modal ────────────────────────────────────────────────────────── */
+.capa-modal { position: fixed; inset: 0; z-index: 100; background: rgba(20,18,30,.45); backdrop-filter: blur(3px); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px 16px; overflow-y: auto; }
+.modal { width: 100%; background: var(--bg2); border: 1px solid var(--borde); border-radius: var(--r-lg); box-shadow: var(--sombra-3); padding: 18px 20px; animation: aparecer .16s ease; }
+@keyframes aparecer { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+.modal-cab { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.modal-cab h3 { flex: 1; font-size: 16px; text-transform: none; }
+.modal-pie { display: flex; align-items: center; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--borde); flex-wrap: wrap; }
+.input-titulo { flex: 1; font-family: Sora, sans-serif; font-size: 18px; font-weight: 600; border-color: transparent; padding: 6px 8px; background: transparent; }
+.input-titulo:hover { border-color: var(--borde); }
+.meta-tarea { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: -4px 0 12px 8px; }
+.tarea-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; }
+.tarea-grid.sin-seguimiento { grid-template-columns: 1fr; }
+.campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+.form-tarea label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; font-weight: 600; color: var(--text2); }
+.campo-ancho { grid-column: 1 / -1; }
+.bloque { margin-top: 14px; }
+.bloque-cab { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.checklist { list-style: none; display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.checklist li { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; background: var(--bg3); }
+.checklist li label { flex: 1; flex-direction: row !important; align-items: center; gap: 8px !important; font-weight: 500 !important; color: var(--text) !important; font-size: 13px !important; cursor: pointer; }
+.checklist li.hecho span { text-decoration: line-through; color: var(--text2); }
+.checklist input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--verde); }
+.check-nuevo { display: flex; gap: 8px; }
+.check-nuevo input { flex: 1; }
+input[type="range"] { accent-color: var(--acento); padding: 0; border: none; box-shadow: none; }
+.tarea-seguimiento { display: flex; flex-direction: column; gap: 10px; background: var(--bg3); border-radius: var(--r); padding: 14px; min-height: 320px; }
+.timeline { list-style: none; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 360px; flex: 1; }
+.timeline li { border-left: 2px solid var(--borde); padding-left: 10px; }
+.timeline li.tl-tipo-comentario { border-left-color: var(--acento); }
+.tl-cab { display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; }
+.tl-comentario { background: var(--bg2); border-radius: 8px; padding: 6px 9px; margin-top: 3px; font-size: 13px; white-space: pre-wrap; word-break: break-word; }
+.comentar { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+
+/* ── Toasts ───────────────────────────────────────────────────────── */
+.toasts { position: fixed; bottom: 20px; right: 20px; z-index: 150; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.toast { display: flex; align-items: center; gap: 14px; max-width: 380px; padding: 10px 14px; border-radius: 12px; background: var(--text); color: var(--bg2); font-size: 13px; box-shadow: var(--sombra-3); animation: aparecer .2s ease; }
+.toast-error { background: var(--rojo); color: #fff; }
+.toast button { border: none; background: none; color: inherit; font-weight: 700; text-decoration: underline; white-space: nowrap; }
+
+/* ── Responsivo ───────────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .kpis-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .rejilla-graficas { grid-template-columns: 1fr; }
+}
+@media (max-width: 980px) {
+  .rejilla-3 { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tarea-grid { grid-template-columns: 1fr; }
+  .dia { min-height: 92px; }
+}
+@media (max-width: 760px) {
+  .lateral { transform: translateX(-100%); transition: transform .2s ease; box-shadow: var(--sombra-3); }
+  body.menu-abierto .lateral { transform: none; }
+  body.menu-abierto .capa-menu { display: block; position: fixed; inset: 0; z-index: 25; background: rgba(20,18,30,.35); }
+  .contenido { margin-left: 0; }
+  .menu-movil { display: inline-flex; }
+  .barra-sup { padding: 0 16px; gap: 6px; }
+  .usuario-info, .barra-sup .btn-icono[data-accion="sincronizar"] { display: none; }
+  .main { padding: 16px 16px 40px; }
+  .rejilla-2 { grid-template-columns: 1fr; }
+  .kpis-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .campos { grid-template-columns: 1fr; }
+  .dia { min-height: 64px; padding: 3px; }
+  .ev-texto, .ev-prio { display: none; }
+  .ev { justify-content: center; padding: 3px; }
+  .barra-fila { grid-template-columns: 90px minmax(0, 1fr) 28px; }
+  .hero { padding: 18px; }
+  .anillo { display: none; }
+  .equipo-nombre { min-width: 0; }
+}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+</head>
+<body>
+
+<!-- ═════════════ INICIO DE SESIÓN ═════════════ -->
+<div id="login" class="login" hidden>
+  <canvas id="login-canvas" aria-hidden="true"></canvas>
+  <div class="login-caja">
+    <div class="login-logo" aria-hidden="true">🗓️</div>
+    <h1>Planner del Equipo</h1>
+    <p class="login-sub">Tareas, seguimiento y rendimiento</p>
+
+    <div id="demo-tip" class="login-demo" hidden>
+      <strong>Modo demo</strong> — los datos se guardan solo en este navegador.<br>
+      Entra como <code>admin@demo.co</code> (administrador) o <code>ana@demo.co</code> (colaboradora). Cualquier contraseña.
+    </div>
+    <div id="login-msg" class="login-msg" role="alert" hidden></div>
+
+    <form id="frm-entrar" onsubmit="Login.entrar(event)">
+      <label>Correo electrónico<input id="inp-email" type="email" autocomplete="username" placeholder="correo@empresa.com" required></label>
+      <label>Contraseña<input id="inp-pass" type="password" autocomplete="current-password" placeholder="Tu contraseña"></label>
+      <button id="btn-entrar" class="btn btn-primario ancho" type="submit">Iniciar sesión</button>
+      <button type="button" class="login-link" onclick="Login.formulario('recuperar')">¿Olvidaste tu contraseña?</button>
+    </form>
+
+    <form id="frm-recuperar" onsubmit="Login.recuperar(event)" hidden>
+      <p class="login-sub">Te enviaremos un enlace para restablecerla.</p>
+      <label>Correo electrónico<input id="inp-rec-email" type="email" placeholder="correo@empresa.com" required></label>
+      <button class="btn btn-primario ancho" type="submit">Enviar enlace</button>
+      <button type="button" class="login-link" onclick="Login.formulario('entrar')">← Volver</button>
+    </form>
+  </div>
+</div>
+
+<!-- ═════════════ APLICACIÓN ═════════════ -->
+<div id="app" class="app" hidden>
+  <aside class="lateral">
+    <div class="marca"><span class="marca-icono" aria-hidden="true">🗓️</span><div><strong>Planner</strong><span>del equipo</span></div></div>
+    <button class="btn btn-primario ancho btn-nueva" data-accion="nueva-tarea" title="Nueva tarea (tecla N)">＋ Nueva tarea</button>
+    <nav id="nav" class="nav" aria-label="Secciones"></nav>
+    <div class="lateral-pie"><span class="muted mini">Tecla <kbd>N</kbd>: nueva tarea</span></div>
+  </aside>
+  <div class="capa-menu" data-accion="menu"></div>
+
+  <div class="contenido">
+    <header class="barra-sup">
+      <button class="btn-icono menu-movil" data-accion="menu" aria-label="Abrir menú">☰</button>
+      <h1 id="titulo-vista">Inicio</h1>
+      <span class="separador"></span>
+      <button class="btn-icono" data-accion="sincronizar" title="Recargar datos" aria-label="Recargar datos">⟳</button>
+      <button class="btn-icono" id="btn-tema" data-accion="tema" title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
+      <div id="usuario" class="usuario"></div>
+      <button class="btn btn-sm" data-accion="salir">Salir</button>
+    </header>
+    <main id="main" class="main"></main>
+  </div>
+</div>
+
+<div id="modal" class="capa-modal" hidden></div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+
+<script>
+/* ── js/config.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// CONFIGURACIÓN GENERAL
+// Todo lo que cambia entre instalaciones vive aquí. El resto del código
+// solo lee estas constantes.
+// ═══════════════════════════════════════════════════════════════════
+
+const CONFIG = {
+  // ── Supabase ──────────────────────────────────────────────────────
+  // La clave "anon" es pública por diseño: la seguridad real la dan
+  // las políticas RLS que configuras en Supabase.
+  SUPABASE_URL: 'https://azjkdqnnqwkrtzgtlgul.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6amtkcW5ucXdrcnR6Z3RsZ3VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTYwNDksImV4cCI6MjA5NzczMjA0OX0.o_S2K7UeXCvgVEouhLOtpuBFMy6im8YDJiFrDIq0LKc',
+
+  TABLAS: {
+    tareas: 'tareas',
+    actividad: 'tarea_actividad',
+    perfiles: 'perfiles',
+  },
+
+  // ── Microsoft Teams (opcional) ────────────────────────────────────
+  // No subas la URL real a un repositorio público: incluye una firma secreta.
+  TEAMS_WEBHOOK_URL: '',
+  // Canal por colaborador: { 'NOMBRE EXACTO DEL PERFIL': 'https://...' }
+  TEAMS_WEBHOOKS_POR_COLABORADOR: {},
+
+  // ── Reglas de la interfaz ─────────────────────────────────────────
+  // Supabase (RLS) es quien realmente permite o niega cada operación.
+  // Estas opciones solo deciden qué botones y vistas muestra la página.
+  ROLES_ADMIN: ['admin', 'lider', 'supervisor'],
+  COLABORADORES_VEN_EQUIPO: true,          // un colaborador puede ver las tareas del equipo
+  COLABORADORES_ASIGNAN_A_OTROS: false,    // un colaborador puede asignar tareas a otros
+
+  DIAS_ALERTA: 3,          // "por vencer" = vence dentro de N días
+  SEMANAS_TENDENCIA: 12,   // semanas en la gráfica de tendencia
+  LIMITE_LISTA: 300,       // filas visibles en la vista Lista antes de "Ver más"
+};
+
+const ESTADOS = [
+  { id: 'pendiente',   label: 'Pendiente',   icon: '○' },
+  { id: 'en_progreso', label: 'En progreso', icon: '▷' },
+  { id: 'en_revision', label: 'En revisión', icon: '◎' },
+  { id: 'completada',  label: 'Completada',  icon: '✓' },
+];
+
+const PRIORIDADES = [
+  { id: 'urgente', label: 'Urgente', icon: '⏫' },
+  { id: 'alta',    label: 'Alta',    icon: '🔺' },
+  { id: 'media',   label: 'Media',   icon: '◆' },
+  { id: 'baja',    label: 'Baja',    icon: '🔻' },
+];
+
+const CATEGORIAS = ['Tributario', 'Contable', 'Nómina', 'Auditoría', 'Cliente', 'Administrativo', 'Otro'];
+
+// Paleta categórica para identificar colaboradores (orden fijo, validada para daltonismo).
+const PALETA_COLABORADORES = {
+  claro:  ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948'],
+  oscuro: ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'],
+};
+
+// Modo demo: sin Supabase configurado, o abriendo la página con ?demo=1.
+// Guarda todo en el navegador; sirve para probar sin tocar datos reales.
+const MODO_DEMO = new URLSearchParams(location.search).has('demo')
+  || !CONFIG.SUPABASE_URL || CONFIG.SUPABASE_URL.includes('TU_');
+
+</script>
+<script>
+/* ── js/utils.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// UTILIDADES — funciones puras sin dependencias del DOM ni de datos
+// ═══════════════════════════════════════════════════════════════════
+
+const Util = {
+  esc(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  },
+
+  uid() {
+    if (window.crypto?.randomUUID) return crypto.randomUUID();
+    return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  },
+
+  normalizar(s) {
+    return String(s ?? '').trim().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  },
+
+  iniciales(nombre) {
+    const partes = String(nombre || '?').trim().split(/\s+/).filter(Boolean);
+    return ((partes[0]?.[0] || '?') + (partes[1]?.[0] || '')).toUpperCase();
+  },
+
+  // ── Fechas ──────────────────────────────────────────────────────────
+  // Las fechas de tareas se guardan como 'AAAA-MM-DD' y se interpretan en
+  // hora local. new Date('2026-07-14') las leería en UTC y en Colombia
+  // (UTC-5) caerían un día antes.
+  aISO(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  },
+
+  deISO(s) {
+    if (!s) return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s));
+    if (!m) return null;
+    return new Date(+m[1], +m[2] - 1, +m[3]);
+  },
+
+  // Fecha local (AAAA-MM-DD) de un timestamp ISO completo.
+  fechaDeTimestamp(ts) {
+    if (!ts) return null;
+    const d = new Date(ts);
+    return isNaN(d) ? null : Util.aISO(d);
+  },
+
+  hoyISO() { return Util.aISO(new Date()); },
+
+  sumarDias(iso, n) {
+    const d = Util.deISO(iso);
+    d.setDate(d.getDate() + n);
+    return Util.aISO(d);
+  },
+
+  diasEntre(desdeISO, hastaISO) {
+    const a = Util.deISO(desdeISO), b = Util.deISO(hastaISO);
+    return Math.round((b - a) / 86400000);
+  },
+
+  // Lunes de la semana de una fecha (semana laboral colombiana empieza en lunes).
+  inicioSemana(iso) {
+    const d = Util.deISO(iso);
+    const dia = (d.getDay() + 6) % 7;
+    d.setDate(d.getDate() - dia);
+    return Util.aISO(d);
+  },
+
+  MESES: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+  MESES_CORTOS: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
+  DIAS_CORTOS: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+
+  fmtFecha(iso) {
+    const d = Util.deISO(iso);
+    if (!d) return '—';
+    return d.getDate() + ' ' + Util.MESES_CORTOS[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : '');
+  },
+
+  // "Hoy", "Mañana", "Ayer", "en 3 días", "hace 5 días"
+  fmtRelativa(iso) {
+    if (!iso) return 'Sin fecha';
+    const n = Util.diasEntre(Util.hoyISO(), iso);
+    if (n === 0) return 'Hoy';
+    if (n === 1) return 'Mañana';
+    if (n === -1) return 'Ayer';
+    if (n > 1 && n <= 6) return 'En ' + n + ' días';
+    if (n < -1 && n >= -30) return 'Hace ' + (-n) + ' días';
+    return Util.fmtFecha(iso);
+  },
+
+  fmtFechaHora(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    return d.toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  },
+
+  // Convierte casi cualquier valor de celda de Excel a 'AAAA-MM-DD'.
+  parsearFecha(v) {
+    if (v == null || v === '') return null;
+    if (v instanceof Date) {
+      if (isNaN(v)) return null;
+      // Las fechas de Excel a veces llegan corridas por zona horaria (p. ej. 19:00 del
+      // día anterior = medianoche UTC en Colombia): de 18:00 en adelante es el día siguiente.
+      const d = new Date(v);
+      if (d.getHours() >= 18) d.setDate(d.getDate() + 1);
+      return Util.aISO(d);
+    }
+    if (typeof v === 'number') {
+      // Número de serie de Excel (días desde 1899-12-30)
+      if (v > 20000 && v < 80000) return Util.aISO(new Date(Math.round((v - 25569) * 86400000) + new Date().getTimezoneOffset() * 60000));
+      return null;
+    }
+    const s = String(v).trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0, 10);
+    const p = s.split(/[\/\-.]/);
+    if (p.length === 3 && p.every(x => /^\d+$/.test(x))) {
+      if (p[2].length === 4) return p[2] + '-' + p[1].padStart(2, '0') + '-' + p[0].padStart(2, '0');
+      if (p[0].length === 4) return p[0] + '-' + p[1].padStart(2, '0') + '-' + p[2].padStart(2, '0');
+    }
+    if (!/[a-zA-Z]/.test(s)) return null; // números sueltos nunca son fechas
+    const d = new Date(s);
+    if (!isNaN(d) && d.getFullYear() >= 2000 && d.getFullYear() <= 2100) return Util.aISO(d);
+    return null;
+  },
+
+  // ── Colores ─────────────────────────────────────────────────────────
+  textoSobre(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return lum > 0.62 ? '#1b1a22' : '#ffffff';
+  },
+
+  pct(n, d) { return d ? Math.round((n / d) * 100) : 0; },
+
+  agruparPor(arr, fn) {
+    const m = new Map();
+    for (const x of arr) {
+      const k = fn(x);
+      if (!m.has(k)) m.set(k, []);
+      m.get(k).push(x);
+    }
+    return m;
+  },
+};
+
+if (typeof module !== 'undefined') module.exports = { Util };
+
+</script>
+<script>
+/* ── js/metricas.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// MÉTRICAS DE RENDIMIENTO — funciones puras (se prueban en tests/)
+//
+// Índice de rendimiento (0–100) de un colaborador en un periodo:
+//   evaluables  = tareas completadas + tareas vencidas sin completar
+//                 (las que aún no vencen no cuentan ni a favor ni en contra)
+//   cumplimiento = completadas / evaluables
+//   puntualidad  = completadas a tiempo / completadas con fecha límite
+//   índice       = 50 % cumplimiento + 50 % puntualidad
+//                  (si ninguna completada tenía fecha, solo cumplimiento)
+// ═══════════════════════════════════════════════════════════════════
+
+const Metricas = (() => {
+  const U = typeof Util !== 'undefined' ? Util : require('./utils.js').Util;
+  const DIAS_ALERTA = typeof CONFIG !== 'undefined' ? CONFIG.DIAS_ALERTA : 3;
+
+  function estaCompletada(t) { return t.estado === 'completada'; }
+
+  // pendiente | en_progreso | en_revision | completada | vencida
+  function estadoEfectivo(t, hoy) {
+    if (estaCompletada(t)) return 'completada';
+    if (t.fecha_vencimiento && t.fecha_vencimiento < hoy) return 'vencida';
+    return t.estado || 'pendiente';
+  }
+
+  function porVencer(t, hoy) {
+    if (estaCompletada(t) || !t.fecha_vencimiento) return false;
+    return t.fecha_vencimiento >= hoy && t.fecha_vencimiento <= U.sumarDias(hoy, DIAS_ALERTA);
+  }
+
+  // true / false; null si no se puede evaluar (sin fecha límite o sin completar)
+  function aTiempo(t) {
+    if (!estaCompletada(t) || !t.fecha_vencimiento) return null;
+    const fin = U.fechaDeTimestamp(t.completada_at) || t.fecha_vencimiento;
+    return fin <= t.fecha_vencimiento;
+  }
+
+  function rangoPeriodo(periodo, hoy) {
+    const d = U.deISO(hoy);
+    const y = d.getFullYear(), m = d.getMonth();
+    const iso = (yy, mm, dd) => U.aISO(new Date(yy, mm, dd));
+    switch (periodo) {
+      case 'semana': { const desde = U.inicioSemana(hoy); return { desde, hasta: U.sumarDias(desde, 6) }; }
+      case 'mes': return { desde: iso(y, m, 1), hasta: iso(y, m + 1, 0) };
+      case 'mes_anterior': return { desde: iso(y, m - 1, 1), hasta: iso(y, m, 0) };
+      case 'trimestre': { const q = Math.floor(m / 3) * 3; return { desde: iso(y, q, 1), hasta: iso(y, q + 3, 0) }; }
+      case 'anio': return { desde: iso(y, 0, 1), hasta: iso(y, 11, 31) };
+      default: return { desde: null, hasta: null };
+    }
+  }
+
+  // Fecha con la que una tarea "pertenece" a un periodo: su vencimiento o, si no tiene, su creación.
+  function fechaReferencia(t) {
+    return t.fecha_vencimiento || U.fechaDeTimestamp(t.created_at);
+  }
+
+  function enRango(t, rango) {
+    if (!rango.desde) return true;
+    const f = fechaReferencia(t);
+    return !!f && f >= rango.desde && f <= rango.hasta;
+  }
+
+  function claveColaborador(t) {
+    if (t.asignado_a) return t.asignado_a;
+    if (t.asignado_nombre) return 'n:' + U.normalizar(t.asignado_nombre);
+    return 'sin';
+  }
+
+  function calcular(tareas, hoy) {
+    const r = { total: tareas.length, completadas: 0, aTiempo: 0, tarde: 0, conFecha: 0, vencidas: 0, enCurso: 0, porVencer: 0, diasTotales: 0, diasMuestras: 0 };
+    for (const t of tareas) {
+      const est = estadoEfectivo(t, hoy);
+      if (est === 'completada') {
+        r.completadas++;
+        const ok = aTiempo(t);
+        if (ok !== null) { r.conFecha++; ok ? r.aTiempo++ : r.tarde++; }
+        const ini = U.fechaDeTimestamp(t.created_at), fin = U.fechaDeTimestamp(t.completada_at);
+        if (ini && fin) { r.diasTotales += Math.max(0, U.diasEntre(ini, fin)); r.diasMuestras++; }
+      } else if (est === 'vencida') {
+        r.vencidas++;
+      } else {
+        r.enCurso++;
+        if (porVencer(t, hoy)) r.porVencer++;
+      }
+    }
+    const evaluables = r.completadas + r.vencidas;
+    r.cumplimiento = evaluables ? r.completadas / evaluables : null;
+    r.puntualidad = r.conFecha ? r.aTiempo / r.conFecha : null;
+    r.indice = r.cumplimiento === null ? null
+      : Math.round(100 * (r.puntualidad === null ? r.cumplimiento : 0.5 * r.cumplimiento + 0.5 * r.puntualidad));
+    r.diasPromedio = r.diasMuestras ? r.diasTotales / r.diasMuestras : null;
+    return r;
+  }
+
+  // Una fila por colaborador (incluye a quienes no tienen tareas en el periodo).
+  function porColaborador(tareas, colaboradores, { periodo = 'todo', hoy = U.hoyISO() } = {}) {
+    const rango = rangoPeriodo(periodo, hoy);
+    const delPeriodo = tareas.filter(t => enRango(t, rango));
+    const grupos = U.agruparPor(delPeriodo, claveColaborador);
+    const filas = [];
+    const vistos = new Set();
+
+    for (const c of colaboradores) {
+      vistos.add(c.id);
+      filas.push({ clave: c.id, nombre: c.nombre, colaborador: c, ...calcular(grupos.get(c.id) || [], hoy) });
+    }
+    for (const [clave, lista] of grupos) {
+      if (vistos.has(clave)) continue;
+      const nombre = clave === 'sin' ? 'Sin asignar' : (lista[0].asignado_nombre || 'Sin asignar');
+      filas.push({ clave, nombre, colaborador: null, ...calcular(lista, hoy) });
+    }
+    return filas;
+  }
+
+  function resumenEquipo(filas) {
+    const s = { total: 0, completadas: 0, aTiempo: 0, conFecha: 0, vencidas: 0, enCurso: 0, porVencer: 0 };
+    for (const f of filas) for (const k in s) s[k] += f[k];
+    const evaluables = s.completadas + s.vencidas;
+    s.cumplimiento = evaluables ? s.completadas / evaluables : null;
+    s.puntualidad = s.conFecha ? s.aTiempo / s.conFecha : null;
+    const conIndice = filas.filter(f => f.indice !== null && f.colaborador);
+    s.indicePromedio = conIndice.length ? Math.round(conIndice.reduce((a, f) => a + f.indice, 0) / conIndice.length) : null;
+    return s;
+  }
+
+  // Tareas completadas por semana (lunes a domingo), las últimas N semanas.
+  function tendenciaSemanal(tareas, semanas, hoy = U.hoyISO()) {
+    const actual = U.inicioSemana(hoy);
+    const serie = [];
+    for (let i = semanas - 1; i >= 0; i--) serie.push({ semana: U.sumarDias(actual, -7 * i), completadas: 0, aTiempo: 0 });
+    const idx = new Map(serie.map((s, i) => [s.semana, i]));
+    for (const t of tareas) {
+      if (!estaCompletada(t)) continue;
+      const fin = U.fechaDeTimestamp(t.completada_at);
+      if (!fin) continue;
+      const i = idx.get(U.inicioSemana(fin));
+      if (i === undefined) continue;
+      serie[i].completadas++;
+      if (aTiempo(t) !== false) serie[i].aTiempo++;
+    }
+    return serie;
+  }
+
+  function nivel(indice) {
+    if (indice === null || indice === undefined) return { id: 'na', label: 'Sin datos', icon: '—' };
+    if (indice >= 85) return { id: 'excelente', label: 'Excelente', icon: '★' };
+    if (indice >= 70) return { id: 'bueno', label: 'Bueno', icon: '▲' };
+    if (indice >= 50) return { id: 'regular', label: 'Regular', icon: '■' };
+    return { id: 'bajo', label: 'Bajo', icon: '▼' };
+  }
+
+  return { estadoEfectivo, porVencer, aTiempo, rangoPeriodo, enRango, claveColaborador, calcular, porColaborador, resumenEquipo, tendenciaSemanal, nivel };
+})();
+
+if (typeof module !== 'undefined') module.exports = { Metricas };
+
+</script>
+<script>
+/* ── js/permisos.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// PERMISOS DE LA INTERFAZ
+//
+// Un solo lugar decide qué ve y qué puede intentar cada usuario.
+// Esto NO reemplaza la seguridad: Supabase (políticas RLS) es quien
+// realmente permite o rechaza cada lectura y escritura. Si la base de
+// datos niega algo, la app muestra el error y revierte el cambio.
+// ═══════════════════════════════════════════════════════════════════
+
+const Permisos = {
+  perfil: null,
+
+  usar(perfil) { this.perfil = perfil; },
+
+  get uid() { return this.perfil?.id; },
+
+  esAdmin() { return CONFIG.ROLES_ADMIN.includes(this.perfil?.rol); },
+
+  verEquipo() { return this.esAdmin() || CONFIG.COLABORADORES_VEN_EQUIPO; },
+
+  verRendimientoEquipo() { return this.esAdmin(); },
+
+  asignarAOtros() { return this.esAdmin() || CONFIG.COLABORADORES_ASIGNAN_A_OTROS; },
+
+  crearTarea() { return !!this.perfil; },
+
+  editarTarea(t) { return this.esAdmin() || t.creado_por === this.uid || t.asignado_a === this.uid; },
+
+  eliminarTarea(t) { return this.esAdmin() || t.creado_por === this.uid; },
+
+  importar() { return this.esAdmin(); },
+
+  administrar() { return this.esAdmin(); },
+};
+
+</script>
+<script>
+/* ── js/datos.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// CAPA DE DATOS
+//
+// Dos implementaciones con la misma interfaz:
+//   · SupabaseStore — producción (tablas: tareas, tarea_actividad, perfiles)
+//   · LocalStore    — modo demo, guarda en el navegador
+// El resto de la app solo usa `Datos`, nunca Supabase directamente.
+//
+// Interfaz:
+//   iniciar() · login(email, pass) · sesion() · logout() · recuperar(email)
+//   colaboradores() · tareas() · crearTarea(t) · actualizarTarea(id, cambios)
+//   eliminarTarea(id) · actividad(tareaId) · registrarActividad(tareaId, tipo, texto)
+//   importarTareas(lista) · suscribir(cb)
+// ═══════════════════════════════════════════════════════════════════
+
+class ErrorDatos extends Error {
+  constructor(mensaje, { codigo, original, faltaEsquema = false } = {}) {
+    super(mensaje);
+    this.codigo = codigo;
+    this.original = original;
+    this.faltaEsquema = faltaEsquema;
+  }
+}
+
+const CAMPOS_TAREA = ['titulo', 'descripcion', 'asignado_a', 'asignado_nombre', 'empresa', 'categoria', 'prioridad', 'estado',
+  'fecha_inicio', 'fecha_vencimiento', 'progreso', 'checklist', 'etiquetas', 'completada_at', 'origen_ref'];
+
+function normalizarTarea(t) {
+  return {
+    ...t,
+    titulo: t.titulo || '(sin título)',
+    estado: t.estado || 'pendiente',
+    prioridad: t.prioridad || 'media',
+    progreso: Number(t.progreso) || 0,
+    checklist: Array.isArray(t.checklist) ? t.checklist : [],
+    etiquetas: Array.isArray(t.etiquetas) ? t.etiquetas : [],
+  };
+}
+
+// Solo columnas conocidas; evita mandar campos internos a la base de datos.
+function limpiarParaGuardar(obj) {
+  const out = {};
+  for (const k of CAMPOS_TAREA) if (k in obj) out[k] = obj[k] === '' ? null : obj[k];
+  return out;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SUPABASE
+// ─────────────────────────────────────────────────────────────────────
+class SupabaseStore {
+  constructor() { this.sb = null; this.canal = null; this.usuario = null; this.perfil = null; }
+
+  get modo() { return 'supabase'; }
+
+  async iniciar() {
+    if (!window.supabase?.createClient) throw new ErrorDatos('No se pudo cargar la librería de Supabase. Revisa tu conexión a internet.');
+    this.sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
+      auth: { autoRefreshToken: true, persistSession: true },
+    });
+  }
+
+  _error(error, accion) {
+    const msg = error?.message || String(error);
+    const faltaEsquema = error?.code === '42P01' || error?.code === 'PGRST205' || /does not exist|could not find the table/i.test(msg);
+    if (faltaEsquema) return new ErrorDatos('Falta crear las tablas del planner en Supabase (ejecuta supabase/schema.sql).', { codigo: error.code, original: error, faltaEsquema });
+    if (error?.code === 'PGRST116' || error?.code === '42501' || /row-level security|permission denied/i.test(msg)) {
+      return new ErrorDatos('No tienes permiso para ' + accion + '.', { codigo: error.code, original: error });
+    }
+    return new ErrorDatos('Error al ' + accion + ': ' + msg, { codigo: error?.code, original: error });
+  }
+
+  async _cargarPerfil(user) {
+    const { data } = await this.sb.from(CONFIG.TABLAS.perfiles).select('*').eq('id', user.id).maybeSingle();
+    this.usuario = user;
+    this.perfil = {
+      id: user.id,
+      nombre: data?.nombre || user.email.split('@')[0],
+      correo: data?.correo || user.email,
+      rol: (data?.rol || 'colaborador').toLowerCase(),
+    };
+    return this.perfil;
+  }
+
+  async login(email, pass) {
+    const { data, error } = await this.sb.auth.signInWithPassword({ email, password: pass });
+    if (error) throw new ErrorDatos(/invalid/i.test(error.message) ? 'Correo o contraseña incorrectos.' : error.message);
+    return this._cargarPerfil(data.user);
+  }
+
+  async sesion() {
+    const { data } = await this.sb.auth.getSession();
+    return data?.session?.user ? this._cargarPerfil(data.session.user) : null;
+  }
+
+  async logout() {
+    if (this.canal) { this.sb.removeChannel(this.canal); this.canal = null; }
+    await this.sb.auth.signOut();
+    this.usuario = this.perfil = null;
+  }
+
+  async recuperar(email) {
+    const { error } = await this.sb.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0] });
+    if (error) throw new ErrorDatos('No se pudo enviar el enlace: ' + error.message);
+  }
+
+  async colaboradores() {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.perfiles).select('*').order('nombre');
+    if (error) throw this._error(error, 'leer los colaboradores');
+    return (data || [])
+      .filter(p => p.activo !== false)
+      .map(p => ({ id: p.id, nombre: p.nombre || p.correo || 'Sin nombre', correo: p.correo || '', rol: (p.rol || 'colaborador').toLowerCase() }));
+  }
+
+  async tareas() {
+    // PostgREST devuelve como máximo 1000 filas por consulta: se pagina.
+    const todas = [];
+    const PAGINA = 1000;
+    for (let desde = 0; ; desde += PAGINA) {
+      const { data, error } = await this.sb.from(CONFIG.TABLAS.tareas).select('*')
+        .order('fecha_vencimiento', { ascending: true, nullsFirst: false })
+        .order('id')
+        .range(desde, desde + PAGINA - 1);
+      if (error) throw this._error(error, 'leer las tareas');
+      todas.push(...data);
+      if (data.length < PAGINA) break;
+    }
+    return todas.map(normalizarTarea);
+  }
+
+  async crearTarea(t) {
+    const fila = { ...limpiarParaGuardar(t), creado_por: this.usuario?.id };
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.tareas).insert(fila).select().single();
+    if (error) throw this._error(error, 'crear la tarea');
+    return normalizarTarea(data);
+  }
+
+  async actualizarTarea(id, cambios) {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.tareas).update(limpiarParaGuardar(cambios)).eq('id', id).select().single();
+    if (error) throw this._error(error, 'modificar esta tarea');
+    return normalizarTarea(data);
+  }
+
+  async eliminarTarea(id) {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.tareas).delete().eq('id', id).select('id');
+    if (error) throw this._error(error, 'eliminar esta tarea');
+    if (!data?.length) throw new ErrorDatos('No tienes permiso para eliminar esta tarea.');
+  }
+
+  async actividad(tareaId) {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.actividad).select('*').eq('tarea_id', tareaId).order('created_at');
+    if (error) throw this._error(error, 'leer el seguimiento');
+    return data || [];
+  }
+
+  async registrarActividad(tareaId, tipo, texto) {
+    const fila = { tarea_id: tareaId, tipo, texto, autor_id: this.usuario?.id, autor_nombre: this.perfil?.nombre };
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.actividad).insert(fila).select().single();
+    if (error) throw this._error(error, 'guardar el seguimiento');
+    return data;
+  }
+
+  async importarTareas(lista, alAvanzar) {
+    let hechas = 0;
+    const filas = lista.map(t => ({ ...limpiarParaGuardar(t), creado_por: this.usuario?.id }));
+    for (let i = 0; i < filas.length; i += 500) {
+      const lote = filas.slice(i, i + 500);
+      // origen_ref evita duplicados al reimportar el mismo archivo
+      const { error } = await this.sb.from(CONFIG.TABLAS.tareas).upsert(lote, { onConflict: 'origen_ref', ignoreDuplicates: true });
+      if (error) throw this._error(error, 'importar tareas');
+      hechas += lote.length;
+      alAvanzar?.(hechas, filas.length);
+    }
+    return hechas;
+  }
+
+  // cb(evento, tareaNueva, tareaAnterior, estadoConexion)
+  suscribir(cb) {
+    if (this.canal) this.sb.removeChannel(this.canal);
+    this.canal = this.sb.channel('tareas-rt')
+      .on('postgres_changes', { event: '*', schema: 'public', table: CONFIG.TABLAS.tareas }, p => {
+        cb(p.eventType, p.new && Object.keys(p.new).length ? normalizarTarea(p.new) : null, p.old || null);
+      })
+      .subscribe(estado => cb('estado', null, null, estado === 'SUBSCRIBED'));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// LOCAL (modo demo)
+// ─────────────────────────────────────────────────────────────────────
+class LocalStore {
+  constructor() { this.CLAVE = 'planner_demo_v1'; this.db = null; this.perfil = null; }
+
+  get modo() { return 'demo'; }
+
+  async iniciar() {
+    try { this.db = JSON.parse(localStorage.getItem(this.CLAVE) || 'null'); } catch { this.db = null; }
+    if (!this.db?.colaboradores) { this.db = DatosDemo.generar(); this._guardar(); }
+  }
+
+  _guardar() { try { localStorage.setItem(this.CLAVE, JSON.stringify(this.db)); } catch { /* almacenamiento lleno o bloqueado */ } }
+
+  reiniciar() { this.db = DatosDemo.generar(); this._guardar(); }
+
+  async login(email) {
+    const correo = String(email).trim().toLowerCase();
+    const c = this.db.colaboradores.find(x => x.correo === correo) || this.db.colaboradores.find(x => x.rol === 'admin');
+    this.perfil = { ...c };
+    sessionStorage.setItem('planner_demo_sesion', c.id);
+    return this.perfil;
+  }
+
+  async sesion() {
+    const id = sessionStorage.getItem('planner_demo_sesion');
+    const c = id && this.db.colaboradores.find(x => x.id === id);
+    return c ? (this.perfil = { ...c }) : null;
+  }
+
+  async logout() { sessionStorage.removeItem('planner_demo_sesion'); this.perfil = null; }
+  async recuperar() { /* en demo no hay correos */ }
+
+  async colaboradores() { return this.db.colaboradores.map(c => ({ ...c })); }
+  async tareas() { return this.db.tareas.map(t => normalizarTarea(structuredClone(t))); }
+
+  async crearTarea(t) {
+    const ahora = new Date().toISOString();
+    const nueva = normalizarTarea({
+      estado: 'pendiente', prioridad: 'media', progreso: 0, checklist: [], etiquetas: [],
+      ...limpiarParaGuardar(t), id: Util.uid(), creado_por: this.perfil?.id, created_at: ahora, updated_at: ahora,
+    });
+    if (nueva.estado === 'completada' && !nueva.completada_at) nueva.completada_at = ahora;
+    this.db.tareas.push(nueva);
+    this._guardar();
+    return structuredClone(nueva);
+  }
+
+  async actualizarTarea(id, cambios) {
+    const t = this.db.tareas.find(x => x.id === id);
+    if (!t) throw new ErrorDatos('La tarea ya no existe.');
+    const limpio = limpiarParaGuardar(cambios);
+    // Igual que el trigger de la base de datos: completada_at se gestiona solo.
+    if (limpio.estado && limpio.estado !== t.estado) {
+      limpio.completada_at = limpio.estado === 'completada' ? new Date().toISOString() : null;
+    }
+    Object.assign(t, limpio, { updated_at: new Date().toISOString() });
+    this._guardar();
+    return normalizarTarea(structuredClone(t));
+  }
+
+  async eliminarTarea(id) {
+    this.db.tareas = this.db.tareas.filter(x => x.id !== id);
+    this.db.actividad = this.db.actividad.filter(a => a.tarea_id !== id);
+    this._guardar();
+  }
+
+  async actividad(tareaId) { return this.db.actividad.filter(a => a.tarea_id === tareaId).sort((a, b) => a.created_at.localeCompare(b.created_at)); }
+
+  async registrarActividad(tareaId, tipo, texto) {
+    const a = { id: Util.uid(), tarea_id: tareaId, tipo, texto, autor_id: this.perfil?.id, autor_nombre: this.perfil?.nombre, created_at: new Date().toISOString() };
+    this.db.actividad.push(a);
+    this._guardar();
+    return a;
+  }
+
+  async importarTareas(lista, alAvanzar) {
+    const refs = new Set(this.db.tareas.map(t => t.origen_ref).filter(Boolean));
+    let n = 0;
+    for (const t of lista) {
+      if (t.origen_ref && refs.has(t.origen_ref)) continue;
+      await this.crearTarea(t);
+      if (t.origen_ref) refs.add(t.origen_ref);
+      n++;
+    }
+    alAvanzar?.(lista.length, lista.length);
+    return n;
+  }
+
+  suscribir(cb) {
+    // Sincroniza entre pestañas del mismo navegador.
+    window.addEventListener('storage', e => {
+      if (e.key !== this.CLAVE) return;
+      try { this.db = JSON.parse(e.newValue); cb('recargar'); } catch { /* ignorar */ }
+    });
+    cb('estado', null, null, true);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Datos de ejemplo para el modo demo
+// ─────────────────────────────────────────────────────────────────────
+const DatosDemo = {
+  generar() {
+    const hoy = Util.hoyISO();
+    const colaboradores = [
+      { id: 'u-admin', nombre: 'Administrador', correo: 'admin@demo.co', rol: 'admin' },
+      { id: 'u-ana', nombre: 'Ana Gómez', correo: 'ana@demo.co', rol: 'colaborador' },
+      { id: 'u-carlos', nombre: 'Carlos Ruiz', correo: 'carlos@demo.co', rol: 'colaborador' },
+      { id: 'u-yohana', nombre: 'Yohana Pérez', correo: 'yohana@demo.co', rol: 'colaborador' },
+      { id: 'u-andres', nombre: 'Andrés Mora', correo: 'andres@demo.co', rol: 'colaborador' },
+    ];
+    const empresas = ['Comercial Andina SAS', 'Inversiones del Valle', 'Textiles Medellín', 'Agro Caribe', 'Logística Bogotá'];
+    const plantillas = [
+      ['Declaración de IVA bimestral', 'Tributario', 'alta'],
+      ['Retención en la fuente', 'Tributario', 'urgente'],
+      ['Conciliación bancaria', 'Contable', 'media'],
+      ['Liquidación de nómina', 'Nómina', 'alta'],
+      ['Cierre contable mensual', 'Contable', 'alta'],
+      ['Informe exógena', 'Tributario', 'media'],
+      ['Reunión de seguimiento con cliente', 'Cliente', 'baja'],
+      ['Revisión de soportes', 'Auditoría', 'media'],
+      ['ICA municipal', 'Tributario', 'alta'],
+      ['Actualizar RUT', 'Administrativo', 'baja'],
+    ];
+    // Generador pseudoaleatorio con semilla: los datos demo son siempre iguales.
+    let semilla = 7;
+    const azar = () => (semilla = (semilla * 16807) % 2147483647) / 2147483647;
+    const elegir = arr => arr[Math.floor(azar() * arr.length)];
+    const ts = (iso, h = 10) => { const d = Util.deISO(iso); d.setHours(h); return d.toISOString(); };
+
+    const tareas = [];
+    const equipo = colaboradores.filter(c => c.rol !== 'admin');
+    // Cada colaborador tiene un ritmo distinto para que el rendimiento varíe.
+    const ritmo = { 'u-ana': 0.92, 'u-carlos': 0.7, 'u-yohana': 0.82, 'u-andres': 0.5 };
+    for (let i = 0; i < 64; i++) {
+      const c = equipo[i % equipo.length];
+      const [titulo, categoria, prioridad] = elegir(plantillas);
+      const offset = Math.round(azar() * 70) - 45; // de -45 a +25 días
+      const vence = Util.sumarDias(hoy, offset);
+      const creada = Util.sumarDias(vence, -(3 + Math.round(azar() * 10)));
+      let estado = 'pendiente', completada_at = null;
+      if (offset < 0) {
+        if (azar() < ritmo[c.id]) {
+          estado = 'completada';
+          const retraso = azar() < ritmo[c.id] ? -Math.round(azar() * 3) : 1 + Math.round(azar() * 5);
+          completada_at = ts(Util.sumarDias(vence, retraso) > hoy ? hoy : Util.sumarDias(vence, retraso));
+        } else {
+          estado = elegir(['pendiente', 'en_progreso']);
+        }
+      } else {
+        estado = elegir(['pendiente', 'pendiente', 'en_progreso', 'en_revision', 'completada']);
+        if (estado === 'completada') completada_at = ts(hoy, 8);
+      }
+      const checklist = azar() < 0.5 ? [
+        { id: Util.uid(), texto: 'Recopilar información', hecho: estado !== 'pendiente' },
+        { id: Util.uid(), texto: 'Preparar borrador', hecho: estado === 'completada' || estado === 'en_revision' },
+        { id: Util.uid(), texto: 'Validar y enviar', hecho: estado === 'completada' },
+      ] : [];
+      tareas.push({
+        id: 't-' + i, titulo, descripcion: '', asignado_a: c.id, asignado_nombre: null, creado_por: 'u-admin',
+        empresa: elegir(empresas), categoria, prioridad, estado,
+        fecha_inicio: null, fecha_vencimiento: vence,
+        progreso: estado === 'completada' ? 100 : estado === 'en_revision' ? 80 : estado === 'en_progreso' ? 40 : 0,
+        checklist, etiquetas: [], completada_at, origen_ref: null,
+        created_at: ts(creada, 9), updated_at: ts(creada, 9),
+      });
+    }
+    return { colaboradores, tareas, actividad: [] };
+  },
+};
+
+const Datos = MODO_DEMO ? new LocalStore() : new SupabaseStore();
+
+</script>
+<script>
+/* ── js/teams.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// NOTIFICACIONES A MICROSOFT TEAMS (opcional)
+// Se configura en js/config.js. Sin URL configurada, no hace nada.
+// ═══════════════════════════════════════════════════════════════════
+
+const Teams = {
+  urlPara(nombreColaborador) {
+    const clave = Util.normalizar(nombreColaborador);
+    for (const [nombre, url] of Object.entries(CONFIG.TEAMS_WEBHOOKS_POR_COLABORADOR)) {
+      if (Util.normalizar(nombre) === clave) return url;
+    }
+    return CONFIG.TEAMS_WEBHOOK_URL;
+  },
+
+  async enviar(titulo, texto, nombreColaborador) {
+    const url = Teams.urlPara(nombreColaborador);
+    if (!url) return;
+    const payload = {
+      type: 'message',
+      attachments: [{
+        contentType: 'application/vnd.microsoft.card.adaptive',
+        content: {
+          $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+          type: 'AdaptiveCard',
+          version: '1.4',
+          body: [
+            { type: 'TextBlock', text: titulo, weight: 'Bolder', size: 'Medium', wrap: true },
+            { type: 'TextBlock', text: texto, wrap: true },
+          ],
+        },
+      }],
+    };
+    try {
+      await fetch(url, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    } catch {
+      // Algunos flujos de Power Automate bloquean CORS: se reintenta sin leer respuesta.
+      try { await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) }); }
+      catch (e) { console.warn('[Teams] No se pudo notificar:', e); }
+    }
+  },
+};
+
+</script>
+<script>
+/* ── js/componentes.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// COMPONENTES DE INTERFAZ — piezas HTML reutilizadas por todas las vistas
+// ═══════════════════════════════════════════════════════════════════
+
+// Registro de vistas. Cada archivo de js/vistas/ agrega la suya:
+//   Vistas.x = { titulo, icono, orden, visible(), render(), montar?() }
+const Vistas = {};
+
+const UI = {
+  // ── Colaboradores ──────────────────────────────────────────────────
+  colorColaborador(id) {
+    const idx = App.estado.colaboradores.findIndex(c => c.id === id);
+    if (idx < 0) return 'var(--text3)';
+    const paleta = App.estado.tema === 'oscuro' ? PALETA_COLABORADORES.oscuro : PALETA_COLABORADORES.claro;
+    return paleta[idx % paleta.length];
+  },
+
+  avatar(t_o_colab, tam = 26) {
+    const c = t_o_colab?.titulo !== undefined ? App.colaboradorDe(t_o_colab) : t_o_colab;
+    const nombre = c?.nombre || 'Sin asignar';
+    const color = c?.id ? UI.colorColaborador(c.id) : null;
+    const fondo = color && color.startsWith('#') ? color : 'var(--bg3)';
+    const texto = color && color.startsWith('#') ? Util.textoSobre(color) : 'var(--text2)';
+    return `<span class="avatar" title="${Util.esc(nombre)}" style="width:${tam}px;height:${tam}px;font-size:${Math.round(tam * 0.4)}px;background:${fondo};color:${texto}">${c ? Util.esc(Util.iniciales(nombre)) : '?'}</span>`;
+  },
+
+  // ── Chips ──────────────────────────────────────────────────────────
+  prioridad(p) {
+    const def = PRIORIDADES.find(x => x.id === p) || PRIORIDADES[2];
+    return `<span class="chip prio-${def.id}">${def.icon} ${def.label}</span>`;
+  },
+
+  estado(t) {
+    const ef = Metricas.estadoEfectivo(t, Util.hoyISO());
+    if (ef === 'vencida') return `<span class="chip est-vencida">⚠ Vencida</span>`;
+    const def = ESTADOS.find(x => x.id === ef) || ESTADOS[0];
+    return `<span class="chip est-${def.id}">${def.icon} ${def.label}</span>`;
+  },
+
+  // Insignia del índice de rendimiento (ícono + número + texto: nunca solo color)
+  nivel(indice, { texto = false } = {}) {
+    const n = Metricas.nivel(indice);
+    if (indice === null || indice === undefined) return `<span class="nivel nivel-na" title="Sin tareas evaluables en el periodo">Sin datos</span>`;
+    return `<span class="nivel nivel-${n.id}" title="Índice ${indice} · ${n.label}">${n.icon} ${indice}${texto ? ` <small>${n.label}</small>` : ''}</span>`;
+  },
+
+  fecha(t) {
+    if (!t.fecha_vencimiento) return '<span class="fecha muted">Sin fecha</span>';
+    const hoy = Util.hoyISO();
+    let cls = '';
+    if (t.estado !== 'completada') {
+      if (t.fecha_vencimiento < hoy) cls = 'vencida';
+      else if (Metricas.porVencer(t, hoy)) cls = 'pronto';
+    }
+    return `<span class="fecha ${cls}" title="${Util.fmtFecha(t.fecha_vencimiento)}">📅 ${Util.fmtRelativa(t.fecha_vencimiento)}</span>`;
+  },
+
+  progreso(t) {
+    const total = t.checklist.length;
+    const hechos = t.checklist.filter(i => i.hecho).length;
+    const pct = total ? Util.pct(hechos, total) : (t.estado === 'completada' ? 100 : t.progreso);
+    return { pct, texto: total ? `${hechos}/${total}` : `${pct}%` };
+  },
+
+  // ── Tarjeta de tarea (tablero, inicio, calendario semanal) ─────────
+  tarjeta(t, { arrastrable = true } = {}) {
+    const p = UI.progreso(t);
+    const hecha = t.estado === 'completada';
+    const puede = Permisos.editarTarea(t);
+    return `<article class="tarjeta prio-borde-${t.prioridad} ${hecha ? 'hecha' : ''}" data-accion="abrir-tarea" data-id="${t.id}"
+        ${arrastrable && puede ? 'draggable="true"' : ''} data-arrastrar="${t.id}">
+      <div class="tarjeta-top">
+        ${UI.prioridad(t.prioridad)}
+        ${t.categoria ? `<span class="chip chip-suave">${Util.esc(t.categoria)}</span>` : ''}
+        ${puede ? `<button class="check ${hecha ? 'on' : ''}" data-accion="completar" data-id="${t.id}" title="${hecha ? 'Reabrir tarea' : 'Marcar como completada'}" aria-label="${hecha ? 'Reabrir tarea' : 'Completar tarea'}">✓</button>` : ''}
+      </div>
+      <h4 class="tarjeta-titulo">${Util.esc(t.titulo)}</h4>
+      ${t.empresa ? `<div class="tarjeta-empresa">🏢 ${Util.esc(t.empresa)}</div>` : ''}
+      ${p.pct > 0 && !hecha ? `<div class="mini-barra"><span style="width:${p.pct}%"></span></div>` : ''}
+      <div class="tarjeta-pie">
+        ${UI.fecha(t)}
+        <span class="pie-der">
+          ${t.checklist.length ? `<span class="muted" title="Lista de verificación">☑ ${p.texto}</span>` : ''}
+          ${UI.avatar(t)}
+        </span>
+      </div>
+    </article>`;
+  },
+
+  // ── Barra de filtros (tablero, lista, calendario) ──────────────────
+  filtros() {
+    const f = App.estado.filtros;
+    const sel = (campo, etiqueta, opciones) => `<select data-filtro="${campo}" aria-label="${etiqueta}">
+        <option value="">${etiqueta}</option>
+        ${opciones.map(([v, l]) => `<option value="${Util.esc(v)}" ${f[campo] === v ? 'selected' : ''}>${Util.esc(l)}</option>`).join('')}
+      </select>`;
+    const colabs = App.estado.colaboradores.map(c => [c.id, c.nombre]);
+    const activos = ['texto', 'colaborador', 'estado', 'prioridad', 'categoria'].some(k => f[k]);
+    return `<div class="barra-filtros">
+      ${Permisos.verEquipo() ? `<div class="segmentado" role="group" aria-label="Alcance">
+        <button class="${f.alcance === 'mias' ? 'on' : ''}" data-accion="alcance" data-valor="mias">Mis tareas</button>
+        <button class="${f.alcance === 'equipo' ? 'on' : ''}" data-accion="alcance" data-valor="equipo">Equipo</button>
+      </div>` : ''}
+      <input type="search" data-filtro="texto" placeholder="🔍 Buscar tarea o empresa…" value="${Util.esc(f.texto)}" aria-label="Buscar">
+      ${f.alcance === 'equipo' ? sel('colaborador', 'Colaborador', colabs) : ''}
+      ${sel('estado', 'Estado', [...ESTADOS.map(e => [e.id, e.label]), ['vencida', 'Vencida']])}
+      ${sel('prioridad', 'Prioridad', PRIORIDADES.map(p => [p.id, p.label]))}
+      ${sel('categoria', 'Categoría', App.categorias().map(c => [c, c]))}
+      ${activos ? '<button class="btn btn-sm" data-accion="limpiar-filtros">✕ Limpiar</button>' : ''}
+    </div>`;
+  },
+
+  vacio(icono, titulo, texto, accion = '') {
+    return `<div class="vacio"><div class="vacio-icono">${icono}</div><h3>${titulo}</h3><p>${texto}</p>${accion}</div>`;
+  },
+
+  // ── Notificaciones ─────────────────────────────────────────────────
+  toast(msg, { tipo = 'info', deshacer = null, ms = 4500 } = {}) {
+    const ct = document.getElementById('toasts');
+    const el = document.createElement('div');
+    el.className = 'toast toast-' + tipo;
+    el.setAttribute('role', 'status');
+    el.innerHTML = `<span>${Util.esc(msg)}</span>`;
+    if (deshacer) {
+      const b = document.createElement('button');
+      b.textContent = 'Deshacer';
+      b.onclick = () => { el.remove(); deshacer(); };
+      el.appendChild(b);
+    }
+    ct.appendChild(el);
+    while (ct.children.length > 3) ct.firstElementChild.remove(); // solo las 3 más recientes
+    setTimeout(() => el.remove(), ms);
+  },
+
+  // ── Modal genérico ─────────────────────────────────────────────────
+  abrirModal(html, { ancho = 560, alCerrar = null } = {}) {
+    const capa = document.getElementById('modal');
+    capa.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:${ancho}px">${html}</div>`;
+    capa.hidden = false;
+    UI._alCerrar = alCerrar;
+    setTimeout(() => capa.querySelector('[autofocus]')?.focus(), 30);
+  },
+
+  cerrarModal() {
+    const capa = document.getElementById('modal');
+    if (capa.hidden) return;
+    capa.hidden = true;
+    capa.innerHTML = '';
+    const fn = UI._alCerrar; UI._alCerrar = null;
+    fn?.();
+  },
+};
+
+</script>
+<script>
+/* ── js/vistas/inicio.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// VISTA: INICIO ("Mi día")
+// ═══════════════════════════════════════════════════════════════════
+
+Vistas.inicio = {
+  titulo: 'Inicio',
+  icono: '🏠',
+  orden: 1,
+  visible: () => true,
+
+  render() {
+    const hoy = Util.hoyISO();
+    const perfil = App.estado.perfil;
+    const mias = App.estado.tareas.filter(t => App.esMia(t));
+    const abiertas = mias.filter(t => t.estado !== 'completada');
+    const vencidas = abiertas.filter(t => t.fecha_vencimiento && t.fecha_vencimiento < hoy);
+    const paraHoy = abiertas.filter(t => t.fecha_vencimiento === hoy);
+    const semana = abiertas.filter(t => t.fecha_vencimiento > hoy && t.fecha_vencimiento <= Util.sumarDias(hoy, 7));
+    const sinFecha = abiertas.filter(t => !t.fecha_vencimiento);
+    const inicioSem = Util.inicioSemana(hoy);
+    const hechasSemana = mias.filter(t => t.estado === 'completada' && (Util.fechaDeTimestamp(t.completada_at) || '') >= inicioSem).length;
+    const m = Metricas.calcular(mias.filter(t => Metricas.enRango(t, Metricas.rangoPeriodo('mes', hoy))), hoy);
+
+    const f = new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+    const fechaLarga = f[0].toUpperCase() + f.slice(1);
+    const hora = new Date().getHours();
+    const saludo = hora < 12 ? 'Buenos días' : hora < 19 ? 'Buenas tardes' : 'Buenas noches';
+
+    const seccion = (titulo, lista, cls, vacioTxt) => `
+      <section class="panel">
+        <header class="panel-cab"><h3>${titulo}</h3><span class="contador ${cls}">${lista.length}</span></header>
+        <div class="lista-tarjetas">${lista.length ? lista.slice(0, 8).map(t => UI.tarjeta(t, { arrastrable: false })).join('') : `<p class="muted pad">${vacioTxt}</p>`}
+        ${lista.length > 8 ? `<button class="btn btn-sm ancho" data-accion="ver-colaborador" data-id="${perfil.id}">Ver las ${lista.length}</button>` : ''}</div>
+      </section>`;
+
+    return `
+    <div class="hero">
+      <div>
+        <p class="hero-fecha">${Util.esc(fechaLarga)}</p>
+        <h2>${saludo}, ${Util.esc(perfil.nombre.split(' ')[0])}</h2>
+        <p class="muted">${abiertas.length ? `Tienes ${abiertas.length} tarea${abiertas.length === 1 ? '' : 's'} abierta${abiertas.length === 1 ? '' : 's'}${vencidas.length ? `, <strong class="txt-rojo">${vencidas.length} vencida${vencidas.length === 1 ? '' : 's'}</strong>` : ''}.` : 'No tienes tareas abiertas. ¡Buen trabajo!'}</p>
+        <form class="captura-rapida" data-captura>
+          <input name="titulo" placeholder="＋ Escribe una tarea y presiona Enter (vence hoy)" aria-label="Nueva tarea rápida" autocomplete="off" maxlength="300">
+        </form>
+      </div>
+      ${m.indice === null && Permisos.verRendimientoEquipo()
+        ? Vistas.inicio.anillo(Metricas.resumenEquipo(Metricas.porColaborador(App.estado.tareas, App.estado.colaboradores, { periodo: 'mes', hoy })).indicePromedio, 'Índice del equipo (mes)')
+        : Vistas.inicio.anillo(m.indice, 'Tu índice del mes')}
+    </div>
+
+    <div class="kpis">
+      ${Vistas.inicio.kpi('Vencidas', vencidas.length, 'rojo', '⚠')}
+      ${Vistas.inicio.kpi('Para hoy', paraHoy.length, 'ambar', '◷')}
+      ${Vistas.inicio.kpi('Próximos 7 días', semana.length, 'azul', '📅')}
+      ${Vistas.inicio.kpi('Completadas esta semana', hechasSemana, 'verde', '✓')}
+    </div>
+
+    <div class="rejilla-3">
+      ${seccion('⚠ Vencidas', vencidas, 'rojo', 'Nada vencido. 🎉')}
+      ${seccion('◷ Hoy', paraHoy, 'ambar', 'Nada programado para hoy.')}
+      ${seccion('📅 Próximos 7 días', semana, 'azul', 'Semana despejada.')}
+    </div>
+    ${sinFecha.length ? `<div class="mt">${seccion('Sin fecha límite', sinFecha, '', '')}</div>` : ''}
+    ${Permisos.verRendimientoEquipo() ? Vistas.inicio.resumenEquipo(hoy) : ''}`;
+  },
+
+  kpi(etiqueta, valor, color, icono) {
+    return `<div class="kpi kpi-${color}"><span class="kpi-icono" aria-hidden="true">${icono}</span><div><div class="kpi-valor">${valor}</div><div class="kpi-etiqueta">${etiqueta}</div></div></div>`;
+  },
+
+  // Anillo de progreso (SVG) para un índice 0–100
+  anillo(valor, etiqueta) {
+    const r = 42, c = 2 * Math.PI * r;
+    const v = valor ?? 0;
+    const n = Metricas.nivel(valor);
+    return `<div class="anillo" title="${etiqueta}: ${valor ?? 'sin datos'}">
+      <svg viewBox="0 0 100 100" width="118" height="118" aria-hidden="true">
+        <circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--bg3)" stroke-width="9"/>
+        <circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--nivel-${n.id})" stroke-width="9" stroke-linecap="round"
+          stroke-dasharray="${(c * v / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 50 50)"/>
+      </svg>
+      <div class="anillo-centro"><strong>${valor ?? '—'}</strong><span>${n.icon} ${n.label}</span></div>
+      <div class="anillo-etiqueta">${etiqueta}</div>
+    </div>`;
+  },
+
+  resumenEquipo(hoy) {
+    const filas = Metricas.porColaborador(App.estado.tareas, App.estado.colaboradores, { periodo: 'mes', hoy })
+      .filter(f => f.colaborador && f.total > 0)
+      .sort((a, b) => (b.indice ?? -1) - (a.indice ?? -1));
+    if (!filas.length) return '';
+    return `<section class="panel mt">
+      <header class="panel-cab"><h3>👥 Equipo este mes</h3><button class="btn btn-sm" data-accion="ir" data-vista="rendimiento">Ver rendimiento →</button></header>
+      <div class="equipo-mini">${filas.map(f => {
+        return `<button class="equipo-fila" data-accion="ver-colaborador" data-id="${f.clave}">
+          ${UI.avatar(f.colaborador, 28)}<span class="equipo-nombre">${Util.esc(f.nombre)}</span>
+          <span class="muted">${f.completadas}/${f.total} · ${f.vencidas ? `<span class="txt-rojo">${f.vencidas} vencidas</span>` : 'al día'}</span>
+          ${UI.nivel(f.indice)}</button>`;
+      }).join('')}</div>
+    </section>`;
+  },
+
+  montar(main) {
+    const form = main.querySelector('[data-captura]');
+    form?.addEventListener('submit', async e => {
+      e.preventDefault();
+      const titulo = form.titulo.value.trim();
+      if (!titulo) return;
+      form.titulo.disabled = true;
+      try {
+        await App.crear({ titulo, fecha_vencimiento: Util.hoyISO() });
+      } catch (err) { UI.toast(err.message, { tipo: 'error' }); }
+      // El render posterior reemplaza el formulario; se devuelve el foco al nuevo.
+      requestAnimationFrame(() => requestAnimationFrame(() => document.querySelector('[data-captura] input')?.focus()));
+    });
+  },
+
+  errorCarga(e) {
+    if (e.faltaEsquema) {
+      return UI.vacio('🛠️', 'Falta configurar la base de datos',
+        `El planner necesita las tablas <code>tareas</code> y <code>tarea_actividad</code> en Supabase.<br>
+         Abre el <strong>SQL Editor</strong> de Supabase, ejecuta el archivo <code>supabase/schema.sql</code> del repositorio y luego tus políticas de permisos.`,
+        '<button class="btn btn-primario" data-accion="sincronizar">Reintentar</button>');
+    }
+    return UI.vacio('⚠️', 'No se pudieron cargar las tareas', Util.esc(e.message), '<button class="btn btn-primario" data-accion="sincronizar">Reintentar</button>');
+  },
+};
+
+</script>
+<script>
+/* ── js/vistas/tablero.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// VISTA: TABLERO (kanban). Arrastrar una tarjeta a otra columna cambia
+// el campo por el que se agrupa: estado, colaborador o prioridad.
+// ═══════════════════════════════════════════════════════════════════
+
+Vistas.tablero = {
+  titulo: 'Tablero',
+  icono: '🗂️',
+  orden: 2,
+  visible: () => true,
+
+  columnas() {
+    const agrupar = App.estado.tablero.agrupar;
+    if (agrupar === 'prioridad') return { campo: 'prioridad', cols: PRIORIDADES.map(p => ({ valor: p.id, titulo: `${p.icon} ${p.label}`, cls: 'prio-' + p.id })) };
+    if (agrupar === 'colaborador') {
+      const visibles = App.estado.filtros.alcance === 'mias' ? [App.estado.perfil] : App.estado.colaboradores;
+      return {
+        campo: 'asignado_a',
+        cols: [...visibles.map(c => ({ valor: c.id, titulo: Util.esc(c.nombre), avatar: c })), { valor: '', titulo: 'Sin asignar' }],
+      };
+    }
+    return { campo: 'estado', cols: ESTADOS.map(e => ({ valor: e.id, titulo: `${e.icon} ${e.label}`, cls: 'est-' + e.id })) };
+  },
+
+  render() {
+    const { campo, cols } = this.columnas();
+    const tareas = App.tareasVisibles();
+    const orden = (a, b) => (a.fecha_vencimiento || '9999').localeCompare(b.fecha_vencimiento || '9999')
+      || PRIORIDADES.findIndex(p => p.id === a.prioridad) - PRIORIDADES.findIndex(p => p.id === b.prioridad);
+    const ag = App.estado.tablero.agrupar;
+    const datoNueva = campo === 'estado' ? 'data-estado' : campo === 'prioridad' ? 'data-prioridad' : 'data-asignado';
+
+    const columnas = cols.map(col => {
+      const lista = tareas.filter(t => (t[campo] || '') === col.valor).sort(orden);
+      // Si las tareas completadas son muchas, se muestran las más recientes.
+      const recortar = campo === 'estado' && col.valor === 'completada' && lista.length > 30;
+      const mostradas = recortar ? lista.slice(-30).reverse() : lista;
+      return `<section class="columna ${col.cls || ''}" data-soltar="${campo}" data-valor="${col.valor}" aria-label="${Util.esc(col.titulo.replace(/<[^>]+>/g, ''))}">
+        <header class="columna-cab">
+          ${col.avatar ? UI.avatar(col.avatar, 22) : ''}
+          <h3>${col.titulo}</h3><span class="contador">${lista.length}</span>
+          <button class="btn-icono btn-sm" data-accion="nueva-tarea" ${datoNueva}="${col.valor}" title="Agregar tarea aquí" aria-label="Agregar tarea">＋</button>
+        </header>
+        <div class="columna-cuerpo">
+          ${mostradas.map(t => UI.tarjeta(t)).join('') || '<p class="columna-vacia">Suelta tareas aquí</p>'}
+          ${recortar ? `<p class="muted pad centrado">Mostrando las 30 más recientes de ${lista.length}</p>` : ''}
+        </div>
+      </section>`;
+    }).join('');
+
+    return `${UI.filtros()}
+      <div class="barra-vista">
+        <div class="segmentado" role="group" aria-label="Agrupar por">
+          <span class="seg-etiqueta">Agrupar por</span>
+          ${[['estado', 'Estado'], ['colaborador', 'Colaborador'], ['prioridad', 'Prioridad']].map(([v, l]) =>
+            `<button class="${ag === v ? 'on' : ''}" data-accion="agrupar" data-valor="${v}">${l}</button>`).join('')}
+        </div>
+        <span class="muted">${tareas.length} tareas · arrastra las tarjetas entre columnas</span>
+      </div>
+      <div class="tablero">${columnas}</div>`;
+  },
+
+  acciones: {
+    agrupar: el => { App.estado.tablero.agrupar = el.dataset.valor; App.render(); },
+  },
+};
+
+</script>
+<script>
+/* ── js/vistas/lista.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// VISTA: LISTA — tabla ordenable con cambio rápido de estado
+// ═══════════════════════════════════════════════════════════════════
+
+Vistas.lista = {
+  titulo: 'Lista',
+  icono: '☰',
+  orden: 3,
+  visible: () => true,
+
+  COLUMNAS: [
+    ['titulo', 'Tarea'], ['asignado', 'Colaborador'], ['empresa', 'Empresa'], ['prioridad', 'Prioridad'],
+    ['estado', 'Estado'], ['fecha_vencimiento', 'Vence'], ['progreso', 'Progreso'],
+  ],
+
+  ordenar(lista) {
+    const { orden, dir } = App.estado.lista;
+    const pesoPrio = p => PRIORIDADES.findIndex(x => x.id === p);
+    const pesoEstado = e => ESTADOS.findIndex(x => x.id === e);
+    const val = t => {
+      switch (orden) {
+        case 'asignado': return App.colaboradorDe(t)?.nombre || '~';
+        case 'prioridad': return pesoPrio(t.prioridad);
+        case 'estado': return pesoEstado(t.estado);
+        case 'progreso': return UI.progreso(t).pct;
+        case 'fecha_vencimiento': return t.fecha_vencimiento || '9999-99-99';
+        default: return String(t[orden] || '~').toLowerCase();
+      }
+    };
+    return [...lista].sort((a, b) => {
+      const va = val(a), vb = val(b);
+      return (va < vb ? -1 : va > vb ? 1 : 0) * dir;
+    });
+  },
+
+  render() {
+    const todas = this.ordenar(App.tareasVisibles());
+    const { orden, dir, limite } = App.estado.lista;
+    const filas = todas.slice(0, limite);
+    const hoy = Util.hoyISO();
+
+    const cab = this.COLUMNAS.map(([k, l]) => `<th><button class="th-orden ${orden === k ? 'on' : ''}" data-accion="ordenar" data-campo="${k}">${l}${orden === k ? (dir === 1 ? ' ▲' : ' ▼') : ''}</button></th>`).join('');
+
+    const cuerpo = filas.map(t => {
+      const p = UI.progreso(t);
+      const ef = Metricas.estadoEfectivo(t, hoy);
+      const puede = Permisos.editarTarea(t);
+      const c = App.colaboradorDe(t);
+      return `<tr class="fila ${ef === 'vencida' ? 'fila-vencida' : ''} ${t.estado === 'completada' ? 'fila-hecha' : ''}">
+        <td class="td-titulo">
+          ${puede ? `<button class="check ${t.estado === 'completada' ? 'on' : ''}" data-accion="completar" data-id="${t.id}" aria-label="Completar">✓</button>` : ''}
+          <button class="enlace-tarea" data-accion="abrir-tarea" data-id="${t.id}">${Util.esc(t.titulo)}</button>
+          ${t.categoria ? `<span class="chip chip-suave">${Util.esc(t.categoria)}</span>` : ''}
+        </td>
+        <td><span class="celda-colab">${UI.avatar(t, 22)} ${Util.esc(c?.nombre || 'Sin asignar')}</span></td>
+        <td class="muted">${Util.esc(t.empresa || '—')}</td>
+        <td>${UI.prioridad(t.prioridad)}</td>
+        <td>${puede
+          ? `<select class="sel-estado est-${ef}" data-cambio="estado" data-id="${t.id}" aria-label="Estado">
+              ${ESTADOS.map(e => `<option value="${e.id}" ${t.estado === e.id ? 'selected' : ''}>${e.icon} ${e.label}</option>`).join('')}
+            </select>${ef === 'vencida' ? ' <span class="chip est-vencida" title="Fecha límite superada">⚠</span>' : ''}`
+          : UI.estado(t)}</td>
+        <td>${UI.fecha(t)}</td>
+        <td><div class="barra-progreso" title="${p.texto}"><span style="width:${p.pct}%"></span></div><span class="muted mini">${p.texto}</span></td>
+      </tr>`;
+    }).join('');
+
+    return `${UI.filtros()}
+      <div class="barra-vista">
+        <span class="muted">${todas.length} tareas${todas.length > filas.length ? ` · mostrando ${filas.length}` : ''}</span>
+        <span class="separador"></span>
+        <button class="btn btn-sm" data-accion="exportar">⬇ Exportar a Excel</button>
+      </div>
+      <div class="tarjeta-tabla">
+        ${todas.length ? `<div class="tabla-scroll"><table class="tabla"><thead><tr>${cab}</tr></thead><tbody>${cuerpo}</tbody></table></div>` :
+          UI.vacio('🔎', 'Sin tareas', 'No hay tareas con estos filtros.', '<button class="btn btn-primario" data-accion="nueva-tarea">＋ Nueva tarea</button>')}
+        ${todas.length > filas.length ? `<div class="centrado pad"><button class="btn" data-accion="ver-mas">Ver ${Math.min(CONFIG.LIMITE_LISTA, todas.length - filas.length)} más</button></div>` : ''}
+      </div>`;
+  },
+
+  acciones: {
+    ordenar: el => {
+      const s = App.estado.lista;
+      if (s.orden === el.dataset.campo) s.dir *= -1; else { s.orden = el.dataset.campo; s.dir = 1; }
+      App.render();
+    },
+    'ver-mas': () => { App.estado.lista.limite += CONFIG.LIMITE_LISTA; App.render(); },
+    exportar: () => Importador.exportar(Vistas.lista.ordenar(App.tareasVisibles())),
+  },
+
+  alCambiar(el) {
+    if (el.dataset.cambio === 'estado') {
+      const label = ESTADOS.find(e => e.id === el.value)?.label;
+      App.actualizar(el.dataset.id, { estado: el.value }, { mensaje: 'Estado: ' + label }).catch(() => {});
+    }
+  },
+};
+
+</script>
+<script>
+/* ── js/vistas/calendario.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// VISTA: CALENDARIO — mes o semana, estilo planner.
+// Clic en un día crea una tarea con esa fecha; arrastrar una tarea a
+// otro día la reprograma.
+// ═══════════════════════════════════════════════════════════════════
+
+Vistas.calendario = {
+  titulo: 'Calendario',
+  icono: '📅',
+  orden: 4,
+  visible: () => true,
+  MAX_POR_DIA: 3,
+
+  porDia(tareas) {
+    const m = new Map();
+    for (const t of tareas) {
+      if (!t.fecha_vencimiento) continue;
+      if (!m.has(t.fecha_vencimiento)) m.set(t.fecha_vencimiento, []);
+      m.get(t.fecha_vencimiento).push(t);
+    }
+    const peso = t => (t.estado === 'completada' ? 10 : 0) + PRIORIDADES.findIndex(p => p.id === t.prioridad);
+    for (const l of m.values()) l.sort((a, b) => peso(a) - peso(b));
+    return m;
+  },
+
+  chip(t, hoy) {
+    const ef = Metricas.estadoEfectivo(t, hoy);
+    const c = App.colaboradorDe(t);
+    const color = c?.id ? UI.colorColaborador(c.id) : 'var(--text3)';
+    const puede = Permisos.editarTarea(t);
+    const prio = PRIORIDADES.find(p => p.id === t.prioridad);
+    return `<button class="ev ev-${ef}" data-accion="abrir-tarea" data-id="${t.id}" ${puede ? 'draggable="true"' : ''} data-arrastrar="${t.id}"
+        title="${Util.esc(t.titulo)} · ${Util.esc(c?.nombre || 'Sin asignar')} · ${prio?.label}">
+      <span class="ev-punto" style="background:${color}"></span>
+      ${t.prioridad === 'urgente' || t.prioridad === 'alta' ? `<span class="ev-prio" aria-hidden="true">${prio.icon}</span>` : ''}
+      <span class="ev-texto">${Util.esc(t.titulo)}</span>
+    </button>`;
+  },
+
+  render() {
+    const s = App.estado.cal;
+    const hoy = Util.hoyISO();
+    const tareas = App.tareasVisibles();
+    const porDia = this.porDia(tareas);
+    const ref = Util.deISO(s.ref);
+
+    let titulo, cuerpo;
+    if (s.modo === 'semana') {
+      const ini = Util.inicioSemana(s.ref);
+      const fin = Util.sumarDias(ini, 6);
+      const a = Util.deISO(ini), b = Util.deISO(fin);
+      titulo = `${a.getDate()} ${Util.MESES_CORTOS[a.getMonth()]} – ${b.getDate()} ${Util.MESES_CORTOS[b.getMonth()]} ${b.getFullYear()}`;
+      cuerpo = `<div class="semana">${[0, 1, 2, 3, 4, 5, 6].map(i => {
+        const iso = Util.sumarDias(ini, i);
+        const d = Util.deISO(iso);
+        const lista = porDia.get(iso) || [];
+        return `<section class="semana-dia ${iso === hoy ? 'es-hoy' : ''} ${i >= 5 ? 'finde' : ''}" data-soltar="fecha_vencimiento" data-valor="${iso}">
+          <header><span class="dia-nombre">${Util.DIAS_CORTOS[i]}</span><span class="dia-num">${d.getDate()}</span>
+            <button class="btn-icono btn-sm" data-accion="nueva-tarea" data-fecha="${iso}" aria-label="Agregar tarea el ${d.getDate()}">＋</button></header>
+          <div class="semana-cuerpo">${lista.map(t => UI.tarjeta(t)).join('') || '<p class="columna-vacia">—</p>'}</div>
+        </section>`;
+      }).join('')}</div>`;
+    } else {
+      const y = ref.getFullYear(), mes = ref.getMonth();
+      titulo = `${Util.MESES[mes]} ${y}`;
+      const primero = new Date(y, mes, 1);
+      const inicio = Util.sumarDias(Util.aISO(primero), -((primero.getDay() + 6) % 7));
+      const semanas = Math.ceil((((primero.getDay() + 6) % 7) + new Date(y, mes + 1, 0).getDate()) / 7);
+      let celdas = '';
+      for (let i = 0; i < semanas * 7; i++) {
+        const iso = Util.sumarDias(inicio, i);
+        const d = Util.deISO(iso);
+        const lista = porDia.get(iso) || [];
+        const abiertas = lista.filter(t => t.estado !== 'completada').length;
+        const extra = lista.length - this.MAX_POR_DIA;
+        celdas += `<div class="dia ${d.getMonth() !== mes ? 'fuera' : ''} ${iso === hoy ? 'es-hoy' : ''} ${i % 7 >= 5 ? 'finde' : ''}"
+            data-soltar="fecha_vencimiento" data-valor="${iso}" data-accion="nueva-tarea" data-fecha="${iso}" title="Clic para agregar una tarea">
+          <div class="dia-cab"><span class="dia-num">${d.getDate()}</span>${abiertas ? `<span class="dia-carga" title="${abiertas} abiertas">${abiertas}</span>` : ''}</div>
+          ${lista.slice(0, extra > 0 ? this.MAX_POR_DIA - 1 : this.MAX_POR_DIA).map(t => this.chip(t, hoy)).join('')}
+          ${extra > 0 ? `<button class="ev-mas" data-accion="ver-dia" data-fecha="${iso}">+${extra + 1} más</button>` : ''}
+        </div>`;
+      }
+      cuerpo = `<div class="mes">
+        ${Util.DIAS_CORTOS.map((n, i) => `<div class="mes-cab ${i >= 5 ? 'finde' : ''}">${n}</div>`).join('')}
+        ${celdas}
+      </div>`;
+    }
+
+    const sinFecha = tareas.filter(t => !t.fecha_vencimiento && t.estado !== 'completada');
+    const colabsVisibles = [...new Map(tareas.map(t => App.colaboradorDe(t)).filter(c => c?.id).map(c => [c.id, c])).values()];
+
+    return `${UI.filtros()}
+      <div class="cal-barra">
+        <div class="cal-nav">
+          <button class="btn-icono" data-accion="cal-mover" data-dir="-1" aria-label="Anterior">‹</button>
+          <button class="btn btn-sm" data-accion="cal-hoy">Hoy</button>
+          <button class="btn-icono" data-accion="cal-mover" data-dir="1" aria-label="Siguiente">›</button>
+          <h2 class="cal-titulo">${titulo}</h2>
+        </div>
+        <div class="segmentado" role="group" aria-label="Vista del calendario">
+          <button class="${s.modo === 'mes' ? 'on' : ''}" data-accion="cal-modo" data-valor="mes">Mes</button>
+          <button class="${s.modo === 'semana' ? 'on' : ''}" data-accion="cal-modo" data-valor="semana">Semana</button>
+        </div>
+      </div>
+      ${colabsVisibles.length > 1 ? `<div class="leyenda">${colabsVisibles.map(c => `<span class="leyenda-item"><span class="ev-punto" style="background:${UI.colorColaborador(c.id)}"></span>${Util.esc(c.nombre)}</span>`).join('')}
+        <span class="leyenda-item"><span class="ev ev-vencida ev-muestra">Vencida</span></span><span class="leyenda-item"><span class="ev ev-completada ev-muestra">Completada</span></span></div>` : ''}
+      ${cuerpo}
+      ${sinFecha.length ? `<section class="panel mt"><header class="panel-cab"><h3>Sin fecha límite</h3><span class="contador">${sinFecha.length}</span><span class="muted mini">Arrástralas a un día para programarlas</span></header>
+        <div class="fila-tarjetas">${sinFecha.slice(0, 12).map(t => UI.tarjeta(t)).join('')}</div></section>` : ''}`;
+  },
+
+  acciones: {
+    'cal-mover': el => {
+      const s = App.estado.cal;
+      const dir = +el.dataset.dir;
+      if (s.modo === 'semana') s.ref = Util.sumarDias(s.ref, 7 * dir);
+      else { const d = Util.deISO(s.ref); s.ref = Util.aISO(new Date(d.getFullYear(), d.getMonth() + dir, 1)); }
+      App.render();
+    },
+    'cal-hoy': () => { App.estado.cal.ref = Util.hoyISO(); App.render(); },
+    'cal-modo': el => { App.estado.cal.modo = el.dataset.valor; App.render(); },
+    'ver-dia': el => {
+      const iso = el.dataset.fecha;
+      const lista = Vistas.calendario.porDia(App.tareasVisibles()).get(iso) || [];
+      const d = Util.deISO(iso);
+      UI.abrirModal(`<header class="modal-cab"><h3>${d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}</h3>
+          <button class="btn-icono" data-accion="cerrar-modal" aria-label="Cerrar">✕</button></header>
+        <div class="lista-tarjetas">${lista.map(t => UI.tarjeta(t, { arrastrable: false })).join('')}</div>
+        <div class="modal-pie"><button class="btn btn-primario" data-accion="nueva-tarea" data-fecha="${iso}">＋ Agregar tarea este día</button></div>`, { ancho: 520 });
+    },
+  },
+};
+
+</script>
+<script>
+/* ── js/vistas/rendimiento.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// VISTA: RENDIMIENTO — indicadores por colaborador (tabla + gráficas)
+// Un administrador ve a todo el equipo; un colaborador solo a sí mismo.
+// La fórmula del índice está documentada en js/metricas.js.
+// ═══════════════════════════════════════════════════════════════════
+
+Vistas.rendimiento = {
+  titulo: 'Rendimiento',
+  icono: '📈',
+  orden: 5,
+  visible: () => true,
+
+  PERIODOS: [['semana', 'Esta semana'], ['mes', 'Este mes'], ['mes_anterior', 'Mes anterior'], ['trimestre', 'Trimestre'], ['anio', 'Este año'], ['todo', 'Todo']],
+
+  SEGMENTOS: [
+    { clave: 'completadasOk', label: 'Completadas', color: 'var(--serie-ok)', icono: '✓' },
+    { clave: 'tarde', label: 'Completadas con retraso', color: 'var(--serie-tarde)', icono: '◷' },
+    { clave: 'enCurso', label: 'En curso', color: 'var(--serie-curso)', icono: '▷' },
+    { clave: 'vencidas', label: 'Vencidas', color: 'var(--serie-vencida)', icono: '⚠' },
+  ],
+
+  datos() {
+    const hoy = Util.hoyISO();
+    const periodo = App.estado.rend.periodo;
+    const equipo = Permisos.verRendimientoEquipo();
+    const tareas = equipo ? App.estado.tareas : App.estado.tareas.filter(t => App.esMia(t));
+    const colabs = equipo ? App.estado.colaboradores : [App.estado.perfil];
+    let filas = Metricas.porColaborador(tareas, colabs, { periodo, hoy })
+      .map(f => ({ ...f, completadasOk: f.completadas - f.tarde }));
+    if (equipo) filas = filas.filter(f => f.total > 0 || (f.colaborador && !CONFIG.ROLES_ADMIN.includes(f.colaborador.rol)));
+    filas.sort((a, b) => (b.indice ?? -1) - (a.indice ?? -1) || b.total - a.total);
+    return { filas, tareas, resumen: Metricas.resumenEquipo(filas), equipo, hoy };
+  },
+
+  render() {
+    const { filas, tareas, resumen, equipo, hoy } = this.datos();
+    const periodo = App.estado.rend.periodo;
+    const pct = v => v === null ? '—' : Math.round(v * 100) + '%';
+
+    return `
+      <div class="barra-vista">
+        <div class="segmentado" role="group" aria-label="Periodo">
+          ${this.PERIODOS.map(([v, l]) => `<button class="${periodo === v ? 'on' : ''}" data-accion="periodo" data-valor="${v}">${l}</button>`).join('')}
+        </div>
+        <span class="muted mini">${equipo ? 'Todo el equipo' : 'Tus indicadores personales'} · por fecha límite de la tarea</span>
+      </div>
+
+      <div class="kpis kpis-5">
+        ${Vistas.inicio.kpi('Tareas del periodo', resumen.total, 'azul', '▦')}
+        ${Vistas.inicio.kpi('Completadas', resumen.completadas, 'verde', '✓')}
+        ${Vistas.inicio.kpi('Puntualidad', pct(resumen.puntualidad), 'ambar', '◷')}
+        ${Vistas.inicio.kpi('Vencidas sin completar', resumen.vencidas, 'rojo', '⚠')}
+        ${Vistas.inicio.kpi(equipo ? 'Índice promedio' : 'Tu índice', (equipo ? resumen.indicePromedio : filas[0]?.indice) ?? '—', 'violeta', '★')}
+      </div>
+
+      <div class="rejilla-graficas">
+        <section class="panel">
+          <header class="panel-cab"><h3>Distribución de tareas por colaborador</h3></header>
+          ${this.graficaBarras(filas)}
+        </section>
+        <section class="panel">
+          <header class="panel-cab"><h3>Tareas completadas por semana</h3><span class="muted mini">Últimas ${CONFIG.SEMANAS_TENDENCIA} semanas</span></header>
+          ${this.graficaTendencia(Metricas.tendenciaSemanal(tareas, CONFIG.SEMANAS_TENDENCIA, hoy))}
+        </section>
+      </div>
+
+      <section class="panel mt">
+        <header class="panel-cab"><h3>Tabla de rendimiento</h3>
+          <span class="muted mini" title="Cumplimiento = completadas ÷ (completadas + vencidas). Puntualidad = completadas a tiempo ÷ completadas con fecha límite.">ⓘ Índice = 50 % cumplimiento + 50 % puntualidad</span>
+        </header>
+        <div class="tabla-scroll"><table class="tabla tabla-rend">
+          <thead><tr><th>Colaborador</th><th class="num">Tareas</th><th class="num">Completadas</th><th class="num">Cumplimiento</th><th class="num">Puntualidad</th>
+            <th class="num">En curso</th><th class="num">Vencidas</th><th class="num">Días prom.</th><th>Índice</th></tr></thead>
+          <tbody>${filas.map(f => {
+            return `<tr class="fila-click" data-accion="ver-colaborador" data-id="${f.colaborador ? f.clave : ''}" title="Ver tareas de ${Util.esc(f.nombre)}">
+              <td><span class="celda-colab">${UI.avatar(f.colaborador || { nombre: f.nombre }, 24)} ${Util.esc(f.nombre)}</span></td>
+              <td class="num">${f.total}</td><td class="num">${f.completadas}</td>
+              <td class="num">${pct(f.cumplimiento)}</td><td class="num">${pct(f.puntualidad)}</td>
+              <td class="num">${f.enCurso}</td><td class="num ${f.vencidas ? 'txt-rojo' : ''}">${f.vencidas}</td>
+              <td class="num">${f.diasPromedio === null ? '—' : f.diasPromedio.toFixed(1)}</td>
+              <td>${UI.nivel(f.indice, { texto: true })}</td>
+            </tr>`;
+          }).join('') || `<tr><td colspan="9" class="centrado muted pad">Sin datos en este periodo</td></tr>`}</tbody>
+        </table></div>
+      </section>`;
+  },
+
+  // Barras horizontales apiladas; la longitud es proporcional al total (escala común).
+  graficaBarras(filas) {
+    const conDatos = filas.filter(f => f.total > 0);
+    if (!conDatos.length) return '<p class="muted pad">Sin tareas en este periodo.</p>';
+    const max = Math.max(...conDatos.map(f => f.total));
+    const leyenda = `<div class="leyenda">${this.SEGMENTOS.map(s => `<span class="leyenda-item"><span class="muestra" style="background:${s.color}"></span>${s.icono} ${s.label}</span>`).join('')}</div>`;
+    const barras = conDatos.map(f => {
+      const segs = this.SEGMENTOS.filter(s => f[s.clave] > 0).map(s => {
+        const ancho = (f[s.clave] / max) * 100;
+        const etiqueta = ancho >= 7 ? `<span class="seg-num">${f[s.clave]}</span>` : '';
+        return `<span class="seg" style="width:${ancho}%;background:${s.color}" data-tip="${Util.esc(f.nombre)} · ${s.label}: ${f[s.clave]} de ${f.total}">${etiqueta}</span>`;
+      }).join('');
+      return `<div class="barra-fila">
+        <span class="barra-nombre" title="${Util.esc(f.nombre)}">${Util.esc(f.nombre)}</span>
+        <div class="barra-pista">${segs}</div>
+        <span class="barra-total">${f.total}</span>
+      </div>`;
+    }).join('');
+    return leyenda + `<div class="grafica-barras" role="img" aria-label="Distribución de tareas por colaborador; los valores exactos están en la tabla de rendimiento">${barras}</div>`;
+  },
+
+  // Línea de una sola serie con bandas de hover por semana.
+  graficaTendencia(serie) {
+    const W = 560, H = 210, I = 34, D = 14, A = 14, B = 28;
+    const max = Math.max(4, ...serie.map(s => s.completadas));
+    const tope = Math.ceil(max / 4) * 4;
+    const x = i => I + (i * (W - I - D)) / Math.max(1, serie.length - 1);
+    const y = v => A + (H - A - B) * (1 - v / tope);
+    const ticks = [0, tope / 4, tope / 2, (3 * tope) / 4, tope];
+    const puntos = serie.map((s, i) => `${x(i).toFixed(1)},${y(s.completadas).toFixed(1)}`).join(' ');
+    const area = `${x(0)},${y(0)} ${puntos} ${x(serie.length - 1)},${y(0)}`;
+    const paso = (W - I - D) / Math.max(1, serie.length - 1);
+    const ult = serie[serie.length - 1];
+    const fmtSem = iso => { const d = Util.deISO(iso); return d.getDate() + ' ' + Util.MESES_CORTOS[d.getMonth()]; };
+
+    return `<svg class="grafica-linea" viewBox="0 0 ${W} ${H}" role="img" aria-label="Tareas completadas por semana. Semana actual: ${ult.completadas}">
+      ${ticks.map(t => `<line class="grid" x1="${I}" x2="${W - D}" y1="${y(t)}" y2="${y(t)}"/><text class="eje" x="${I - 8}" y="${y(t) + 4}" text-anchor="end">${t}</text>`).join('')}
+      ${serie.map((s, i) => i % 2 === serie.length % 2 ? '' : `<text class="eje" x="${x(i)}" y="${H - 8}" text-anchor="middle">${fmtSem(s.semana)}</text>`).join('')}
+      <polygon class="area" points="${area}"/>
+      <polyline class="linea" points="${puntos}"/>
+      ${serie.map((s, i) => `<g class="banda" data-tip="Semana del ${fmtSem(s.semana)}: ${s.completadas} completada${s.completadas === 1 ? '' : 's'} (${s.aTiempo} a tiempo)">
+        <rect x="${x(i) - paso / 2}" y="${A}" width="${paso}" height="${H - A - B}" fill="transparent"/>
+        <line class="guia" x1="${x(i)}" x2="${x(i)}" y1="${A}" y2="${H - B}"/>
+        <circle class="punto" cx="${x(i)}" cy="${y(s.completadas)}" r="4.5"/>
+      </g>`).join('')}
+      <text class="valor-final" x="${x(serie.length - 1) - 8}" y="${y(ult.completadas) - 10}" text-anchor="end">${ult.completadas}</text>
+    </svg>`;
+  },
+
+  acciones: {
+    periodo: el => { App.estado.rend.periodo = el.dataset.valor; App.render(); },
+  },
+};
+
+</script>
+<script>
+/* ── js/vistas/colaboradores.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// VISTA: COLABORADORES — carga de trabajo actual de cada persona
+// ═══════════════════════════════════════════════════════════════════
+
+Vistas.colaboradores = {
+  titulo: 'Colaboradores',
+  icono: '👥',
+  orden: 6,
+  visible: () => Permisos.verEquipo(),
+
+  render() {
+    const hoy = Util.hoyISO();
+    const filasMes = new Map(Metricas.porColaborador(App.estado.tareas, App.estado.colaboradores, { periodo: 'mes', hoy }).map(f => [f.clave, f]));
+    const abiertasDe = id => App.estado.tareas.filter(t => t.asignado_a === id && t.estado !== 'completada');
+    const maxCarga = Math.max(1, ...App.estado.colaboradores.map(c => abiertasDe(c.id).length));
+
+    const tarjetas = App.estado.colaboradores.map(c => {
+      const abiertas = abiertasDe(c.id);
+      const vencidas = abiertas.filter(t => t.fecha_vencimiento && t.fecha_vencimiento < hoy).length;
+      const pronto = abiertas.filter(t => Metricas.porVencer(t, hoy)).length;
+      const enProgreso = abiertas.filter(t => t.estado === 'en_progreso' || t.estado === 'en_revision').length;
+      const f = filasMes.get(c.id);
+      const siguiente = abiertas.filter(t => t.fecha_vencimiento).sort((a, b) => a.fecha_vencimiento.localeCompare(b.fecha_vencimiento))[0];
+      const esAdmin = CONFIG.ROLES_ADMIN.includes(c.rol);
+      return `<article class="colab">
+        <header class="colab-cab">
+          ${UI.avatar(c, 44)}
+          <div class="colab-nombre"><h3>${Util.esc(c.nombre)}</h3><span class="muted mini">${esAdmin ? 'Administrador' : 'Colaborador'}${c.correo ? ' · ' + Util.esc(c.correo) : ''}</span></div>
+          ${UI.nivel(f?.indice)}
+        </header>
+        <div class="colab-stats">
+          <div><strong>${abiertas.length}</strong><span>Abiertas</span></div>
+          <div><strong>${enProgreso}</strong><span>En curso</span></div>
+          <div class="${pronto ? 'txt-ambar' : ''}"><strong>${pronto}</strong><span>Por vencer</span></div>
+          <div class="${vencidas ? 'txt-rojo' : ''}"><strong>${vencidas}</strong><span>Vencidas</span></div>
+        </div>
+        <div class="carga" title="Carga de trabajo relativa al equipo"><span style="width:${Util.pct(abiertas.length, maxCarga)}%;background:${UI.colorColaborador(c.id)}"></span></div>
+        <p class="mini muted">${siguiente ? `Próxima: <strong>${Util.esc(siguiente.titulo)}</strong> · ${Util.fmtRelativa(siguiente.fecha_vencimiento)}` : 'Sin entregas pendientes'}</p>
+        <footer class="colab-pie">
+          <button class="btn btn-sm" data-accion="ver-colaborador" data-id="${c.id}">Ver tareas</button>
+          ${Permisos.asignarAOtros() || c.id === Permisos.uid ? `<button class="btn btn-sm btn-primario" data-accion="nueva-tarea" data-asignado="${c.id}">＋ Asignar tarea</button>` : ''}
+        </footer>
+      </article>`;
+    }).join('');
+
+    return `<div class="barra-vista"><span class="muted">${App.estado.colaboradores.length} colaboradores · índice del mes en curso</span>
+        ${Permisos.administrar() ? '<span class="muted mini">Los colaboradores se gestionan en la tabla <code>perfiles</code> de Supabase.</span>' : ''}</div>
+      <div class="rejilla-colabs">${tarjetas}</div>`;
+  },
+};
+
+</script>
+<script>
+/* ── js/vistas/admin.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// VISTA: ADMINISTRACIÓN — importar/exportar y estado del sistema
+// ═══════════════════════════════════════════════════════════════════
+
+Vistas.admin = {
+  titulo: 'Administración',
+  icono: '⚙️',
+  orden: 9,
+  visible: () => Permisos.administrar(),
+
+  render() {
+    const demo = Datos.modo === 'demo';
+    return `
+      <div class="rejilla-2">
+        <section class="panel">
+          <header class="panel-cab"><h3>📥 Importar tareas desde Excel</h3></header>
+          <p class="muted">Acepta dos formatos:</p>
+          <ul class="lista-ayuda">
+            <li><strong>Planner:</strong> columnas <code>TAREA</code> o <code>TITULO</code>, <code>COLABORADOR</code>, <code>FECHA</code>, y opcionales <code>EMPRESA</code>, <code>CATEGORIA</code>, <code>PRIORIDAD</code>, <code>ESTADO</code>, <code>DESCRIPCION</code>.</li>
+            <li><strong>Calendario tributario anterior:</strong> <code>EMPRESA</code>, <code>CONTADOR</code>, <code>TIPO DE IMPUESTO</code>, <code>PERÍODO</code>, <code>FECHA VENCIMIENTO</code>. Cada obligación se convierte en una tarea de categoría Tributario.</li>
+          </ul>
+          <p class="muted mini">El colaborador se asocia por nombre con la tabla de perfiles. Reimportar el mismo archivo no duplica tareas.</p>
+          <button class="btn btn-primario" data-accion="importar">Seleccionar archivo Excel</button>
+          <input type="file" id="archivo-excel" accept=".xlsx,.xls,.csv" hidden>
+        </section>
+
+        <section class="panel">
+          <header class="panel-cab"><h3>📤 Exportar</h3></header>
+          <p class="muted">Descarga todas las tareas (${App.estado.tareas.length}) con su colaborador, estado y fechas.</p>
+          <button class="btn" data-accion="exportar-todo">⬇ Descargar Excel</button>
+        </section>
+
+        <section class="panel">
+          <header class="panel-cab"><h3>🔌 Estado del sistema</h3></header>
+          <dl class="datos-sistema">
+            <dt>Origen de datos</dt><dd>${demo ? '<span class="chip est-en_revision">Modo demo (navegador)</span>' : '<span class="chip est-completada">Supabase</span>'}</dd>
+            <dt>Tiempo real</dt><dd>${App.estado.conectado ? 'Conectado' : 'Sin conexión'}</dd>
+            <dt>Colaboradores</dt><dd>${App.estado.colaboradores.length}</dd>
+            <dt>Tareas</dt><dd>${App.estado.tareas.length}</dd>
+            <dt>Teams</dt><dd>${CONFIG.TEAMS_WEBHOOK_URL || Object.keys(CONFIG.TEAMS_WEBHOOKS_POR_COLABORADOR).length ? 'Configurado' : 'No configurado (js/config.js)'}</dd>
+          </dl>
+          <div class="fila-botones">
+            <button class="btn" data-accion="sincronizar">🔄 Recargar datos</button>
+            ${demo ? '<button class="btn" data-accion="reiniciar-demo">↺ Reiniciar datos demo</button>' : ''}
+          </div>
+        </section>
+
+        <section class="panel">
+          <header class="panel-cab"><h3>🔐 Permisos</h3></header>
+          <p class="muted">La página oculta o muestra acciones según el rol del perfil (<code>${CONFIG.ROLES_ADMIN.join('</code>, <code>')}</code> = administrador; cualquier otro = colaborador).
+          Quién puede leer, crear, editar o borrar cada tarea lo deciden las políticas RLS de Supabase.</p>
+          <p class="muted mini">Opciones en <code>js/config.js</code>: colaboradores ven al equipo: <strong>${CONFIG.COLABORADORES_VEN_EQUIPO ? 'sí' : 'no'}</strong> ·
+          asignan a otros: <strong>${CONFIG.COLABORADORES_ASIGNAN_A_OTROS ? 'sí' : 'no'}</strong>.</p>
+        </section>
+      </div>`;
+  },
+
+  montar(main) {
+    main.querySelector('#archivo-excel')?.addEventListener('change', e => {
+      const f = e.target.files[0];
+      e.target.value = '';
+      if (f) Importador.importarArchivo(f);
+    });
+  },
+
+  acciones: {
+    importar: () => document.getElementById('archivo-excel').click(),
+    'exportar-todo': () => Importador.exportar(App.estado.tareas),
+    'reiniciar-demo': async () => {
+      if (!confirm('¿Borrar los cambios del modo demo y volver a los datos de ejemplo?')) return;
+      Datos.reiniciar();
+      await App.sincronizar();
+    },
+  },
+};
+
+</script>
+<script>
+/* ── js/tarea-modal.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// VENTANA DE TAREA — crear, editar, lista de verificación y seguimiento
+// ═══════════════════════════════════════════════════════════════════
+
+const TareaModal = {
+  id: null,          // null = tarea nueva
+  original: null,
+  checklist: [],
+
+  abrirNueva(pre = {}) {
+    if (!Permisos.crearTarea()) return;
+    const limpio = Object.fromEntries(Object.entries(pre).filter(([, v]) => v !== undefined));
+    const asignado = 'asignado_a' in limpio ? (limpio.asignado_a || null) : Permisos.uid;
+    this._abrir(null, {
+      titulo: '', descripcion: '', empresa: '', categoria: 'Otro', prioridad: 'media', estado: 'pendiente',
+      fecha_inicio: null, fecha_vencimiento: null, progreso: 0, checklist: [], ...limpio,
+      asignado_a: asignado && (asignado === Permisos.uid || Permisos.asignarAOtros()) ? asignado : Permisos.uid,
+    });
+  },
+
+  abrir(id) {
+    const t = App.tarea(id);
+    if (t) this._abrir(id, structuredClone(t));
+  },
+
+  _abrir(id, t) {
+    this.id = id;
+    this.original = t;
+    this.checklist = structuredClone(t.checklist || []);
+    const editable = !id || Permisos.editarTarea(t);
+    const dis = editable ? '' : 'disabled';
+    const opcionesColab = App.estado.colaboradores
+      .filter(c => Permisos.asignarAOtros() || c.id === Permisos.uid || c.id === t.asignado_a)
+      .map(c => `<option value="${c.id}" ${c.id === t.asignado_a ? 'selected' : ''}>${Util.esc(c.nombre)}</option>`).join('');
+    const creador = id && t.creado_por ? App.colaborador(t.creado_por)?.nombre : null;
+
+    UI.abrirModal(`
+      <form id="form-tarea" class="form-tarea" novalidate>
+        <header class="modal-cab">
+          <input name="titulo" class="input-titulo" placeholder="Nombre de la tarea" value="${Util.esc(t.titulo)}" maxlength="300" required ${dis} ${!id ? 'autofocus' : ''} aria-label="Título">
+          <button type="button" class="btn-icono" data-accion="cerrar-modal" aria-label="Cerrar">✕</button>
+        </header>
+        ${id ? `<p class="muted mini meta-tarea">${UI.estado(t)} ${creador ? `· Creada por ${Util.esc(creador)}` : ''} ${t.created_at ? '· ' + Util.fmtFechaHora(t.created_at) : ''}
+          ${t.completada_at ? '· Completada ' + Util.fmtFechaHora(t.completada_at) : ''}</p>` : ''}
+        <div class="tarea-grid ${id ? '' : 'sin-seguimiento'}">
+          <div class="tarea-principal">
+            <div class="campos">
+              <label>Colaborador
+                <select name="asignado_a" ${dis} ${Permisos.asignarAOtros() ? '' : 'title="Solo un administrador puede asignar a otros"'}>
+                  ${Permisos.asignarAOtros() ? `<option value="" ${!t.asignado_a ? 'selected' : ''}>Sin asignar</option>` : ''}${opcionesColab}
+                </select></label>
+              <label>Estado
+                <select name="estado" ${dis}>${ESTADOS.map(e => `<option value="${e.id}" ${t.estado === e.id ? 'selected' : ''}>${e.icon} ${e.label}</option>`).join('')}</select></label>
+              <label>Prioridad
+                <select name="prioridad" ${dis}>${PRIORIDADES.map(p => `<option value="${p.id}" ${t.prioridad === p.id ? 'selected' : ''}>${p.icon} ${p.label}</option>`).join('')}</select></label>
+              <label>Categoría
+                <input name="categoria" list="lista-categorias" value="${Util.esc(t.categoria || '')}" ${dis} maxlength="60">
+                <datalist id="lista-categorias">${App.categorias().map(c => `<option value="${Util.esc(c)}">`).join('')}</datalist></label>
+              <label>Fecha de inicio<input type="date" name="fecha_inicio" value="${t.fecha_inicio || ''}" ${dis}></label>
+              <label>Fecha límite<input type="date" name="fecha_vencimiento" value="${t.fecha_vencimiento || ''}" ${dis}></label>
+              <label class="campo-ancho">Empresa / cliente
+                <input name="empresa" list="lista-empresas" value="${Util.esc(t.empresa || '')}" ${dis} maxlength="200" placeholder="Opcional">
+                <datalist id="lista-empresas">${[...new Set(App.estado.tareas.map(x => x.empresa).filter(Boolean))].sort().slice(0, 300).map(e => `<option value="${Util.esc(e)}">`).join('')}</datalist></label>
+            </div>
+            <label class="campo-ancho">Descripción
+              <textarea name="descripcion" rows="3" ${dis} placeholder="Detalles, instrucciones, enlaces…">${Util.esc(t.descripcion || '')}</textarea></label>
+
+            <div class="bloque">
+              <div class="bloque-cab"><strong>Lista de verificación</strong><span class="muted mini" id="check-resumen"></span></div>
+              <ul class="checklist" id="checklist"></ul>
+              ${editable ? `<div class="check-nuevo"><input id="check-input" placeholder="＋ Agregar paso y presionar Enter" maxlength="200" aria-label="Nuevo paso"><button type="button" class="btn btn-sm" data-accion="check-agregar">Agregar</button></div>` : ''}
+            </div>
+            <div class="bloque" id="bloque-progreso">
+              <label>Progreso manual: <strong id="progreso-valor">${t.progreso || 0}%</strong>
+                <input type="range" name="progreso" min="0" max="100" step="10" value="${t.progreso || 0}" ${dis}></label>
+            </div>
+          </div>
+          ${id ? `<aside class="tarea-seguimiento">
+            <strong>Seguimiento</strong>
+            <ol class="timeline" id="timeline"><li class="muted">Cargando…</li></ol>
+            <div class="comentar">
+              <textarea id="comentario" rows="2" placeholder="Escribe una actualización o comentario…" maxlength="2000" aria-label="Comentario"></textarea>
+              <button type="button" class="btn btn-sm btn-primario" data-accion="comentar">Comentar</button>
+            </div>
+          </aside>` : ''}
+        </div>
+        <footer class="modal-pie">
+          ${id && Permisos.eliminarTarea(t) ? '<button type="button" class="btn btn-peligro" data-accion="eliminar-tarea">🗑 Eliminar</button>' : ''}
+          <span class="separador"></span>
+          <button type="button" class="btn" data-accion="cerrar-modal">${editable ? 'Cancelar' : 'Cerrar'}</button>
+          ${editable ? `<button type="submit" class="btn btn-primario" id="btn-guardar">${id ? 'Guardar cambios' : 'Crear tarea'}</button>` : ''}
+        </footer>
+      </form>`, { ancho: id ? 900 : 640 });
+
+    this._editable = editable;
+    this._pintarChecklist();
+    const form = document.getElementById('form-tarea');
+    form.addEventListener('submit', e => { e.preventDefault(); this.guardar(); });
+    form.progreso?.addEventListener('input', e => { document.getElementById('progreso-valor').textContent = e.target.value + '%'; });
+    document.getElementById('check-input')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); this.acciones['check-agregar'](); }
+    });
+    form.addEventListener('change', e => {
+      if (e.target.dataset.check) {
+        const item = this.checklist.find(i => i.id === e.target.dataset.check);
+        if (item) { item.hecho = e.target.checked; this._pintarChecklist(); }
+      }
+    });
+    if (id) this._cargarSeguimiento();
+  },
+
+  _pintarChecklist() {
+    const ul = document.getElementById('checklist');
+    if (!ul) return;
+    const dis = this._editable ? '' : 'disabled';
+    ul.innerHTML = this.checklist.map(i => `<li class="${i.hecho ? 'hecho' : ''}">
+        <label><input type="checkbox" data-check="${i.id}" ${i.hecho ? 'checked' : ''} ${dis}> <span>${Util.esc(i.texto)}</span></label>
+        ${this._editable ? `<button type="button" class="btn-icono btn-sm" data-accion="check-quitar" data-item="${i.id}" aria-label="Quitar paso">✕</button>` : ''}
+      </li>`).join('') || '<li class="muted mini">Sin pasos. Divide la tarea en pasos para medir el avance automáticamente.</li>';
+    const hechos = this.checklist.filter(i => i.hecho).length;
+    document.getElementById('check-resumen').textContent = this.checklist.length ? `${hechos}/${this.checklist.length} · ${Util.pct(hechos, this.checklist.length)}%` : '';
+    // Con pasos, el progreso se calcula solo; sin pasos se ajusta a mano.
+    document.getElementById('bloque-progreso').hidden = this.checklist.length > 0;
+  },
+
+  async _cargarSeguimiento() {
+    const ol = document.getElementById('timeline');
+    const id = this.id;
+    try {
+      const items = await Datos.actividad(id);
+      if (this.id !== id || !document.getElementById('timeline')) return;
+      ol.innerHTML = items.length ? items.map(a => `<li class="tl-tipo-${a.tipo}">
+          <div class="tl-cab"><strong>${Util.esc(a.autor_nombre || 'Sistema')}</strong><span class="muted mini">${Util.fmtFechaHora(a.created_at)}</span></div>
+          <div class="${a.tipo === 'comentario' ? 'tl-comentario' : 'muted mini'}">${Util.esc(a.texto)}</div>
+        </li>`).join('') : '<li class="muted mini">Aún no hay actividad.</li>';
+      ol.scrollTop = ol.scrollHeight;
+    } catch (e) {
+      ol.innerHTML = `<li class="muted mini">${Util.esc(e.message)}</li>`;
+    }
+  },
+
+  _leerFormulario() {
+    const f = document.getElementById('form-tarea');
+    const v = n => (f[n]?.value ?? '').trim();
+    const datos = {
+      titulo: v('titulo'),
+      descripcion: v('descripcion') || null,
+      asignado_a: v('asignado_a') || null,
+      estado: v('estado'),
+      prioridad: v('prioridad'),
+      categoria: v('categoria') || 'Otro',
+      empresa: v('empresa') || null,
+      fecha_inicio: v('fecha_inicio') || null,
+      fecha_vencimiento: v('fecha_vencimiento') || null,
+      checklist: this.checklist,
+    };
+    if (!this.checklist.length) datos.progreso = Number(v('progreso')) || 0;
+    return datos;
+  },
+
+  async guardar() {
+    const datos = this._leerFormulario();
+    if (!datos.titulo) { UI.toast('Escribe el nombre de la tarea.', { tipo: 'error' }); document.querySelector('#form-tarea [name=titulo]').focus(); return; }
+    if (datos.fecha_inicio && datos.fecha_vencimiento && datos.fecha_inicio > datos.fecha_vencimiento) {
+      UI.toast('La fecha de inicio no puede ser posterior a la fecha límite.', { tipo: 'error' }); return;
+    }
+    const btn = document.getElementById('btn-guardar');
+    btn.disabled = true;
+    try {
+      if (!this.id) {
+        await App.crear(datos);
+      } else {
+        // Solo se envían los campos que cambiaron
+        const cambios = {};
+        const norm = x => JSON.stringify(x === '' || x === undefined ? null : x);
+        for (const [k, val] of Object.entries(datos)) {
+          if (norm(val) !== norm(this.original[k])) cambios[k] = val;
+        }
+        if (Object.keys(cambios).length) await App.actualizar(this.id, cambios, { mensaje: 'Tarea guardada', deshacible: false });
+      }
+      UI.cerrarModal();
+    } catch (e) {
+      if (!this.id) UI.toast(e.message, { tipo: 'error' });
+      if (btn.isConnected) btn.disabled = false;
+    }
+  },
+
+  acciones: {
+    'check-agregar': () => {
+      const input = document.getElementById('check-input');
+      const texto = input?.value.trim();
+      if (!texto) return;
+      TareaModal.checklist.push({ id: Util.uid(), texto, hecho: false });
+      input.value = '';
+      TareaModal._pintarChecklist();
+      input.focus();
+    },
+    'check-quitar': el => {
+      TareaModal.checklist = TareaModal.checklist.filter(i => i.id !== el.dataset.item);
+      TareaModal._pintarChecklist();
+    },
+    'eliminar-tarea': async () => {
+      if (await App.eliminar(TareaModal.id)) UI.cerrarModal();
+    },
+    comentar: async el => {
+      const ta = document.getElementById('comentario');
+      const texto = ta.value.trim();
+      if (!texto) return;
+      el.disabled = true;
+      try {
+        await Datos.registrarActividad(TareaModal.id, 'comentario', texto);
+        ta.value = '';
+        await TareaModal._cargarSeguimiento();
+      } catch (e) { UI.toast(e.message, { tipo: 'error' }); }
+      el.disabled = false;
+    },
+  },
+};
+
+</script>
+<script>
+/* ── js/importar.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// IMPORTAR / EXPORTAR EXCEL
+// La conversión de filas a tareas (filasATareas) es pura y se prueba
+// en tests/; la lectura del archivo usa SheetJS cargado bajo demanda.
+// ═══════════════════════════════════════════════════════════════════
+
+const Importador = (() => {
+  const U = typeof Util !== 'undefined' ? Util : require('./utils.js').Util;
+  const XLSX_URL = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+
+  const COLS = {
+    titulo: ['TAREA', 'TITULO', 'ACTIVIDAD', 'ASUNTO'],
+    colaborador: ['COLABORADOR', 'RESPONSABLE', 'ASIGNADO A', 'ASIGNADO', 'CONTADOR', 'ENCARGADO'],
+    fecha: ['FECHA LIMITE', 'FECHA VENCIMIENTO', 'FECHA DE VENCIMIENTO', 'VENCIMIENTO', 'VENCE', 'FECHA'],
+    fecha_inicio: ['FECHA INICIO', 'FECHA DE INICIO', 'INICIO'],
+    empresa: ['EMPRESA', 'EMPRESAS', 'CLIENTE', 'RAZON SOCIAL', 'NOMBRE DE EMPRESA'],
+    categoria: ['CATEGORIA', 'TIPO DE TAREA', 'AREA'],
+    prioridad: ['PRIORIDAD'],
+    estado: ['ESTADO'],
+    descripcion: ['DESCRIPCION', 'DETALLE', 'OBSERVACIONES', 'NOTAS'],
+    impuesto: ['TIPO DE IMPUESTO', 'IMPUESTO'],
+    periodo: ['PERIODO'],
+  };
+  const MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
+
+  // Busca por prioridad de candidato: primero coincidencia exacta, luego por palabras
+  // completas ("FECHA VENCIMIENTO 2026" sirve para VENCIMIENTO; "TAREA" no sirve para AREA).
+  function buscarCol(cabeceras, candidatos, excluir = []) {
+    const ok = h => !excluir.some(x => h.includes(x));
+    const contiene = (h, c) => (' ' + h.replace(/[^A-Z0-9]+/g, ' ') + ' ').includes(' ' + c + ' ');
+    for (const c of candidatos) { const i = cabeceras.findIndex(h => h === c && ok(h)); if (i >= 0) return i; }
+    for (const c of candidatos) { const i = cabeceras.findIndex(h => contiene(h, c) && ok(h)); if (i >= 0) return i; }
+    return -1;
+  }
+
+  function mapearEstado(v) {
+    const s = U.normalizar(v);
+    if (!s) return 'pendiente';
+    if (/COMPLET|PRESENTAD|HECH|TERMINAD|FINALIZAD|CERRAD|^SI$|^OK$/.test(s)) return 'completada';
+    if (/REVISI/.test(s)) return 'en_revision';
+    if (/PROGRES|CURSO|PROCESO/.test(s)) return 'en_progreso';
+    return 'pendiente';
+  }
+
+  function mapearPrioridad(v) {
+    const s = U.normalizar(v);
+    if (/URGENT|CRITIC/.test(s)) return 'urgente';
+    if (/ALTA|HIGH/.test(s)) return 'alta';
+    if (/BAJA|LOW/.test(s)) return 'baja';
+    return s ? 'media' : null;
+  }
+
+  // Hash FNV-1a de 2×32 bits: referencia estable para no duplicar al reimportar.
+  function huella(s) {
+    let a = 0x811c9dc5, b = 0x01000193 ^ s.length;
+    for (let i = 0; i < s.length; i++) {
+      a = Math.imul(a ^ s.charCodeAt(i), 16777619);
+      b = Math.imul(b ^ s.charCodeAt(s.length - 1 - i), 16777619);
+    }
+    return (a >>> 0).toString(16).padStart(8, '0') + (b >>> 0).toString(16).padStart(8, '0');
+  }
+
+  function texto(v) { return v == null || v === 'null' ? '' : String(v).trim(); }
+
+  // hojas: [{ nombre, filas: [[celda, …], …] }] → { tareas, log }
+  function filasATareas(hojas, colaboradores) {
+    const porNombre = new Map();
+    for (const c of colaboradores) {
+      porNombre.set(U.normalizar(c.nombre), c);
+      const primero = U.normalizar(c.nombre).split(' ')[0];
+      if (primero && !porNombre.has(primero)) porNombre.set(primero, c);
+    }
+    const asignar = nombre => {
+      const n = U.normalizar(nombre);
+      if (!n) return { asignado_a: null, asignado_nombre: null };
+      const c = porNombre.get(n) || porNombre.get(n.split(' ')[0]);
+      return c ? { asignado_a: c.id, asignado_nombre: null } : { asignado_a: null, asignado_nombre: nombre.trim() };
+    };
+
+    const tareas = [], log = [];
+    const sinCoincidencia = new Set();
+
+    for (const hoja of hojas) {
+      const filas = hoja.filas || [];
+      let filaCab = -1, cab = [];
+      for (let i = 0; i < Math.min(8, filas.length); i++) {
+        const c = (filas[i] || []).map(U.normalizar);
+        // Un título suelto ("CALENDARIO EMPRESAS 2026") no es encabezado: se exigen 2+ columnas.
+        if (c.filter(Boolean).length >= 2 && c.some(h => COLS.titulo.includes(h) || COLS.empresa.some(e => h.includes(e)))) { filaCab = i; cab = c; break; }
+      }
+      if (filaCab < 0) { log.push(`· "${hoja.nombre}": sin encabezados reconocibles, se omite`); continue; }
+
+      const col = {
+        titulo: buscarCol(cab, COLS.titulo),
+        colaborador: buscarCol(cab, COLS.colaborador),
+        fecha: buscarCol(cab, COLS.fecha, ['INICIO', 'ENTREGA', 'PRESENTACION']),
+        fecha_inicio: buscarCol(cab, COLS.fecha_inicio),
+        empresa: buscarCol(cab, COLS.empresa),
+        categoria: buscarCol(cab, COLS.categoria),
+        prioridad: buscarCol(cab, COLS.prioridad),
+        estado: buscarCol(cab, COLS.estado),
+        descripcion: buscarCol(cab, COLS.descripcion),
+        impuesto: buscarCol(cab, COLS.impuesto),
+        periodo: buscarCol(cab, COLS.periodo),
+      };
+      const modoPlanner = col.titulo >= 0;
+      const tributarioPlano = !modoPlanner && col.impuesto >= 0 && col.fecha >= 0;
+      // Formato ancho del calendario tributario: una columna de fecha por mes.
+      let colsMes = !modoPlanner && !tributarioPlano
+        ? cab.map((h, i) => ({ i, mes: MESES.findIndex(m => h.includes(m)) })).filter(x => x.mes >= 0 && !cab[x.i].includes('ENTREGA'))
+        : [];
+      // Sin meses pero con una columna de vencimiento: una tarea por fila con el nombre de la hoja.
+      if (!modoPlanner && !tributarioPlano && !colsMes.length && col.fecha >= 0) colsMes = [{ i: col.fecha, mes: -1 }];
+      if (!modoPlanner && !tributarioPlano && !colsMes.length) { log.push(`· "${hoja.nombre}": no tiene columnas de tarea ni de fechas, se omite`); continue; }
+
+      let n = 0;
+      for (let r = filaCab + 1; r < filas.length; r++) {
+        const f = filas[r] || [];
+        const val = k => (col[k] >= 0 ? texto(f[col[k]]) : '');
+        const empresa = val('empresa');
+        const colab = val('colaborador');
+        const base = {
+          empresa: empresa || null,
+          descripcion: val('descripcion') || null,
+          ...asignar(colab),
+        };
+        if (colab && !base.asignado_a) sinCoincidencia.add(colab);
+
+        const agregar = (titulo, fecha, extra = {}) => {
+          const estado = col.estado >= 0 ? mapearEstado(f[col.estado]) : 'pendiente';
+          const t = {
+            ...base, titulo: titulo.slice(0, 300), fecha_vencimiento: fecha, estado,
+            prioridad: mapearPrioridad(val('prioridad')) || extra.prioridad || 'media',
+            categoria: val('categoria') || extra.categoria || 'Otro',
+            fecha_inicio: col.fecha_inicio >= 0 ? U.parsearFecha(f[col.fecha_inicio]) : null,
+            progreso: estado === 'completada' ? 100 : 0,
+            checklist: [], etiquetas: [],
+            // Lo importado como completado se toma como entregado en su fecha límite.
+            completada_at: estado === 'completada' && fecha ? U.deISO(fecha).toISOString() : null,
+          };
+          t.origen_ref = 'xls:' + huella([hoja.nombre, t.titulo, empresa, fecha, colab].join('|'));
+          tareas.push(t);
+          n++;
+        };
+
+        if (modoPlanner) {
+          const titulo = val('titulo');
+          if (titulo) agregar(titulo, U.parsearFecha(f[col.fecha]));
+        } else if (tributarioPlano) {
+          const imp = val('impuesto'), per = val('periodo'), fecha = U.parsearFecha(f[col.fecha]);
+          if (imp && fecha && empresa) agregar(per ? `${imp} · ${per}` : imp, fecha, { categoria: 'Tributario', prioridad: 'alta' });
+        } else if (empresa && U.normalizar(empresa) !== 'EMPRESA') {
+          for (const { i, mes } of colsMes) {
+            const fecha = U.parsearFecha(f[i]);
+            const sufijo = mes >= 0 ? ' · ' + MESES[mes][0] + MESES[mes].slice(1).toLowerCase() : '';
+            if (fecha) agregar(hoja.nombre + sufijo, fecha, { categoria: 'Tributario', prioridad: 'alta' });
+          }
+        }
+      }
+      log.push(`✓ "${hoja.nombre}": ${n} tareas`);
+    }
+    if (sinCoincidencia.size) {
+      log.push(`⚠ ${sinCoincidencia.size} nombre(s) sin perfil en el sistema (quedan sin asignar, con el nombre guardado): ${[...sinCoincidencia].slice(0, 8).join(', ')}${sinCoincidencia.size > 8 ? '…' : ''}`);
+    }
+    return { tareas, log };
+  }
+
+  async function cargarXLSX() {
+    if (window.XLSX) return;
+    await new Promise((ok, mal) => {
+      const s = document.createElement('script');
+      s.src = XLSX_URL; s.onload = ok; s.onerror = () => mal(new Error('No se pudo cargar la librería de Excel (sin conexión).'));
+      document.head.appendChild(s);
+    });
+  }
+
+  function progreso(pct, estado, lineas) {
+    const el = document.getElementById('imp-estado');
+    if (!el) return;
+    el.textContent = estado;
+    document.getElementById('imp-barra').style.width = pct + '%';
+    if (lineas) document.getElementById('imp-log').innerHTML = lineas.map(l => `<div>${U.esc(l)}</div>`).join('');
+  }
+
+  async function importarArchivo(archivo) {
+    if (archivo.size > 20 * 1024 * 1024) { UI.toast('El archivo supera 20 MB.', { tipo: 'error' }); return; }
+    UI.abrirModal(`<header class="modal-cab"><h3>Importar: ${U.esc(archivo.name)}</h3></header>
+      <p id="imp-estado" class="muted">Leyendo archivo…</p>
+      <div class="barra-progreso grande"><span id="imp-barra" style="width:5%"></span></div>
+      <div id="imp-log" class="imp-log"></div>
+      <div class="modal-pie"><span class="separador"></span><button class="btn" data-accion="cerrar-modal">Cerrar</button></div>`, { ancho: 520 });
+    try {
+      await cargarXLSX();
+      progreso(20, 'Procesando hojas…');
+      const wb = XLSX.read(await archivo.arrayBuffer(), { type: 'array', cellDates: true });
+      const hojas = wb.SheetNames.map(nombre => ({ nombre, filas: XLSX.utils.sheet_to_json(wb.Sheets[nombre], { header: 1, defval: null, raw: true }) }));
+      const { tareas, log } = filasATareas(hojas, App.estado.colaboradores);
+      if (!tareas.length) { progreso(100, 'No se encontraron tareas en el archivo.', log); return; }
+      progreso(40, `Guardando ${tareas.length} tareas…`, log);
+      const creadas = await Datos.importarTareas(tareas, (hechas, total) => progreso(40 + Math.round(55 * hechas / total), `Guardando… ${hechas}/${total}`));
+      await App.cargar();
+      App.render();
+      progreso(100, `Listo: ${tareas.length} tareas procesadas${Datos.modo === 'demo' ? `, ${creadas} nuevas` : ' (las repetidas se omiten)'}.`, log);
+    } catch (e) {
+      console.error(e);
+      progreso(100, '❌ ' + e.message);
+    }
+  }
+
+  async function exportar(tareas) {
+    const cab = ['Tarea', 'Colaborador', 'Empresa', 'Categoría', 'Prioridad', 'Estado', 'Fecha inicio', 'Fecha límite', 'Completada el', 'A tiempo', 'Progreso %', 'Descripción'];
+    const hoy = U.hoyISO();
+    const filas = tareas.map(t => {
+      const ef = Metricas.estadoEfectivo(t, hoy);
+      const at = Metricas.aTiempo(t);
+      return [t.titulo, App.colaboradorDe(t)?.nombre || '', t.empresa || '', t.categoria || '',
+        PRIORIDADES.find(p => p.id === t.prioridad)?.label || '', ef === 'vencida' ? 'Vencida' : ESTADOS.find(e => e.id === t.estado)?.label || '',
+        t.fecha_inicio || '', t.fecha_vencimiento || '', U.fechaDeTimestamp(t.completada_at) || '', at === null ? '' : at ? 'Sí' : 'No',
+        UI.progreso(t).pct, t.descripcion || ''];
+    });
+    const nombre = 'planner_tareas_' + hoy;
+    try {
+      await cargarXLSX();
+      const ws = XLSX.utils.aoa_to_sheet([cab, ...filas]);
+      ws['!cols'] = cab.map((h, i) => ({ wch: i === 0 || i === 11 ? 40 : 16 }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Tareas');
+      XLSX.writeFile(wb, nombre + '.xlsx');
+    } catch {
+      // Sin la librería, se descarga CSV (Excel también lo abre).
+      const csv = [cab, ...filas].map(f => f.map(v => /[",\n;]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v).join(',')).join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = nombre + '.csv';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
+    UI.toast(`${tareas.length} tareas exportadas`, { tipo: 'ok' });
+  }
+
+  return { filasATareas, mapearEstado, mapearPrioridad, huella, importarArchivo, exportar };
+})();
+
+if (typeof module !== 'undefined') module.exports = { Importador };
+
+</script>
+<script>
+/* ── js/login.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// PANTALLA DE INICIO DE SESIÓN (+ fondo 3D decorativo)
+// ═══════════════════════════════════════════════════════════════════
+
+const Login = {
+  el: id => document.getElementById(id),
+
+  mostrar() {
+    this.el('login').hidden = false;
+    this.el('demo-tip').hidden = Datos.modo !== 'demo';
+    this.formulario('entrar');
+    Escena3D.iniciar();
+  },
+
+  ocultar() {
+    this.el('login').hidden = true;
+    Escena3D.detener();
+  },
+
+  formulario(cual) {
+    this.el('frm-entrar').hidden = cual !== 'entrar';
+    this.el('frm-recuperar').hidden = cual !== 'recuperar';
+    this.mensaje('', '');
+  },
+
+  mensaje(texto, tipo) {
+    const m = this.el('login-msg');
+    m.textContent = texto;
+    m.className = 'login-msg ' + tipo;
+    m.hidden = !texto;
+  },
+  error(texto) { this.mensaje(texto, 'error'); },
+
+  async entrar(e) {
+    e?.preventDefault();
+    const email = this.el('inp-email').value.trim();
+    const pass = this.el('inp-pass').value;
+    if (!email || (!pass && Datos.modo !== 'demo')) { this.error('Ingresa correo y contraseña.'); return; }
+    const btn = this.el('btn-entrar');
+    btn.disabled = true; btn.textContent = 'Entrando…';
+    try {
+      const perfil = await Datos.login(email, pass);
+      this.el('inp-pass').value = '';
+      await App.entrar(perfil);
+    } catch (err) {
+      this.error(err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Iniciar sesión';
+    }
+  },
+
+  async recuperar(e) {
+    e?.preventDefault();
+    const email = this.el('inp-rec-email').value.trim();
+    if (!email) { this.error('Ingresa tu correo.'); return; }
+    try {
+      await Datos.recuperar(email);
+      this.mensaje('Enlace enviado. Revisa tu correo (también la carpeta de spam).', 'ok');
+    } catch (err) { this.error(err.message); }
+  },
+};
+
+const Escena3D = {
+  s: null,
+
+  detener() {
+    if (!this.s) return;
+    cancelAnimationFrame(this.s.frame);
+    window.removeEventListener('mousemove', this.s.onMouse);
+    window.removeEventListener('resize', this.s.onResize);
+    this.s.renderer.dispose();
+    this.s = null;
+  },
+
+  iniciar() {
+    this.detener();
+    const canvas = document.getElementById('login-canvas');
+    if (!canvas || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (typeof THREE === 'undefined') {
+      // three.js se carga con defer: si aún no llegó, se reintenta al terminar la carga.
+      if (document.readyState !== 'complete') addEventListener('load', () => { if (!document.getElementById('login').hidden) this.iniciar(); }, { once: true });
+      return;
+    }
+    let w = innerWidth, h = innerHeight;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 100);
+    camera.position.set(0, 0, 8);
+    let renderer;
+    try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); } catch { return; }
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+
+    const formas = [];
+    const agregar = (r, x, y, z, color, op, tipo) => {
+      const geo = tipo === 'box' ? new THREE.BoxGeometry(r, r, r) : tipo === 'octa' ? new THREE.OctahedronGeometry(r, 0) : new THREE.IcosahedronGeometry(r, tipo === 'ico1' ? 1 : 0);
+      const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: op }));
+      mesh.position.set(x, y, z);
+      mesh.userData.giro = { y: (Math.random() - 0.5) * 0.006, x: (Math.random() - 0.5) * 0.004 };
+      scene.add(mesh); formas.push(mesh);
+    };
+    agregar(2.4, 3.4, 1.0, -3, 0x9d8fe8, 0.36, 'ico1');
+    agregar(1.6, -3.8, -0.8, -2.5, 0xc9a35f, 0.30, 'ico');
+    agregar(1.1, 2.8, -2.4, -1.5, 0xc9a35f, 0.26, 'octa');
+    agregar(0.9, -2.6, 2.2, -1, 0x9d8fe8, 0.24, 'box');
+    agregar(1.8, 0.2, 2.8, -3.5, 0xc9a35f, 0.20, 'ico');
+
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(1200 * 3);
+    for (let i = 0; i < pos.length; i++) pos[i] = (Math.random() - 0.5) * (i % 3 === 2 ? 14 : 30);
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const estrellas = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xb9aee8, size: 0.06, transparent: true, opacity: 0.55 }));
+    scene.add(estrellas);
+
+    let mx = 0, my = 0;
+    const onMouse = e => { mx = (e.clientX / w - 0.5) * 2; my = (e.clientY / h - 0.5) * 2; };
+    const onResize = () => { w = innerWidth; h = innerHeight; camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h); };
+    addEventListener('mousemove', onMouse);
+    addEventListener('resize', onResize);
+
+    const s = { renderer, onMouse, onResize, frame: 0 };
+    const animar = () => {
+      s.frame = requestAnimationFrame(animar);
+      for (const f of formas) { f.rotation.y += f.userData.giro.y; f.rotation.x += f.userData.giro.x; }
+      estrellas.rotation.y += 0.0009;
+      camera.position.x += (mx * 1.5 - camera.position.x) * 0.05;
+      camera.position.y += (-my * 1.1 - camera.position.y) * 0.05;
+      camera.lookAt(scene.position);
+      renderer.render(scene, camera);
+    };
+    animar();
+    this.s = s;
+  },
+};
+
+</script>
+<script>
+/* ── js/app.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// APLICACIÓN — estado global, acciones sobre tareas, eventos y arranque
+//
+// Flujo: un evento del usuario → una acción de App → Datos (Supabase o
+// demo) → App.render() vuelve a pintar la vista activa a partir del estado.
+// ═══════════════════════════════════════════════════════════════════
+
+const App = {
+  estado: {
+    perfil: null,
+    colaboradores: [],
+    tareas: [],
+    conectado: false,
+    errorCarga: null,
+    vista: 'inicio',
+    tema: 'claro',
+    filtros: { alcance: 'mias', texto: '', colaborador: '', estado: '', prioridad: '', categoria: '' },
+    tablero: { agrupar: 'estado' },
+    lista: { orden: 'fecha_vencimiento', dir: 1, limite: CONFIG.LIMITE_LISTA },
+    cal: { modo: 'mes', ref: Util.hoyISO() },
+    rend: { periodo: 'mes' },
+  },
+
+  // ── Consultas sobre el estado ──────────────────────────────────────
+  tarea(id) { return this.estado.tareas.find(t => t.id === id); },
+
+  colaborador(id) { return this.estado.colaboradores.find(c => c.id === id) || null; },
+
+  colaboradorDe(t) {
+    if (t.asignado_a) return this.colaborador(t.asignado_a) || { id: t.asignado_a, nombre: t.asignado_nombre || 'Colaborador' };
+    if (t.asignado_nombre) return { id: null, nombre: t.asignado_nombre };
+    return null;
+  },
+
+  categorias() {
+    return [...new Set([...CATEGORIAS, ...this.estado.tareas.map(t => t.categoria).filter(Boolean)])];
+  },
+
+  esMia(t) {
+    const uid = Permisos.uid;
+    return t.asignado_a === uid || (!t.asignado_a && t.creado_por === uid);
+  },
+
+  // Tareas que el usuario ve en tablero, lista y calendario.
+  tareasVisibles({ sinFiltros = false } = {}) {
+    const f = this.estado.filtros;
+    let lista = this.estado.tareas;
+    if (f.alcance === 'mias' || !Permisos.verEquipo()) lista = lista.filter(t => this.esMia(t));
+    if (sinFiltros) return lista;
+    const hoy = Util.hoyISO();
+    const q = Util.normalizar(f.texto);
+    return lista.filter(t =>
+      (!f.colaborador || t.asignado_a === f.colaborador) &&
+      (!f.estado || (f.estado === 'vencida' ? Metricas.estadoEfectivo(t, hoy) === 'vencida' : t.estado === f.estado)) &&
+      (!f.prioridad || t.prioridad === f.prioridad) &&
+      (!f.categoria || t.categoria === f.categoria) &&
+      (!q || Util.normalizar(`${t.titulo} ${t.empresa || ''} ${t.descripcion || ''}`).includes(q)));
+  },
+
+  // ── Acciones sobre tareas ──────────────────────────────────────────
+  async crear(datos) {
+    const base = { estado: 'pendiente', prioridad: 'media', categoria: 'Otro', asignado_a: Permisos.uid, ...datos };
+    if (base.estado === 'completada') base.progreso = 100;
+    const t = await Datos.crearTarea(base);
+    if (!this.tarea(t.id)) this.estado.tareas.push(t);
+    this._registrar(t.id, 'creacion', 'Creó la tarea');
+    if (t.asignado_a && t.asignado_a !== Permisos.uid) this._notificarAsignacion(t);
+    this.render();
+    UI.toast('Tarea creada', { tipo: 'ok' });
+    return t;
+  },
+
+  // Calcula los campos que dependen de otros (progreso, fecha de completado).
+  _derivar(t, cambios) {
+    const c = { ...cambios };
+    if ('checklist' in c && c.checklist.length) c.progreso = Util.pct(c.checklist.filter(i => i.hecho).length, c.checklist.length);
+    if (c.estado === 'completada' && t.estado !== 'completada') c.progreso = 100;
+    if (c.estado && c.estado !== 'completada' && t.estado === 'completada' && (c.progreso ?? t.progreso) === 100) c.progreso = 80;
+    // completada_at lo fija la base de datos (trigger); aquí solo se refleja localmente.
+    const local = {};
+    if (c.estado && c.estado !== t.estado) local.completada_at = c.estado === 'completada' ? new Date().toISOString() : null;
+    return { enviar: c, local };
+  },
+
+  async actualizar(id, cambios, { mensaje = null, deshacible = true } = {}) {
+    const t = this.tarea(id);
+    if (!t) return;
+    if (!Permisos.editarTarea(t)) { UI.toast('No tienes permiso para modificar esta tarea.', { tipo: 'error' }); return; }
+    const antes = structuredClone(t);
+    const { enviar, local } = this._derivar(t, cambios);
+    Object.assign(t, enviar, local);
+    this.render();
+    try {
+      const guardada = await Datos.actualizarTarea(id, enviar);
+      this._reemplazar(guardada);
+      this._registrarCambios(antes, guardada);
+      if (guardada.estado === 'completada' && antes.estado !== 'completada') this._notificarCompletada(guardada);
+      if (guardada.asignado_a && guardada.asignado_a !== antes.asignado_a && guardada.asignado_a !== Permisos.uid) this._notificarAsignacion(guardada);
+      this.render();
+      if (mensaje) {
+        const revertir = {};
+        for (const k of Object.keys(enviar)) revertir[k] = antes[k];
+        UI.toast(mensaje, { tipo: 'ok', deshacer: deshacible ? () => this.actualizar(id, revertir, { mensaje: 'Cambio revertido', deshacible: false }) : null });
+      }
+      return guardada;
+    } catch (e) {
+      this._reemplazar(antes);
+      this.render();
+      UI.toast(e.message, { tipo: 'error' });
+      throw e;
+    }
+  },
+
+  async eliminar(id) {
+    const t = this.tarea(id);
+    if (!t) return false;
+    if (!Permisos.eliminarTarea(t)) { UI.toast('No tienes permiso para eliminar esta tarea.', { tipo: 'error' }); return false; }
+    if (!confirm(`¿Eliminar la tarea "${t.titulo}"? Esta acción no se puede deshacer.`)) return false;
+    try {
+      await Datos.eliminarTarea(id);
+      this.estado.tareas = this.estado.tareas.filter(x => x.id !== id);
+      this.render();
+      UI.toast('Tarea eliminada');
+      return true;
+    } catch (e) { UI.toast(e.message, { tipo: 'error' }); return false; }
+  },
+
+  completar(id) {
+    const t = this.tarea(id);
+    if (!t) return;
+    const hecha = t.estado === 'completada';
+    return this.actualizar(id, { estado: hecha ? 'en_progreso' : 'completada' }, { mensaje: hecha ? 'Tarea reabierta' : '✓ Tarea completada' }).catch(() => {});
+  },
+
+  // Arrastrar y soltar: campo = estado | asignado_a | prioridad | fecha_vencimiento
+  mover(id, campo, valor) {
+    const t = this.tarea(id);
+    if (!t) return;
+    valor = valor || null;
+    if ((t[campo] || null) === valor) return;
+    if (campo === 'asignado_a' && valor !== Permisos.uid && !Permisos.asignarAOtros()) {
+      UI.toast('Solo un administrador puede asignar tareas a otros colaboradores.', { tipo: 'error' });
+      return;
+    }
+    const textos = {
+      estado: () => 'Movida a ' + (ESTADOS.find(e => e.id === valor)?.label || valor),
+      asignado_a: () => 'Asignada a ' + (this.colaborador(valor)?.nombre || 'nadie'),
+      prioridad: () => 'Prioridad: ' + (PRIORIDADES.find(p => p.id === valor)?.label || valor),
+      fecha_vencimiento: () => 'Reprogramada para el ' + Util.fmtFecha(valor),
+    };
+    this.actualizar(id, { [campo]: valor }, { mensaje: textos[campo]?.() || 'Tarea actualizada' }).catch(() => {});
+  },
+
+  _reemplazar(t) {
+    const i = this.estado.tareas.findIndex(x => x.id === t.id);
+    if (i >= 0) this.estado.tareas[i] = t; else this.estado.tareas.push(t);
+  },
+
+  // ── Seguimiento (bitácora de cada tarea) ──────────────────────────
+  _registrar(tareaId, tipo, texto) {
+    Datos.registrarActividad(tareaId, tipo, texto).catch(e => console.warn('[seguimiento]', e.message));
+  },
+
+  _registrarCambios(antes, despues) {
+    const nombreEstado = id => ESTADOS.find(e => e.id === id)?.label || id;
+    if (antes.estado !== despues.estado) this._registrar(despues.id, 'estado', `Cambió el estado: ${nombreEstado(antes.estado)} → ${nombreEstado(despues.estado)}`);
+    if ((antes.asignado_a || null) !== (despues.asignado_a || null)) this._registrar(despues.id, 'asignacion', `Asignó la tarea a ${this.colaborador(despues.asignado_a)?.nombre || 'nadie'}`);
+    if ((antes.fecha_vencimiento || null) !== (despues.fecha_vencimiento || null)) this._registrar(despues.id, 'fecha', `Cambió la fecha límite: ${Util.fmtFecha(antes.fecha_vencimiento)} → ${Util.fmtFecha(despues.fecha_vencimiento)}`);
+    if (antes.prioridad !== despues.prioridad) this._registrar(despues.id, 'edicion', `Cambió la prioridad a ${PRIORIDADES.find(p => p.id === despues.prioridad)?.label}`);
+  },
+
+  // ── Microsoft Teams ────────────────────────────────────────────────
+  _notificarCompletada(t) {
+    Teams.enviar('✅ Tarea completada', `**${t.titulo}**${t.empresa ? ' · ' + t.empresa : ''}\n\nCompletada por **${this.estado.perfil?.nombre}**`, this.colaboradorDe(t)?.nombre);
+  },
+  _notificarAsignacion(t) {
+    const quien = this.colaborador(t.asignado_a)?.nombre || 'un colaborador';
+    Teams.enviar('📌 Nueva tarea asignada', `**${t.titulo}** asignada a **${quien}**${t.fecha_vencimiento ? '\n\nVence: ' + Util.fmtFecha(t.fecha_vencimiento) : ''}`, quien);
+  },
+
+  // ── Navegación y render ────────────────────────────────────────────
+  ir(vista) {
+    if (!Vistas[vista] || !Vistas[vista].visible()) vista = 'inicio';
+    if (location.hash !== '#/' + vista) history.replaceState(null, '', '#/' + vista);
+    this.estado.vista = vista;
+    window.scrollTo(0, 0);
+    this.render();
+  },
+
+  _pendienteRender: false,
+  render() {
+    if (this._pendienteRender) return;
+    this._pendienteRender = true;
+    requestAnimationFrame(() => { this._pendienteRender = false; this._pintar(); });
+  },
+
+  _pintar() {
+    if (!this.estado.perfil) return;
+    const main = document.getElementById('main');
+    // Conservar el foco del buscador entre repintados
+    const activo = document.activeElement;
+    const filtroActivo = activo?.dataset?.filtro;
+    const cursor = filtroActivo ? activo.selectionStart : null;
+
+    this._pintarNav();
+    const v = Vistas[this.estado.vista];
+    document.getElementById('titulo-vista').textContent = v.titulo;
+    if (this.estado.errorCarga) {
+      main.innerHTML = Vistas.inicio.errorCarga(this.estado.errorCarga);
+    } else {
+      main.innerHTML = v.render();
+      v.montar?.(main);
+    }
+
+    if (filtroActivo) {
+      const el = main.querySelector(`[data-filtro="${filtroActivo}"]`);
+      if (el) { el.focus(); if (cursor !== null && el.setSelectionRange) el.setSelectionRange(cursor, cursor); }
+    }
+  },
+
+  _pintarNav() {
+    const hoy = Util.hoyISO();
+    const misVencidas = this.estado.tareas.filter(t => this.esMia(t) && Metricas.estadoEfectivo(t, hoy) === 'vencida').length;
+    const items = Object.entries(Vistas).filter(([, v]) => v.visible()).sort((a, b) => a[1].orden - b[1].orden);
+    const html = items.map(([id, v]) => `<button class="${id === this.estado.vista ? 'activo' : ''}" data-accion="ir" data-vista="${id}" ${id === this.estado.vista ? 'aria-current="page"' : ''}>
+        <span class="nav-icono">${v.icono}</span><span class="nav-texto">${v.titulo}</span>
+        ${id === 'inicio' && misVencidas ? `<span class="nav-badge" title="Tus tareas vencidas">${misVencidas}</span>` : ''}
+      </button>`).join('');
+    document.getElementById('nav').innerHTML = html;
+  },
+
+  // ── Sesión ─────────────────────────────────────────────────────────
+  async entrar(perfil) {
+    this.estado.perfil = perfil;
+    Permisos.usar(perfil);
+    this.estado.filtros.alcance = Permisos.esAdmin() ? 'equipo' : 'mias';
+    Login.ocultar();
+    document.getElementById('app').hidden = false;
+    this._pintarUsuario();
+    document.getElementById('main').innerHTML = '<div class="cargando">Cargando tareas…</div>';
+    await this.cargar();
+    this._pintarUsuario(); // de nuevo: el color del avatar depende de la lista de colaboradores
+    Datos.suscribir((evento, nueva, anterior, conectado) => this._alCambiar(evento, nueva, anterior, conectado));
+    const desdeHash = location.hash.replace('#/', '');
+    this.ir(Vistas[desdeHash] ? desdeHash : 'inicio');
+  },
+
+  async cargar() {
+    try {
+      const [colabs, tareas] = await Promise.all([
+        Datos.colaboradores().catch(e => { if (e.faltaEsquema) throw e; console.warn(e.message); return []; }),
+        Datos.tareas(),
+      ]);
+      // Si las políticas solo devuelven el propio perfil, igual debe aparecer el usuario actual.
+      if (!colabs.some(c => c.id === this.estado.perfil.id)) colabs.push({ ...this.estado.perfil });
+      colabs.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+      this.estado.colaboradores = colabs;
+      this.estado.tareas = tareas;
+      this.estado.errorCarga = null;
+    } catch (e) {
+      console.error(e);
+      this.estado.errorCarga = e;
+    }
+  },
+
+  async sincronizar() {
+    await this.cargar();
+    this.render();
+    if (!this.estado.errorCarga) UI.toast('Datos actualizados', { tipo: 'ok' });
+  },
+
+  async salir() {
+    await Datos.logout();
+    this.estado.perfil = null;
+    this.estado.tareas = [];
+    // El siguiente usuario empieza limpio: sin la vista ni los filtros del anterior.
+    this.estado.vista = 'inicio';
+    Object.assign(this.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '' });
+    this.estado.lista.limite = CONFIG.LIMITE_LISTA;
+    history.replaceState(null, '', location.pathname + location.search);
+    document.getElementById('app').hidden = true;
+    UI.cerrarModal();
+    Login.mostrar();
+  },
+
+  _alCambiar(evento, nueva, anterior, conectado) {
+    if (evento === 'estado') {
+      this.estado.conectado = conectado;
+      const punto = document.getElementById('punto-conexion');
+      if (punto) { punto.classList.toggle('off', !conectado); punto.title = conectado ? 'Conectado en tiempo real' : 'Sin conexión en tiempo real'; }
+      return;
+    }
+    if (evento === 'recargar') { this.cargar().then(() => this.render()); return; }
+    if (evento === 'DELETE' && anterior?.id) this.estado.tareas = this.estado.tareas.filter(t => t.id !== anterior.id);
+    else if (nueva) this._reemplazar(nueva);
+    this.render();
+  },
+
+  _pintarUsuario() {
+    const p = this.estado.perfil;
+    const rol = Permisos.esAdmin() ? 'Administrador' : 'Colaborador';
+    document.getElementById('usuario').innerHTML = `
+      ${UI.avatar(p, 30)}
+      <div class="usuario-info"><strong>${Util.esc(p.nombre)}</strong><span>${rol}${Datos.modo === 'demo' ? ' · demo' : ''}</span></div>
+      <span id="punto-conexion" class="punto-conexion off" title="Conectando…"></span>`;
+  },
+
+  aplicarTema(tema) {
+    this.estado.tema = tema;
+    document.documentElement.dataset.theme = tema === 'oscuro' ? 'dark' : 'light';
+    try { localStorage.setItem('planner_tema', tema); } catch { /* sin almacenamiento */ }
+    const b = document.getElementById('btn-tema');
+    if (b) b.textContent = tema === 'oscuro' ? '☀️' : '🌙';
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// EVENTOS (delegados: un solo listener por tipo para toda la página)
+// ═══════════════════════════════════════════════════════════════════
+const Acciones = {
+  'ir': el => App.ir(el.dataset.vista),
+  'nueva-tarea': el => TareaModal.abrirNueva({ fecha_vencimiento: el.dataset.fecha, estado: el.dataset.estado, asignado_a: el.dataset.asignado, prioridad: el.dataset.prioridad }),
+  'abrir-tarea': el => TareaModal.abrir(el.dataset.id),
+  'completar': el => App.completar(el.dataset.id),
+  'alcance': el => { App.estado.filtros.alcance = el.dataset.valor; if (el.dataset.valor === 'mias') App.estado.filtros.colaborador = ''; App.render(); },
+  'limpiar-filtros': () => { Object.assign(App.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '' }); App.render(); },
+  'ver-colaborador': el => {
+    Object.assign(App.estado.filtros, { alcance: 'equipo', colaborador: el.dataset.id || '', estado: el.dataset.estado || '' });
+    App.ir('lista');
+  },
+  'tema': () => App.aplicarTema(App.estado.tema === 'oscuro' ? 'claro' : 'oscuro'),
+  'salir': () => App.salir(),
+  'sincronizar': () => App.sincronizar(),
+  'cerrar-modal': () => UI.cerrarModal(),
+  'menu': () => document.body.classList.toggle('menu-abierto'),
+};
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-accion]');
+  if (!el) {
+    if (e.target.id === 'modal') UI.cerrarModal();
+    return;
+  }
+  const fn = Acciones[el.dataset.accion] || Vistas[App.estado.vista]?.acciones?.[el.dataset.accion] || TareaModal.acciones[el.dataset.accion];
+  if (!fn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if (el.dataset.accion === 'ir') document.body.classList.remove('menu-abierto');
+  fn(el, e);
+});
+
+document.addEventListener('input', e => {
+  const campo = e.target.dataset?.filtro;
+  if (campo === 'texto') { App.estado.filtros.texto = e.target.value; App.render(); }
+});
+document.addEventListener('change', e => {
+  const campo = e.target.dataset?.filtro;
+  if (campo && campo !== 'texto') { App.estado.filtros[campo] = e.target.value; App.render(); return; }
+  const fn = Vistas[App.estado.vista]?.alCambiar;
+  if (e.target.dataset?.cambio && fn) fn(e.target);
+});
+
+// Tooltips de gráficas: cualquier elemento con data-tip
+document.addEventListener('mouseover', e => {
+  const el = e.target.closest?.('[data-tip]');
+  const tip = document.getElementById('tooltip');
+  if (!el) { tip.hidden = true; return; }
+  tip.textContent = el.dataset.tip;
+  tip.hidden = false;
+});
+document.addEventListener('mousemove', e => {
+  const tip = document.getElementById('tooltip');
+  if (tip.hidden) return;
+  const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8);
+  const y = e.clientY + 18 + tip.offsetHeight > innerHeight ? e.clientY - tip.offsetHeight - 10 : e.clientY + 18;
+  tip.style.transform = `translate(${x}px, ${y}px)`;
+});
+
+// Arrastrar y soltar
+document.addEventListener('dragstart', e => {
+  const el = e.target.closest?.('[data-arrastrar]');
+  if (!el) return;
+  e.dataTransfer.setData('text/plain', el.dataset.arrastrar);
+  e.dataTransfer.effectAllowed = 'move';
+  requestAnimationFrame(() => el.classList.add('arrastrando'));
+});
+document.addEventListener('dragend', () => {
+  document.querySelectorAll('.arrastrando, .sobre').forEach(x => x.classList.remove('arrastrando', 'sobre'));
+});
+document.addEventListener('dragover', e => {
+  const zona = e.target.closest?.('[data-soltar]');
+  if (!zona) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.sobre').forEach(x => x !== zona && x.classList.remove('sobre'));
+  zona.classList.add('sobre');
+});
+document.addEventListener('drop', e => {
+  const zona = e.target.closest?.('[data-soltar]');
+  if (!zona) return;
+  e.preventDefault();
+  zona.classList.remove('sobre');
+  const id = e.dataTransfer.getData('text/plain');
+  if (id) App.mover(id, zona.dataset.soltar, zona.dataset.valor);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { UI.cerrarModal(); document.body.classList.remove('menu-abierto'); return; }
+  const escribiendo = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+  if (!escribiendo && App.estado.perfil && document.getElementById('modal').hidden && e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    e.preventDefault();
+    TareaModal.abrirNueva();
+  }
+});
+
+window.addEventListener('hashchange', () => {
+  const v = location.hash.replace('#/', '');
+  if (App.estado.perfil && v !== App.estado.vista && Vistas[v]) App.ir(v);
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// ARRANQUE
+// ═══════════════════════════════════════════════════════════════════
+(async () => {
+  let tema = 'claro';
+  try { tema = localStorage.getItem('planner_tema') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro'); } catch { /* sin almacenamiento */ }
+  App.aplicarTema(tema);
+  try {
+    await Datos.iniciar();
+    const perfil = await Datos.sesion();
+    if (perfil) { await App.entrar(perfil); return; }
+  } catch (e) {
+    console.error(e);
+    Login.error(e.message);
+  }
+  Login.mostrar();
+})();
+
+</script>
+</body>
+</html>
