@@ -38,6 +38,12 @@ La campana de la barra superior activa los avisos del navegador (cada persona lo
 
 Los avisos llegan mientras la página esté abierta, aunque esté en otra pestaña o minimizada. Si se bloquearon, se vuelven a permitir desde el candado junto a la dirección de la página.
 
+## Notas personales
+
+La sección **Notas** es un bloc de notas privado: cada persona ve solo las suyas (carpetas Todas, Favoritas, Recientes, Archivadas y Papelera; fijar, favorita, color, buscador y guardado automático).
+
+Para activarla, ejecuta una sola vez [`supabase/notas.sql`](supabase/notas.sql) en Supabase → **SQL Editor**. Mientras no exista la tabla, la sección muestra un aviso.
+
 ## Modo demo
 
 Abre la página con `?demo` al final de la dirección para probarla con datos de ejemplo guardados solo en el navegador.
