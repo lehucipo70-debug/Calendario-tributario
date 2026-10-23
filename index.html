@@ -2927,7 +2927,7 @@ const App = {
   // ── Acciones sobre tareas ──────────────────────────────────────────
   async crear(datos) {
     const base = { estado: 'pendiente', prioridad: 'media', categoria: 'Otro', asignado_a: Permisos.uid, ...datos };
-    if (base.estado === 'completada') base.progreso = 100;
+    if (base.estado === 'completada') { base.progreso = 100; base.completada_at ??= new Date().toISOString(); }
     const t = await Datos.crearTarea(base);
     if (!this.tarea(t.id)) this.estado.tareas.push(t);
     this._registrar(t.id, 'creacion', 'Creó la tarea');
@@ -2943,10 +2943,10 @@ const App = {
     if ('checklist' in c && c.checklist.length) c.progreso = Util.pct(c.checklist.filter(i => i.hecho).length, c.checklist.length);
     if (c.estado === 'completada' && t.estado !== 'completada') c.progreso = 100;
     if (c.estado && c.estado !== 'completada' && t.estado === 'completada' && (c.progreso ?? t.progreso) === 100) c.progreso = 80;
-    // completada_at lo fija la base de datos (trigger); aquí solo se refleja localmente.
-    const local = {};
-    if (c.estado && c.estado !== t.estado) local.completada_at = c.estado === 'completada' ? new Date().toISOString() : null;
-    return { enviar: c, local };
+    // completada_at se envía siempre: las gráficas dependen de ella y no todas las bases
+    // de datos tienen el trigger que la fija (si existe, el trigger tiene la última palabra).
+    if (c.estado && c.estado !== t.estado) c.completada_at = c.estado === 'completada' ? new Date().toISOString() : null;
+    return { enviar: c, local: {} };
   },
 
   async actualizar(id, cambios, { mensaje = null, deshacible = true } = {}) {
