@@ -37,6 +37,13 @@ La campana de la barra superior activa los avisos del navegador (cada persona lo
 
 Los avisos llegan mientras la página esté abierta, aunque esté en otra pestaña o minimizada. Si se bloquearon, se vuelven a permitir desde el candado junto a la dirección de la página.
 
+Si no llegan avisos:
+
+- La campana debe estar activa (sin la raya). Al entrar, la página invita a activarla si aún no se ha dado permiso.
+- **Windows**: *Configuración → Sistema → Notificaciones* debe tener activado el navegador (Chrome o Edge), y *No molestar* / *Asistente de concentración* debe estar apagado.
+- **macOS**: *Ajustes del Sistema → Notificaciones →* el navegador debe tener los avisos permitidos.
+- En celulares (Chrome para Android, Safari en iPhone) estos avisos no funcionan: son para el navegador de escritorio.
+
 ## Modo demo
 
 Abre la página con `?demo` al final de la dirección para probarla con datos de ejemplo guardados solo en el navegador.

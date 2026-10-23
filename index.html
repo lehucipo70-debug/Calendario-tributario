@@ -1492,7 +1492,8 @@ const Avisos = {
   mostrar(titulo, cuerpo, { tag, tareaId } = {}) {
     if (!this.activos()) return;
     try {
-      const n = new Notification(titulo, { body: cuerpo, tag, lang: 'es' });
+      // renotify: sin esto, un aviso con la misma etiqueta reemplaza al anterior sin sonar ni mostrarse.
+      const n = new Notification(titulo, { body: cuerpo, tag, renotify: !!tag, lang: 'es' });
       n.onclick = () => {
         window.focus();
         if (tareaId && App.tarea(tareaId)) TareaModal.abrir(tareaId);
@@ -1549,6 +1550,11 @@ const Avisos = {
   iniciar() {
     this.pintarBoton();
     this.detener();
+    // Sin permiso pedido aún no llega ningún aviso: se invita a activarlos (una vez por sesión).
+    if (this.soportado() && Notification.permission === 'default' && !sessionStorage.getItem('planner_avisos_invitado')) {
+      sessionStorage.setItem('planner_avisos_invitado', '1');
+      UI.toast('Activa los avisos de escritorio para enterarte de vencimientos y asignaciones.', { ms: 12000, accion: { texto: 'Activar', fn: () => this.alternar() } });
+    }
     this.revisar();
     this.temporizador = setInterval(() => this.revisar(), CONFIG.MINUTOS_AVISOS * 60 * 1000);
   },
@@ -1676,16 +1682,17 @@ const UI = {
   },
 
   // ── Notificaciones ─────────────────────────────────────────────────
-  toast(msg, { tipo = 'info', deshacer = null, ms = 4500 } = {}) {
+  toast(msg, { tipo = 'info', deshacer = null, accion = null, ms = 4500 } = {}) {
     const ct = document.getElementById('toasts');
     const el = document.createElement('div');
     el.className = 'toast toast-' + tipo;
     el.setAttribute('role', 'status');
     el.innerHTML = `<span>${Util.esc(msg)}</span>`;
-    if (deshacer) {
+    if (deshacer) accion = { texto: 'Deshacer', fn: deshacer };
+    if (accion) {
       const b = document.createElement('button');
-      b.textContent = 'Deshacer';
-      b.onclick = () => { el.remove(); deshacer(); };
+      b.textContent = accion.texto;
+      b.onclick = () => { el.remove(); accion.fn(); };
       el.appendChild(b);
     }
     ct.appendChild(el);
@@ -3366,7 +3373,16 @@ const App = {
       // Si mientras tanto hubo cambios (propios o en tiempo real), estos datos ya son viejos.
       if (version !== this._version || this.estado.perfil !== perfil) return;
       let cambio = JSON.stringify(tareas) !== JSON.stringify(this.estado.tareas);
-      if (cambio) this.estado.tareas = tareas;
+      if (cambio) {
+        // Asignaciones que no llegaron por tiempo real también avisan.
+        const previas = new Map(this.estado.tareas.map(t => [t.id, t]));
+        for (const t of tareas) {
+          const previa = previas.get(t.id);
+          if (!previa || previa.asignado_a !== t.asignado_a) Avisos.alCambiarRemoto(previa ? 'UPDATE' : 'INSERT', t, previa);
+        }
+        this.estado.tareas = tareas;
+        Avisos.revisar();
+      }
       if (colabs?.length) {
         if (!colabs.some(c => c.id === perfil.id)) colabs.push({ ...perfil });
         colabs.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
@@ -3419,6 +3435,7 @@ const App = {
       Avisos.alCambiarRemoto(evento, nueva, previa);
       // Se combina con la tarea conocida: el evento puede omitir columnas que no cambiaron.
       this._reemplazar(previa ? { ...previa, ...nueva } : nueva);
+      Avisos.revisar(); // una tarea nueva o reprogramada puede vencer hoy: no esperar al siguiente ciclo
     }
     this._version++;
     this.render();
