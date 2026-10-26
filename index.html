@@ -365,6 +365,7 @@ body[data-vista="inicio"] .titulo-vista { position: absolute; width: 1px; height
 /* ── Barra de filtros ─────────────────────────────────────────────── */
 .barra-filtros { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .barra-filtros input[type="search"] { flex: 1; min-width: 200px; max-width: 360px; }
+.filtro-dia { display: inline-flex; gap: 4px; align-items: center; }
 .barra-vista { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 
 /* ── Tablero ──────────────────────────────────────────────────────── */
@@ -1249,6 +1250,16 @@ class ErrorDatos extends Error {
   }
 }
 
+// Filtro por día de la barra de filtros: qué fecha de la tarea se compara con el día elegido.
+// Las fechas con hora se pasan al día local (Colombia), no al de UTC.
+const FILTRO_DIA_SEGUN = [['completada', 'Completada ese día'], ['creada', 'Creada ese día'], ['modificada', 'Modificada ese día'], ['vence', 'Vence ese día']];
+const FILTRO_DIA_FECHA = {
+  completada: t => Util.fechaDeTimestamp(t.completada_at),
+  creada: t => Util.fechaDeTimestamp(t.created_at),
+  modificada: t => Util.fechaDeTimestamp(t.updated_at),
+  vence: t => t.fecha_vencimiento,
+};
+
 const CAMPOS_TAREA = ['titulo', 'descripcion', 'asignado_a', 'asignado_nombre', 'empresa', 'categoria', 'prioridad', 'estado',
   'fecha_inicio', 'fecha_vencimiento', 'progreso', 'checklist', 'etiquetas', 'completada_at', 'origen_ref'];
 
@@ -1992,7 +2003,7 @@ const UI = {
         ${opciones.map(([v, l]) => `<option value="${Util.esc(v)}" ${f[campo] === v ? 'selected' : ''}>${Util.esc(l)}</option>`).join('')}
       </select>`;
     const colabs = App.estado.colaboradores.map(c => [c.id, c.nombre]);
-    const activos = ['texto', 'colaborador', 'estado', 'prioridad', 'categoria'].some(k => f[k]);
+    const activos = ['texto', 'colaborador', 'estado', 'prioridad', 'categoria', 'dia'].some(k => f[k]);
     return `<div class="barra-filtros">
       ${Permisos.verEquipo() ? `<div class="segmentado" role="group" aria-label="Alcance">
         <button class="${f.alcance === 'mias' ? 'on' : ''}" data-accion="alcance" data-valor="mias">Mis tareas</button>
@@ -2003,6 +2014,12 @@ const UI = {
       ${sel('estado', 'Estado', [...ESTADOS.map(e => [e.id, e.label]), ['vencida', 'Vencida']])}
       ${sel('prioridad', 'Prioridad', PRIORIDADES.map(p => [p.id, p.label]))}
       ${sel('categoria', 'Categoría', App.categorias().map(c => [c, c]))}
+      <span class="filtro-dia">
+        <input type="date" data-filtro="dia" value="${Util.esc(f.dia)}" aria-label="Día" title="Filtrar por día">
+        <select data-filtro="diaSegun" aria-label="Fecha que se filtra" title="Qué fecha de la tarea se compara con el día">
+          ${FILTRO_DIA_SEGUN.map(([v, l]) => `<option value="${v}" ${f.diaSegun === v ? 'selected' : ''}>${l}</option>`).join('')}
+        </select>
+      </span>
       ${activos ? '<button class="btn btn-sm" data-accion="limpiar-filtros">✕ Limpiar</button>' : ''}
     </div>`;
   },
@@ -4416,7 +4433,7 @@ const App = {
     errorCarga: null,
     vista: 'inicio',
     tema: 'claro',
-    filtros: { alcance: 'mias', texto: '', colaborador: '', estado: '', prioridad: '', categoria: '' },
+    filtros: { alcance: 'mias', texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '', diaSegun: 'completada' },
     tablero: { agrupar: 'estado' },
     lista: { orden: 'fecha_vencimiento', dir: 1, limite: CONFIG.LIMITE_LISTA },
     cal: { modo: 'mes', ref: Util.hoyISO() },
@@ -4444,7 +4461,8 @@ const App = {
   },
 
   // Tareas que el usuario ve en tablero, lista y calendario.
-  // Las completadas se archivan: solo aparecen con el filtro de estado "Completada".
+  // Las completadas se archivan: solo aparecen con el filtro de estado "Completada"
+  // o con el filtro de día (para auditar, ese día se ven todas, también las completadas).
   tareasVisibles({ sinFiltros = false, estado = this.estado.filtros.estado } = {}) {
     const f = this.estado.filtros;
     let lista = this.estado.tareas;
@@ -4452,9 +4470,11 @@ const App = {
     if (sinFiltros) return lista;
     const hoy = Util.hoyISO();
     const q = Util.normalizar(f.texto);
+    const fechaDia = FILTRO_DIA_FECHA[f.diaSegun] || FILTRO_DIA_FECHA.completada;
     return lista.filter(t =>
       (!f.colaborador || t.asignado_a === f.colaborador) &&
-      (estado ? (estado === 'vencida' ? Metricas.estadoEfectivo(t, hoy) === 'vencida' : t.estado === estado) : t.estado !== 'completada') &&
+      (estado ? (estado === 'vencida' ? Metricas.estadoEfectivo(t, hoy) === 'vencida' : t.estado === estado) : f.dia || t.estado !== 'completada') &&
+      (!f.dia || fechaDia(t) === f.dia) &&
       (!f.prioridad || t.prioridad === f.prioridad) &&
       (!f.categoria || t.categoria === f.categoria) &&
       (!q || Util.normalizar(`${t.titulo} ${t.empresa || ''} ${t.descripcion || ''}`).includes(q)));
@@ -4685,7 +4705,7 @@ const App = {
     this.estado.tareas = [];
     // El siguiente usuario empieza limpio: sin la vista ni los filtros del anterior.
     this.estado.vista = 'inicio';
-    Object.assign(this.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '' });
+    Object.assign(this.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '' });
     this.estado.lista.limite = CONFIG.LIMITE_LISTA;
     history.replaceState(null, '', location.pathname + location.search);
     document.getElementById('app').hidden = true;
@@ -4741,7 +4761,7 @@ const Acciones = {
   'completar': el => App.completar(el.dataset.id),
   'alcance': el => { App.estado.filtros.alcance = el.dataset.valor; if (el.dataset.valor === 'mias') App.estado.filtros.colaborador = ''; App.render(); },
   'ver-completadas': () => { App.estado.filtros.estado = 'completada'; App.render(); },
-  'limpiar-filtros': () => { Object.assign(App.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '' }); App.render(); },
+  'limpiar-filtros': () => { Object.assign(App.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '' }); App.render(); },
   'ver-colaborador': el => {
     Object.assign(App.estado.filtros, { alcance: 'equipo', colaborador: el.dataset.id || '', estado: el.dataset.estado || '' });
     App.ir('lista');
