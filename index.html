@@ -616,6 +616,53 @@ body[data-vista="inicio"] .titulo-vista { position: absolute; width: 1px; height
   .nota-cuerpo { padding: 16px 18px 28px; }
 }
 
+/* ── Clientes (directorio) ───────────────────────────────────────── */
+.cli-letras { display: flex; gap: 4px; flex-wrap: wrap; margin: -4px 0 14px; }
+.cli-letras button { border: 0; background: var(--bg3); color: var(--text2); border-radius: 8px; min-width: 28px; height: 28px; padding: 0 8px; font-size: 12px; font-weight: 600; }
+.cli-letras button:hover { color: var(--text); }
+.cli-letras button.on { background: var(--text); color: var(--bg); }
+.cli-lista { display: flex; flex-direction: column; gap: 8px; }
+.cli-item { background: var(--bg2); border: 1px solid var(--borde); border-radius: 16px; overflow: hidden; }
+.cli-item.abierto { border-color: var(--vidrio-fila-borde); box-shadow: var(--sombra); }
+.cli-cab { display: flex; align-items: center; gap: 14px; width: 100%; padding: 13px 18px; border: 0; background: none; color: inherit; text-align: left; }
+.cli-cab:hover { background: var(--vidrio-fila); }
+.cli-ini { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-weight: 700; font-size: 14px; background: var(--bg3); flex-shrink: 0; }
+.cli-nom { flex: 1; min-width: 0; }
+.cli-nom b { display: block; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cli-nom span { font-size: 12px; color: var(--text2); }
+.cli-flecha { color: var(--text2); transition: transform .2s ease; }
+.abierto .cli-flecha { transform: rotate(90deg); }
+.cli-cuerpo { border-top: 1px solid var(--borde); padding: 18px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 22px; }
+.cli-cuerpo h5 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text2); margin: 0 0 8px; }
+.cli-cuerpo h5:not(:first-child) { margin-top: 18px; }
+.cli-dato { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 0; font-size: 13px; border-bottom: 1px dashed var(--borde); min-height: 36px; }
+.cli-dato > span:first-child { color: var(--text2); flex-shrink: 0; }
+.cli-valor { display: inline-flex; align-items: center; gap: 4px; min-width: 0; text-align: right; overflow-wrap: anywhere; }
+.cli-valor a { color: inherit; }
+.cli-clave { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .5px; }
+.cli-codigo { background: var(--text); color: var(--bg); border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 700; }
+.cli-acciones { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+.cli-form { display: flex; flex-direction: column; gap: 10px; }
+.cli-form label, .cli-venc-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text2); }
+.cli-venc { border: 1px solid var(--borde); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+.cli-venc.editando { border-color: var(--text2); }
+.cli-venc-cab { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; flex-wrap: wrap; }
+.cli-venc-barra { height: 6px; border-radius: 9px; background: var(--bg3); margin-top: 10px; overflow: hidden; }
+.cli-venc-barra span { display: block; height: 100%; border-radius: 9px; background: var(--verde); }
+.gv-pronto .cli-venc-barra span { background: var(--ambar); }
+.gv-vencido .cli-venc-barra span { background: var(--rojo); }
+.cli-venc-fechas { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--text2); margin-top: 8px; }
+.cli-venc-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; margin-top: 10px; }
+.cli-venc-form .cli-acciones { margin-top: 0; }
+.cli-versiones { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cli-version { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--borde); border-radius: 12px; font-size: 13px; }
+@media (max-width: 860px) {
+  .cli-cuerpo { grid-template-columns: minmax(0, 1fr); padding: 14px; }
+  .cli-venc-form { grid-template-columns: 1fr 1fr; }
+  .cli-venc-form .cli-acciones { grid-column: 1 / -1; }
+  .cli-cab { padding: 12px 14px; gap: 10px; }
+}
+
 /* ── Modal ────────────────────────────────────────────────────────── */
 .capa-modal { position: fixed; inset: 0; z-index: 100; background: rgba(9,9,11,.6); backdrop-filter: blur(6px); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px 16px; overflow-y: auto; }
 .modal { width: 100%; background: var(--bg2); border: 1px solid var(--borde); border-radius: var(--r-lg); box-shadow: var(--sombra-3); padding: 22px 24px; animation: aparecer .16s ease; }
@@ -773,6 +820,7 @@ const CONFIG = {
     actividad: 'tarea_actividad',
     perfiles: 'perfiles',
     notas: 'notas',
+    clientes: 'clientes',
   },
 
   // ── Microsoft Teams (opcional) ────────────────────────────────────
@@ -1356,6 +1404,40 @@ class SupabaseStore {
     if (error) throw this._error(error, 'borrar la nota');
   }
 
+  // ── Clientes (todos los usuarios ven y editan; solo administradores borran) ──
+  async clientes() {
+    const todos = [];
+    const PAGINA = 1000;
+    for (let desde = 0; ; desde += PAGINA) {
+      const { data, error } = await this.sb.from(CONFIG.TABLAS.clientes).select('*').order('nombre').order('id').range(desde, desde + PAGINA - 1);
+      if (error) throw this._error(error, 'leer los clientes');
+      todos.push(...(data || []));
+      if (!data || data.length < PAGINA) return todos;
+    }
+  }
+
+  async guardarCliente(g) {
+    // El historial de versiones lo arma el trigger de supabase/clientes.sql; aquí no se envía.
+    const fila = { id: g.id, nombre: g.nombre, nit: g.nit || null, datos: g.datos, vencimientos: g.vencimientos };
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.clientes).upsert(fila).select().single();
+    if (error) throw this._error(error, 'guardar el cliente');
+    return data;
+  }
+
+  async borrarCliente(id) {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.clientes).delete().eq('id', id).select('id');
+    if (error) throw this._error(error, 'eliminar el cliente');
+    if (!data?.length) throw new ErrorDatos('Solo un administrador puede eliminar clientes.');
+  }
+
+  async importarClientes(lista) {
+    for (let i = 0; i < lista.length; i += 200) {
+      const lote = lista.slice(i, i + 200).map(g => ({ id: g.id, nombre: g.nombre, nit: g.nit || null, datos: g.datos, vencimientos: g.vencimientos }));
+      const { error } = await this.sb.from(CONFIG.TABLAS.clientes).upsert(lote, { onConflict: 'id', ignoreDuplicates: true });
+      if (error) throw this._error(error, 'importar los clientes');
+    }
+  }
+
   async importarTareas(lista, alAvanzar) {
     let hechas = 0;
     const filas = lista.map(t => ({ ...limpiarParaGuardar(t), creado_por: this.usuario?.id }));
@@ -1470,6 +1552,40 @@ class LocalStore {
 
   async borrarNota(id) { this.db.notas = (this.db.notas || []).filter(n => n.id !== id); this._guardar(); }
 
+  async clientes() {
+    if (!this.db.clientes) { this.db.clientes = DatosDemo.clientes(); this._guardar(); }
+    return structuredClone(this.db.clientes);
+  }
+
+  async guardarCliente(g) {
+    this.db.clientes ||= [];
+    const i = this.db.clientes.findIndex(x => x.id === g.id);
+    const fila = structuredClone({ id: g.id, nombre: g.nombre, nit: g.nit, datos: g.datos, vencimientos: g.vencimientos,
+      updated_at: new Date().toISOString(), actualizado_nombre: this.perfil?.nombre || null, historial: [] });
+    // Igual que el trigger de la base de datos: la versión anterior pasa al historial.
+    const ant = this.db.clientes[i];
+    if (ant) {
+      const v = { nombre: ant.nombre, nit: ant.nit, datos: ant.datos, vencimientos: ant.vencimientos, fecha: ant.updated_at || null, autor: ant.actualizado_nombre || null };
+      fila.historial = [v, ...(ant.historial || [])].slice(0, CLIENTE_VERSIONES);
+    }
+    if (i >= 0) this.db.clientes[i] = fila; else this.db.clientes.push(fila);
+    this._guardar();
+    return structuredClone(fila);
+  }
+
+  async borrarCliente(id) {
+    if (!Permisos.esAdmin()) throw new ErrorDatos('Solo un administrador puede eliminar clientes.');
+    this.db.clientes = (this.db.clientes || []).filter(g => g.id !== id);
+    this._guardar();
+  }
+
+  async importarClientes(lista) {
+    this.db.clientes ||= [];
+    const ids = new Set(this.db.clientes.map(g => g.id));
+    for (const g of lista) if (!ids.has(g.id)) this.db.clientes.push(structuredClone(g));
+    this._guardar();
+  }
+
   async importarTareas(lista, alAvanzar) {
     const refs = new Set(this.db.tareas.map(t => t.origen_ref).filter(Boolean));
     let n = 0;
@@ -1563,6 +1679,23 @@ const DatosDemo = {
       });
     }
     return { colaboradores, tareas, actividad: [] };
+  },
+
+  clientes() {
+    const d = n => Util.sumarDias(Util.hoyISO(), n);
+    const g = (id, nombre, nit, codigo, lechera, correo, venc) => ({
+      id, nombre, nit,
+      datos: { lechera_codigo: codigo, lechera_nombre: lechera, correo, clave_correo: 'Demo' + nit.slice(-4) + '*', clave_dian: 'Dian' + nit.slice(-4) + '*' },
+      vencimientos: Object.fromEntries(Object.entries(venc).map(([k, [ini, fin]]) => [k, { inicio: ini === null ? null : d(ini), fin: d(fin) }])),
+    });
+    return [
+      g('g-demo-1', 'Agropecuaria La Esperanza', '900775321', '4008', 'Lácteos Betania', 'esperanza@demo.co', { certificado: [-200, 165], resolucion: [-300, 430], soporte: [-100, 265] }),
+      g('g-demo-2', 'Benicio Mazo García', '70194642', '4642', 'Colanta', 'benicio@demo.co', { certificado: [-400, -35], resolucion: [-100, 200], soporte: [-50, 315] }),
+      g('g-demo-3', 'Carlos Mario Zapata Mesa', '70196888', '6051', 'Colanta', 'carlos@demo.co', { certificado: [-30, 335], resolucion: [-200, 165], soporte: [-357, 8] }),
+      g('g-demo-4', 'Inversiones El Roble SAS', '901280555', '', 'Auralac', 'roble@demo.co', { certificado: [-10, 355], resolucion: [-730, -70] }),
+      g('g-demo-5', 'Jorge Restrepo Gil', '71234567', '8342', 'Lácteos Betania', 'jorge@demo.co', { certificado: [-640, -270], resolucion: [-760, -30], soporte: [-332, 33] }),
+      g('g-demo-6', 'Luz Dary Henao Tobón', '39441902', '1749', 'Alquería', 'luzdary@demo.co', { certificado: [null, 500] }),
+    ];
   },
 };
 
@@ -3061,6 +3194,564 @@ Vistas.notas = {
   montar: main => Notas.montar(main),
 };
 
+/* ── js/vistas/clientes.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// VISTA: CLIENTES — directorio de clientes con sus claves y vencimientos
+//
+// La ficha se arma con las listas CLIENTE_CAMPOS y CLIENTE_VENCIMIENTOS:
+// para agregar un dato nuevo basta con sumar una línea a la lista. No hace
+// falta tocar Supabase: los campos se guardan en la columna jsonb "datos" y
+// los vencimientos en "vencimientos". La tabla y su RLS: supabase/clientes.sql
+// La vista es persistente (como Notas) para no perder una edición en curso
+// cuando llega un cambio de tareas en tiempo real.
+// ═══════════════════════════════════════════════════════════════════
+
+// Días antes del vencimiento en que la fila empieza a avisar (amarillo).
+const CLIENTE_DIAS_ALERTA = 30;
+
+// Versiones anteriores que se guardan de cada cliente. Si se cambia, cambiar también
+// el número en el trigger de supabase/clientes.sql (allí está el límite real).
+const CLIENTE_VERSIONES = 5;
+
+// Secciones de la ficha, en orden.
+const CLIENTE_SECCIONES = [
+  { id: 'datos', titulo: 'Datos' },
+  { id: 'claves', titulo: '🔒 Claves' },
+];
+
+// Campos de la ficha (además del nombre y la cédula/NIT, que son fijos).
+//   tipo:    texto | correo | clave | telefono | codigo
+//   excel:   encabezados que se buscan al importar (sin tildes, da igual mayúsculas)
+//   extraer: opcional, convierte el valor de la celda antes de guardarlo
+//   junto:   opcional, en la ficha se muestra delante de este campo (no en su propia fila)
+const CLIENTE_CAMPOS = [
+  { id: 'lechera_codigo', label: 'Código empresa lechera', tipo: 'codigo', seccion: 'datos', junto: 'lechera_nombre',
+    excel: ['EMPRESA LECHERA'], extraer: v => (String(v).trim().match(/^(\d+)(?:\.0+)?(?=\D|$)/) || [])[1] || '' },
+  { id: 'lechera_nombre', label: 'Empresa lechera', tipo: 'texto', seccion: 'datos',
+    excel: ['EMPRESA LECHERA'], extraer: v => String(v).trim().replace(/^\d+(?:\.0+)?\s*[-–:]?\s*/, '') },
+  { id: 'correo', label: 'Correo', tipo: 'correo', seccion: 'datos', excel: ['E-MAIL', 'EMAIL', 'CORREO'] },
+  { id: 'clave_correo', label: 'Clave correo', tipo: 'clave', seccion: 'claves', excel: ['CLAVE E-MAIL', 'CLAVE EMAIL', 'CLAVE CORREO'] },
+  { id: 'clave_dian', label: 'Clave DIAN', tipo: 'clave', seccion: 'claves', excel: ['CLAVE DIAN'] },
+];
+
+// Vencimientos: cada uno guarda { inicio, fin } (fechas AAAA-MM-DD).
+const CLIENTE_VENCIMIENTOS = [
+  { id: 'certificado', label: 'Certificado de firma', corto: 'Firma', icono: '🔏', excel: ['VENCIMIENTO CERTIFICADO'] },
+  { id: 'resolucion', label: 'Resolución de facturación', corto: 'Resolución', icono: '🧾', excel: ['VENCIMIENTO DE RESOLUCION FACTURACION', 'VENCIMIENTO RESOLUCION FACTURACION', 'VENCIMIENTO RESOLUCION'] },
+  { id: 'soporte', label: 'Documento soporte', corto: 'Doc. soporte', icono: '📄', excel: ['VENCIMIENTO DOCUMENTO SOPORTE', 'VENCIMIENTO SOPORTE'] },
+];
+
+const Clientes = {
+  raiz: null,
+  lista: [],
+  cargada: false,
+  error: null,
+  filtro: { texto: '', lechera: '', venc: '', letra: '' },
+  abiertoId: null,
+  editando: null,      // { id, que: 'datos' | <id de vencimiento> }
+  reveladas: new Set(), // claves reveladas: "<id>|<campo>"
+
+  // ── Ciclo de vida ─────────────────────────────────────────────────
+  reiniciar() {
+    this.raiz?.remove();
+    Object.assign(this, { raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '' }, abiertoId: null, editando: null, reveladas: new Set() });
+  },
+
+  montar(main) {
+    if (!this.raiz) this._crearRaiz();
+    main.appendChild(this.raiz);
+    if (!this.cargada) this.cargar(); else this.pintar();
+  },
+
+  async cargar() {
+    this.error = null;
+    try {
+      this.lista = (await Datos.clientes()).map(g => this.normalizar(g));
+    } catch (e) {
+      console.error(e);
+      this.error = e;
+    }
+    this.cargada = true;
+    this.pintar();
+  },
+
+  normalizar(g) {
+    return { ...g, nit: g.nit || '', nombre: g.nombre || '', datos: g.datos || {}, vencimientos: g.vencimientos || {}, historial: Array.isArray(g.historial) ? g.historial : [] };
+  },
+
+  // ── Consultas ─────────────────────────────────────────────────────
+  cliente(id) { return this.lista.find(g => g.id === id); },
+
+  // vencido | pronto | ok | sin
+  estadoVenc(v, hoy = Util.hoyISO()) {
+    if (!v?.fin) return { estado: 'sin', dias: null };
+    const dias = Util.diasEntre(hoy, v.fin);
+    return { estado: dias < 0 ? 'vencido' : dias <= CLIENTE_DIAS_ALERTA ? 'pronto' : 'ok', dias };
+  },
+
+  // Lo más urgente del cliente, para la etiqueta de la fila (null si no hay nada que avisar).
+  alerta(g) {
+    const hoy = Util.hoyISO();
+    const est = CLIENTE_VENCIMIENTOS.map(v => ({ v, ...this.estadoVenc(g.vencimientos[v.id], hoy) }));
+    const vencidos = est.filter(e => e.estado === 'vencido');
+    if (vencidos.length > 1) return { estado: 'vencido', texto: `${vencidos.length} vencidos` };
+    if (vencidos.length) return { estado: 'vencido', texto: `Vencido: ${vencidos[0].v.corto}` };
+    const pronto = est.filter(e => e.estado === 'pronto').sort((a, b) => a.dias - b.dias)[0];
+    if (pronto) return { estado: 'pronto', texto: `${pronto.v.corto} ${pronto.dias === 0 ? 'vence hoy' : `en ${pronto.dias} día${pronto.dias === 1 ? '' : 's'}`}` };
+    return null;
+  },
+
+  // Estado general para el filtro de vencimientos
+  estadoGeneral(g) {
+    const a = this.alerta(g);
+    if (a) return a.estado;
+    return CLIENTE_VENCIMIENTOS.some(v => g.vencimientos[v.id]?.fin) ? 'ok' : 'sin';
+  },
+
+  letra(g) { return Util.normalizar(g.nombre).charAt(0) || '#'; },
+
+  visibles() {
+    const f = this.filtro;
+    const q = Util.normalizar(f.texto);
+    const textoBusqueda = g => Util.normalizar([g.nombre, g.nit, ...CLIENTE_CAMPOS.filter(c => c.tipo !== 'clave').map(c => g.datos[c.id] || '')].join(' '));
+    return this.lista
+      .filter(g => !f.letra || this.letra(g) === f.letra)
+      .filter(g => !f.lechera || Util.normalizar(g.datos.lechera_nombre) === f.lechera)
+      .filter(g => !f.venc || this.estadoGeneral(g) === f.venc)
+      .filter(g => !q || textoBusqueda(g).includes(q))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  },
+
+  // ── Cambios ───────────────────────────────────────────────────────
+  async guardar(g, mensaje = 'Guardado') {
+    const antes = this.cliente(g.id);
+    const copia = antes && structuredClone(antes);
+    g.updated_at = new Date().toISOString();
+    if (antes) { Object.assign(antes, g); delete antes._nuevo; } else this.lista.push(g);
+    this.editando = null;
+    this.pintar();
+    try {
+      const fila = await Datos.guardarCliente(g);
+      const actual = this.cliente(g.id);
+      if (fila && actual) { Object.assign(actual, this.normalizar(fila)); this.pintar(); }
+      UI.toast(mensaje, { tipo: 'ok' });
+    } catch (e) {
+      console.error(e);
+      if (copia) Object.assign(antes, copia); else this.lista = this.lista.filter(x => x.id !== g.id);
+      this.pintar();
+      UI.toast(e.message, { tipo: 'error' });
+    }
+  },
+
+  // Lo que cambia entre dos versiones de un cliente: etiquetas, o { label, valor } con el valor de "a".
+  diferencias(a, b, { conValor = false } = {}) {
+    const igual = (x, y) => (x || '') === (y || '');
+    const out = [];
+    const agregar = (label, valor) => out.push(conValor ? { label, valor: valor || '(vacío)' } : label);
+    if (!igual(a.nombre, b.nombre)) agregar('Nombre', a.nombre);
+    if (!igual(a.nit, b.nit)) agregar('Cédula / NIT', a.nit);
+    for (const c of CLIENTE_CAMPOS) {
+      if (!igual(a.datos?.[c.id], b.datos?.[c.id])) agregar(c.label, c.tipo === 'clave' && a.datos?.[c.id] ? 'otra clave' : a.datos?.[c.id]);
+    }
+    for (const v of CLIENTE_VENCIMIENTOS) {
+      const x = a.vencimientos?.[v.id] || {}, y = b.vencimientos?.[v.id] || {};
+      if (!igual(x.inicio, y.inicio) || !igual(x.fin, y.fin)) {
+        agregar(v.label, x.inicio || x.fin ? `${x.inicio ? Util.fmtFecha(x.inicio) : '—'} → ${x.fin ? Util.fmtFecha(x.fin) : '—'}` : '');
+      }
+    }
+    return out;
+  },
+
+  // Guarda un cambio sobre un cliente existente pidiendo confirmación.
+  confirmarYGuardar(antes, despues, mensaje) {
+    const cambios = this.diferencias(antes, despues);
+    if (!cambios.length) { this.editando = null; this.pintar(); return; }
+    if (!confirm(`¿Seguro desea hacer este cambio?\n\nCambia: ${cambios.join(', ')}`)) return;
+    this.guardar(despues, mensaje);
+  },
+
+  // ── Versiones ─────────────────────────────────────────────────────
+  verVersiones(id) {
+    const g = this.cliente(id);
+    if (!g) return;
+    const versiones = g.historial || [];
+    // Cada versión se compara con la que la reemplazó (la siguiente más nueva).
+    const filas = versiones.map((v, i) => {
+      const siguiente = i === 0 ? g : versiones[i - 1];
+      const cambios = this.diferencias(v, siguiente, { conValor: true });
+      return `<li class="cli-version">
+        <div><b>${v.fecha ? Util.fmtFechaHora(v.fecha) : 'Versión importada'}</b>${v.autor ? ` · ${Util.esc(v.autor)}` : ''}
+          <div class="muted mini">${cambios.length ? cambios.map(c => `${Util.esc(c.label)}: <b>${Util.esc(c.valor)}</b>`).join(' · ') : 'Igual a la versión siguiente'}</div></div>
+        <button class="btn btn-sm" data-cv="restaurar" data-i="${i}">↺ Restaurar</button></li>`;
+    }).join('');
+    UI.abrirModal(`<header class="modal-cab"><h3>🕘 Versiones de ${Util.esc(g.nombre)}</h3>
+        <button class="btn-icono" data-accion="cerrar-modal" aria-label="Cerrar">✕</button></header>
+      <p class="muted mini">Actual: ${Util.fmtFechaHora(g.updated_at) || '—'}${g.actualizado_nombre ? ' · ' + Util.esc(g.actualizado_nombre) : ''}. Se guardan las últimas ${CLIENTE_VERSIONES} versiones anteriores.</p>
+      ${filas ? `<ul class="cli-versiones">${filas}</ul>` : '<p class="muted pad centrado">Aún no hay versiones anteriores: aparecen cuando alguien cambia este cliente.</p>'}`, { ancho: 600 });
+    document.querySelector('#modal .modal').addEventListener('click', e => {
+      const b = e.target.closest('[data-cv="restaurar"]');
+      if (!b) return;
+      const v = versiones[Number(b.dataset.i)];
+      const despues = { ...structuredClone(g), nombre: v.nombre || '', nit: v.nit || '', datos: structuredClone(v.datos || {}), vencimientos: structuredClone(v.vencimientos || {}) };
+      const cambios = this.diferencias(g, despues);
+      if (!cambios.length) { UI.toast('Esa versión es igual a la actual'); return; }
+      if (!confirm(`¿Seguro desea hacer este cambio?\n\nSe restaura la versión del ${v.fecha ? Util.fmtFechaHora(v.fecha) : 'archivo importado'}\nCambia: ${cambios.join(', ')}`)) return;
+      UI.cerrarModal();
+      this.guardar(despues, 'Versión restaurada');
+    });
+  },
+
+  nuevo() {
+    const g = this.normalizar({ id: Util.uid(), nombre: '', nit: '', _nuevo: true });
+    this.lista.push(g);
+    Object.assign(this.filtro, { texto: '', lechera: '', venc: '', letra: '' });
+    this.abiertoId = g.id;
+    this.editando = { id: g.id, que: 'datos' };
+    this.pintar();
+    this.raiz.querySelector('[name="nombre"]')?.focus();
+  },
+
+  async eliminar(id) {
+    const g = this.cliente(id);
+    if (!g || !confirm(`¿Eliminar a ${g.nombre || 'este cliente'}? No se puede deshacer.`)) return;
+    try {
+      await Datos.borrarCliente(id);
+      this.lista = this.lista.filter(x => x.id !== id);
+      this.abiertoId = this.editando = null;
+      this.pintar();
+      UI.toast('Cliente eliminado');
+    } catch (e) { UI.toast(e.message, { tipo: 'error' }); }
+  },
+
+  cancelarEdicion() {
+    const g = this.cliente(this.editando?.id);
+    if (g?._nuevo) { this.lista = this.lista.filter(x => x !== g); this.abiertoId = null; }
+    this.editando = null;
+    this.pintar();
+  },
+
+  async copiar(texto) {
+    try { await navigator.clipboard.writeText(texto); UI.toast('Copiado', { tipo: 'ok', ms: 1500 }); }
+    catch { UI.toast('No se pudo copiar', { tipo: 'error' }); }
+  },
+
+  // ── Interfaz ──────────────────────────────────────────────────────
+  _crearRaiz() {
+    const r = document.createElement('div');
+    r.className = 'clientes';
+    r.addEventListener('click', e => this._alClic(e));
+    r.addEventListener('input', e => this._alEscribir(e));
+    r.addEventListener('change', e => this._alCambiar(e));
+    r.addEventListener('submit', e => this._alEnviar(e));
+    this.raiz = r;
+  },
+
+  chip(estado, texto) {
+    const cls = { vencido: 'est-vencida', pronto: 'est-en_revision', ok: 'est-completada', sin: 'chip-suave' }[estado];
+    const ico = { vencido: '⚠', pronto: '◷', ok: '✓', sin: '·' }[estado];
+    return `<span class="chip ${cls}">${ico} ${Util.esc(texto)}</span>`;
+  },
+
+  pintar() {
+    if (!this.raiz) return;
+    const enfocado = document.activeElement;
+    const buscando = enfocado?.classList?.contains('cli-buscar');
+    const cursor = buscando ? enfocado.selectionStart : null;
+
+    if (this.error) {
+      const falta = this.error.faltaEsquema;
+      this.raiz.innerHTML = `<div class="vacio"><h3>${falta ? 'Falta activar Clientes en Supabase' : 'No se pudieron cargar los clientes'}</h3>
+        <p>${falta ? 'El administrador debe ejecutar una sola vez el archivo <code>supabase/clientes.sql</code> en el SQL Editor de Supabase.' : Util.esc(this.error.message || '')}</p>
+        <button class="btn" data-g="reintentar">Reintentar</button></div>`;
+      return;
+    }
+
+    const f = this.filtro;
+    const visibles = this.visibles();
+    const lecheras = [...new Map(this.lista.filter(g => g.datos.lechera_nombre).map(g => [Util.normalizar(g.datos.lechera_nombre), g.datos.lechera_nombre.trim()])).entries()]
+      .sort((a, b) => a[1].localeCompare(b[1], 'es'));
+    const letras = [...new Set(this.lista.map(g => this.letra(g)))].sort();
+    const opt = (v, l, actual) => `<option value="${Util.esc(v)}" ${actual === v ? 'selected' : ''}>${Util.esc(l)}</option>`;
+
+    this.raiz.innerHTML = `
+      <div class="barra-filtros">
+        <input type="search" class="cli-buscar" placeholder="🔍 Nombre, cédula, NIT, código o empresa lechera…" value="${Util.esc(f.texto)}" aria-label="Buscar cliente">
+        <select data-gf="lechera" aria-label="Empresa lechera"><option value="">Empresa lechera</option>${lecheras.map(([v, l]) => opt(v, l, f.lechera)).join('')}</select>
+        <select data-gf="venc" aria-label="Vencimientos"><option value="">Vencimientos</option>
+          ${opt('vencido', 'Con algo vencido', f.venc)}${opt('pronto', `Vence en ${CLIENTE_DIAS_ALERTA} días`, f.venc)}${opt('ok', 'Todo al día', f.venc)}${opt('sin', 'Sin fechas', f.venc)}</select>
+        ${f.texto || f.lechera || f.venc || f.letra ? '<button class="btn btn-sm" data-g="limpiar">✕ Limpiar</button>' : ''}
+      </div>
+      <div class="cli-letras" role="group" aria-label="Inicial">
+        <button class="${f.letra ? '' : 'on'}" data-g="letra" data-l="">Todos</button>
+        ${letras.map(l => `<button class="${f.letra === l ? 'on' : ''}" data-g="letra" data-l="${Util.esc(l)}">${Util.esc(l)}</button>`).join('')}
+      </div>
+      <div class="barra-vista">
+        <span class="muted">${this.cargada ? `${visibles.length === this.lista.length ? '' : visibles.length + ' de '}${this.lista.length} clientes · toca un nombre para ver su información` : 'Cargando clientes…'}</span>
+        <span class="separador"></span>
+        ${Permisos.importar() ? `<label class="btn btn-sm">⬆ Importar Excel<input type="file" accept=".xlsx,.xls" data-g="importar" hidden></label>` : ''}
+        <button class="btn btn-sm btn-primario" data-g="nuevo">＋ Nuevo cliente</button>
+      </div>
+      <div class="cli-lista">
+        ${visibles.map(g => this._filaHtml(g)).join('') || (this.cargada ? `<p class="muted pad centrado">${this.lista.length ? 'Ningún cliente coincide con la búsqueda.' : 'Aún no hay clientes. Importa el Excel o crea uno nuevo.'}</p>` : '')}
+      </div>`;
+
+    if (buscando) {
+      const b = this.raiz.querySelector('.cli-buscar');
+      b.focus(); b.setSelectionRange(cursor, cursor);
+    }
+  },
+
+  _filaHtml(g) {
+    const abierto = g.id === this.abiertoId;
+    const a = this.alerta(g);
+    return `<div class="cli-item ${abierto ? 'abierto' : ''}">
+      <button class="cli-cab" data-g="abrir" data-id="${Util.esc(g.id)}" aria-expanded="${abierto}">
+        <span class="cli-ini">${Util.esc(Util.iniciales(g.nombre || '?'))}</span>
+        <span class="cli-nom"><b>${Util.esc(g.nombre || 'Sin nombre')}</b><span>${g.nit ? 'NIT ' + Util.esc(g.nit) : 'Sin NIT'}</span></span>
+        ${a ? this.chip(a.estado, a.texto) : ''}
+        <span class="cli-flecha" aria-hidden="true">›</span>
+      </button>
+      ${abierto ? `<div class="cli-cuerpo">${this._datosHtml(g)}<section><h5>Vencimientos</h5>${CLIENTE_VENCIMIENTOS.map(v => this._vencHtml(g, v)).join('')}</section></div>` : ''}
+    </div>`;
+  },
+
+  _valorHtml(g, c) {
+    const v = g.datos[c.id] || '';
+    if (!v) return '<span class="muted">—</span>';
+    const copiar = `<button class="btn-icono btn-sm" data-g="copiar" data-id="${Util.esc(g.id)}" data-campo="${c.id}" title="Copiar" aria-label="Copiar ${Util.esc(c.label)}">📋</button>`;
+    switch (c.tipo) {
+      case 'clave': {
+        const ver = this.reveladas.has(g.id + '|' + c.id);
+        return `<span class="cli-clave">${ver ? Util.esc(v) : '••••••••'}</span>
+          <button class="btn-icono btn-sm" data-g="ver" data-id="${Util.esc(g.id)}" data-campo="${c.id}" title="${ver ? 'Ocultar' : 'Mostrar'}" aria-label="${ver ? 'Ocultar' : 'Mostrar'} ${Util.esc(c.label)}">${ver ? '🙈' : '👁'}</button>${copiar}`;
+      }
+      case 'correo': return `<a href="mailto:${Util.esc(v)}">${Util.esc(v)}</a>${copiar}`;
+      case 'telefono': return `<a href="tel:${Util.esc(v.replace(/[^\d+]/g, ''))}">${Util.esc(v)}</a>${copiar}`;
+      case 'codigo': return `<code class="cli-codigo">${Util.esc(v)}</code>`;
+      default: return `<span>${Util.esc(v)}</span>`;
+    }
+  },
+
+  _datosHtml(g) {
+    const editando = this.editando?.id === g.id && this.editando.que === 'datos';
+    const fila = (label, valor) => `<div class="cli-dato"><span>${Util.esc(label)}</span><span class="cli-valor">${valor}</span></div>`;
+    if (editando) {
+      const input = (name, label, valor, tipo = 'text') => `<label>${Util.esc(label)}<input name="${name}" type="${tipo}" value="${Util.esc(valor || '')}" ${name === 'nombre' ? 'required' : ''}></label>`;
+      return `<form class="cli-form" data-g="form-datos" data-id="${Util.esc(g.id)}"><h5>${g._nuevo ? 'Nuevo cliente' : 'Editar datos'}</h5>
+        ${input('nombre', 'Nombre o razón social', g.nombre)}${input('nit', 'Cédula / NIT', g.nit)}
+        ${CLIENTE_CAMPOS.map(c => input('d_' + c.id, c.label, g.datos[c.id], c.tipo === 'correo' ? 'email' : 'text')).join('')}
+        <div class="cli-acciones"><button class="btn btn-sm btn-primario" type="submit">Guardar</button><button class="btn btn-sm" type="button" data-g="cancelar">Cancelar</button>
+          ${!g._nuevo && Permisos.esAdmin() ? `<span class="separador"></span><button class="btn btn-sm btn-peligro" type="button" data-g="eliminar" data-id="${Util.esc(g.id)}">Eliminar</button>` : ''}</div>
+      </form>`;
+    }
+    const junto = new Map(CLIENTE_CAMPOS.filter(c => c.junto).map(c => [c.junto, c]));
+    const secciones = CLIENTE_SECCIONES.map(s => {
+      const campos = CLIENTE_CAMPOS.filter(c => c.seccion === s.id && !c.junto);
+      const filas = campos.map(c => {
+        const pre = junto.get(c.id);
+        const valor = pre && g.datos[pre.id] ? this._valorHtml(g, pre) + ' ' + this._valorHtml(g, c) : this._valorHtml(g, c);
+        return fila(c.label, valor);
+      }).join('');
+      return `<h5>${Util.esc(s.titulo)}</h5>${s.id === 'datos' ? fila('Nombre', Util.esc(g.nombre)) + fila('Cédula / NIT', g.nit ? Util.esc(g.nit) + ` <button class="btn-icono btn-sm" data-g="copiar" data-id="${Util.esc(g.id)}" data-campo="nit" title="Copiar" aria-label="Copiar NIT">📋</button>` : '<span class="muted">—</span>') : ''}${filas}`;
+    }).join('');
+    return `<section class="cli-datos">${secciones}<div class="cli-acciones"><button class="btn btn-sm" data-g="editar" data-id="${Util.esc(g.id)}" data-que="datos">✎ Editar datos</button>
+      <button class="btn btn-sm" data-g="versiones" data-id="${Util.esc(g.id)}">🕘 Versiones (${g.historial.length})</button></div></section>`;
+  },
+
+  _vencHtml(g, v) {
+    const val = g.vencimientos[v.id] || {};
+    const editando = this.editando?.id === g.id && this.editando.que === v.id;
+    const { estado, dias } = this.estadoVenc(val);
+    if (editando) {
+      return `<form class="cli-venc editando" data-g="form-venc" data-id="${Util.esc(g.id)}" data-venc="${v.id}">
+        <div class="cli-venc-cab">${v.icono} ${Util.esc(v.label)}<span class="separador"></span><span class="muted mini">Editando</span></div>
+        <div class="cli-venc-form">
+          <label>Fecha de inicio<input type="date" name="inicio" value="${Util.esc(val.inicio || '')}"></label>
+          <label>Fecha de vencimiento<input type="date" name="fin" value="${Util.esc(val.fin || '')}"></label>
+          <div class="cli-acciones"><button class="btn btn-sm" type="button" data-g="cancelar">Cancelar</button><button class="btn btn-sm btn-primario" type="submit">Guardar</button></div>
+        </div></form>`;
+    }
+    const texto = estado === 'sin' ? 'Sin fecha'
+      : estado === 'vencido' ? `Venció hace ${-dias} día${dias === -1 ? '' : 's'}`
+      : dias === 0 ? 'Vence hoy' : `Vence en ${dias} día${dias === 1 ? '' : 's'}`;
+    const total = val.inicio && val.fin ? Util.diasEntre(val.inicio, val.fin) : 0;
+    const pct = total > 0 ? Math.min(100, Math.max(0, Math.round(100 * Util.diasEntre(val.inicio, Util.hoyISO()) / total))) : null;
+    return `<div class="cli-venc gv-${estado}">
+      <div class="cli-venc-cab">${v.icono} ${Util.esc(v.label)}<span class="separador"></span>${this.chip(estado, texto)}
+        <button class="btn btn-sm" data-g="editar" data-id="${Util.esc(g.id)}" data-que="${v.id}">✎ Editar</button></div>
+      ${pct !== null ? `<div class="cli-venc-barra"><span style="width:${pct}%"></span></div>` : ''}
+      <div class="cli-venc-fechas"><span>Inicio · ${val.inicio ? Util.fmtFecha(val.inicio) : '—'}</span><span>Vence · ${val.fin ? Util.fmtFecha(val.fin) : '—'}</span></div>
+    </div>`;
+  },
+
+  // ── Eventos ───────────────────────────────────────────────────────
+  _alClic(e) {
+    const b = e.target.closest('[data-g]');
+    if (!b || b.tagName === 'FORM' || b.tagName === 'INPUT') return;
+    const g = this.cliente(b.dataset.id);
+    switch (b.dataset.g) {
+      case 'reintentar': this.cargada = false; this.error = null; this.pintar(); this.cargar(); break;
+      case 'limpiar': Object.assign(this.filtro, { texto: '', lechera: '', venc: '', letra: '' }); this.pintar(); break;
+      case 'letra': this.filtro.letra = b.dataset.l; this.pintar(); break;
+      case 'nuevo': if (this.editando) this.cancelarEdicion(); this.nuevo(); break;
+      case 'abrir':
+        if (this.editando) this.cancelarEdicion();
+        this.abiertoId = this.abiertoId === b.dataset.id ? null : b.dataset.id;
+        this.pintar();
+        break;
+      case 'editar': if (this.editando) this.cancelarEdicion(); this.editando = { id: b.dataset.id, que: b.dataset.que }; this.pintar(); break;
+      case 'cancelar': this.cancelarEdicion(); break;
+      case 'eliminar': this.eliminar(b.dataset.id); break;
+      case 'versiones': this.verVersiones(b.dataset.id); break;
+      case 'ver': {
+        const k = b.dataset.id + '|' + b.dataset.campo;
+        if (this.reveladas.has(k)) this.reveladas.delete(k); else this.reveladas.add(k);
+        this.pintar();
+        break;
+      }
+      case 'copiar': if (g) this.copiar(b.dataset.campo === 'nit' ? g.nit : g.datos[b.dataset.campo] || ''); break;
+    }
+  },
+
+  _alEscribir(e) {
+    if (e.target.classList.contains('cli-buscar')) { this.filtro.texto = e.target.value; this.pintar(); }
+  },
+
+  _alCambiar(e) {
+    const t = e.target;
+    if (t.dataset.gf) { this.filtro[t.dataset.gf] = t.value; this.pintar(); return; }
+    if (t.dataset.g === 'importar' && t.files[0]) { Clientes.importarArchivo(t.files[0]); t.value = ''; }
+  },
+
+  _alEnviar(e) {
+    e.preventDefault();
+    const form = e.target;
+    const g = this.cliente(form.dataset.id);
+    if (!g) return;
+    const fd = new FormData(form);
+    const copia = structuredClone({ ...g, _nuevo: undefined });
+    delete copia._nuevo;
+    if (form.dataset.g === 'form-datos') {
+      copia.nombre = String(fd.get('nombre') || '').trim();
+      copia.nit = String(fd.get('nit') || '').trim();
+      if (!copia.nombre) { UI.toast('Escribe el nombre.', { tipo: 'error' }); return; }
+      for (const c of CLIENTE_CAMPOS) copia.datos[c.id] = String(fd.get('d_' + c.id) || '').trim();
+      if (g._nuevo) this.guardar(copia, 'Cliente creado');
+      else this.confirmarYGuardar(g, copia, 'Datos guardados');
+    } else if (form.dataset.g === 'form-venc') {
+      const inicio = fd.get('inicio') || null, fin = fd.get('fin') || null;
+      if (inicio && fin && fin < inicio) { UI.toast('La fecha de vencimiento no puede ser anterior a la de inicio.', { tipo: 'error' }); return; }
+      copia.vencimientos[form.dataset.venc] = { inicio, fin };
+      this.confirmarYGuardar(g, copia, 'Vencimiento guardado');
+    }
+  },
+
+  // ── Importar Excel ────────────────────────────────────────────────
+  // Convierte las filas de una hoja en clientes. Pura: no toca la página.
+  filasAClientes(filas) {
+    const norm = h => Util.normalizar(h).replace(/\s+/g, ' ');
+    let filaCab = -1, cab = [];
+    for (let i = 0; i < Math.min(8, filas.length); i++) {
+      const c = (filas[i] || []).map(norm);
+      if (c.includes('PRIMER NOMBRE') || c.some(h => /^(NOMBRE|RAZON SOCIAL)/.test(h))) { filaCab = i; cab = c; break; }
+    }
+    if (filaCab < 0) return [];
+    const col = candidatos => {
+      for (const c of candidatos) { const i = cab.indexOf(c); if (i >= 0) return i; }
+      for (const c of candidatos) { const i = cab.findIndex(h => h.startsWith(c)); if (i >= 0) return i; }
+      return -1;
+    };
+    const iNit = col(['CEDULA', 'CEDULA / NIT', 'NIT']);
+    const iNitEmpresa = cab.indexOf('NIT') !== iNit ? cab.indexOf('NIT') : -1;
+    const iPrimer = col(['PRIMER NOMBRE', 'NOMBRE', 'RAZON SOCIAL']);
+    // Nombre: PRIMER NOMBRE + SEGUNDO NOMBRE + PRIMER APELLIDO + SEGUNDO APELLIDO
+    // (el segundo apellido puede venir en una columna sin encabezado junto al primero).
+    const iAp1 = col(['PRIMER APELLIDO']);
+    let iAp2 = col(['SEGUNDO APELLIDO']);
+    if (iAp2 < 0 && iAp1 >= 0 && !cab[iAp1 + 1]) iAp2 = iAp1 + 1;
+    const partesNombre = [iPrimer, col(['SEGUNDO NOMBRE']), iAp1, iAp2].filter(i => i >= 0);
+    // Empresas: NIT de 9 dígitos que empieza por 8 o 9, o razón social reconocible.
+    const esNitEmpresa = v => /^[89]\d{8}$/.test(v);
+    const RAZON_SOCIAL = /\b(S\.?\s?A\.?\s?S|LTDA|INVERSIONES|SOCIEDAD)\b/i;
+    const campos = CLIENTE_CAMPOS.map(c => ({ c, i: col(c.excel || []) })).filter(x => x.i >= 0);
+    const vencs = CLIENTE_VENCIMIENTOS.map(v => ({ v, i: col(v.excel || []) })).filter(x => x.i >= 0);
+    const texto = v => (v == null ? '' : String(v).replace(/\.0+$/, '').trim());
+
+    const out = [];
+    for (const f of filas.slice(filaCab + 1)) {
+      if (!f) continue;
+      const cedula = iNit >= 0 ? texto(f[iNit]).replace(/\s+/g, '') : '';
+      const nitCol = iNitEmpresa >= 0 ? texto(f[iNitEmpresa]).replace(/\s+/g, '') : '';
+      const nitEmpresa = esNitEmpresa(cedula) ? cedula : esNitEmpresa(nitCol) ? nitCol : '';
+      const primer = iPrimer >= 0 ? texto(f[iPrimer]).replace(/\s+/g, ' ') : '';
+      let nombre, nit;
+      if (primer && !/^\d+$/.test(primer) && (nitEmpresa || RAZON_SOCIAL.test(primer))) {
+        // Empresa: solo la razón social; el representante legal de las otras columnas se ignora
+        // (y lo que venga después de "SAS" en la misma celda, p. ej. "HATO SAMPUES SAS DOMINGO").
+        nombre = primer.replace(/^(.*?\bS\.?\s?A\.?\s?S\b\.?).*$/i, '$1');
+        nit = nitEmpresa || cedula;
+      } else {
+        // Persona: los números sueltos en las columnas de nombre (cédulas de otra persona) no son parte del nombre.
+        nombre = partesNombre.map(i => texto(f[i])).filter(p => p && !/^\d+$/.test(p)).join(' ').replace(/\s+/g, ' ');
+        nit = cedula;
+      }
+      if (!nombre) continue;
+      const datos = {};
+      for (const { c, i } of campos) {
+        const v = f[i];
+        if (v == null || String(v).trim() === '') continue;
+        const val = texto(c.extraer ? c.extraer(v) : v);
+        if (val) datos[c.id] = val;
+      }
+      const vencimientos = {};
+      for (const { v, i } of vencs) {
+        const fin = Util.parsearFecha(f[i]);
+        if (fin) vencimientos[v.id] = { inicio: null, fin };
+      }
+      // Id estable: reimportar el mismo archivo no duplica clientes.
+      const id = 'c-' + (nit ? 'nit-' + nit : 'nom-' + Util.normalizar(nombre).replace(/[^A-Z0-9]+/g, '-'));
+      out.push({ id, nombre, nit, datos, vencimientos });
+    }
+    return [...new Map(out.map(g => [g.id, g])).values()];
+  },
+
+  async importarArchivo(archivo) {
+    UI.abrirModal(`<header class="modal-cab"><h3>Importar clientes: ${Util.esc(archivo.name)}</h3></header>
+      <p id="gimp-estado" class="muted">Leyendo archivo…</p>
+      <div class="modal-pie"><span class="separador"></span><button class="btn" data-accion="cerrar-modal">Cerrar</button></div>`, { ancho: 520 });
+    const estado = t => { const el = document.getElementById('gimp-estado'); if (el) el.textContent = t; };
+    try {
+      await Importador.cargarXLSX();
+      const wb = XLSX.read(await archivo.arrayBuffer(), { type: 'array', cellDates: true });
+      let lista = [];
+      for (const nombre of wb.SheetNames) {
+        lista = lista.concat(this.filasAClientes(XLSX.utils.sheet_to_json(wb.Sheets[nombre], { header: 1, defval: null, raw: true })));
+      }
+      if (!lista.length) { estado('No se encontraron clientes. La hoja debe tener una columna PRIMER NOMBRE o NOMBRE.'); return; }
+      const existentes = new Set(this.lista.map(g => g.id));
+      const nuevos = lista.filter(g => !existentes.has(g.id));
+      estado(`Guardando ${nuevos.length} clientes nuevos…`);
+      await Datos.importarClientes(nuevos);
+      await this.cargar();
+      estado(`Listo: ${lista.length} clientes en el archivo, ${nuevos.length} nuevos. Los que ya existían no se modificaron.`);
+    } catch (e) {
+      console.error(e);
+      estado('❌ ' + e.message);
+    }
+  },
+};
+
+Vistas.clientes = {
+  titulo: 'Clientes',
+  icono: '🏢',
+  orden: 6.5,
+  visible: () => true,
+  persistente: true,
+  nodo: () => Clientes.raiz,
+  render: () => '',
+  montar: main => Clientes.montar(main),
+};
+
 </script>
 <script>
 /* ── js/tarea-modal.js ── */
@@ -3526,7 +4217,7 @@ const Importador = (() => {
     UI.toast(`${tareas.length} tareas exportadas`, { tipo: 'ok' });
   }
 
-  return { filasATareas, mapearEstado, mapearPrioridad, huella, importarArchivo, exportar };
+  return { filasATareas, mapearEstado, mapearPrioridad, huella, importarArchivo, exportar, cargarXLSX };
 })();
 
 if (typeof module !== 'undefined') module.exports = { Importador };
@@ -3976,6 +4667,7 @@ const App = {
   async salir() {
     Avisos.detener();
     Notas.reiniciar();
+    Clientes.reiniciar();
     await Datos.logout();
     this.estado.perfil = null;
     this.estado.tareas = [];
