@@ -1,8 +1,9 @@
 -- ═══════════════════════════════════════════════════════════════════
 -- CLIENTES: directorio de clientes con sus claves y vencimientos
 -- Ejecutar en Supabase → SQL Editor (se puede volver a ejecutar sin problema).
--- Todos los usuarios con sesión ven, crean y editan (incluidas las claves);
--- solo los administradores (admin, lider, supervisor) pueden eliminar.
+-- Solo los usuarios con fila en "perfiles" (el equipo) ven, crean y editan
+-- (incluidas las claves); una cuenta sin perfil no ve nada.
+-- Solo los administradores (admin, lider, supervisor) pueden eliminar.
 --
 -- Los datos de la ficha van en "datos" (jsonb) y los vencimientos en
 -- "vencimientos" (jsonb: { "certificado": { "inicio": "2026-01-01", "fin": "2027-01-01" }, ... }).
@@ -77,19 +78,33 @@ create trigger clientes_versionar
   for each row execute function public.clientes_versionar();
 
 -- ── Permisos (RLS) ───────────────────────────────────────────────────
+-- ¿El usuario de la sesión es del equipo (tiene fila en perfiles)?
+-- security definer: funciona aunque las políticas de "perfiles" no dejen leerla.
+create or replace function public.es_del_equipo()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (select 1 from public.perfiles p where p.id = auth.uid());
+$$;
+revoke execute on function public.es_del_equipo() from public, anon;
+grant execute on function public.es_del_equipo() to authenticated;
+
 alter table public.clientes enable row level security;
 
 drop policy if exists clientes_leer on public.clientes;
 create policy clientes_leer on public.clientes
-  for select to authenticated using (true);
+  for select to authenticated using (public.es_del_equipo());
 
 drop policy if exists clientes_crear on public.clientes;
 create policy clientes_crear on public.clientes
-  for insert to authenticated with check (true);
+  for insert to authenticated with check (public.es_del_equipo());
 
 drop policy if exists clientes_editar on public.clientes;
 create policy clientes_editar on public.clientes
-  for update to authenticated using (true) with check (true);
+  for update to authenticated using (public.es_del_equipo()) with check (public.es_del_equipo());
 
 drop policy if exists clientes_borrar on public.clientes;
 create policy clientes_borrar on public.clientes
