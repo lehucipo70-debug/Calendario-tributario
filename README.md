@@ -27,6 +27,10 @@ En **Administración → Seleccionar archivo Excel**. La primera fila debe tener
 - **RESPONSABLE** se asocia con el nombre del perfil (basta el primer nombre). Crea el perfil **antes** de importar; si no existe, la tarea queda sin asignar.
 - Importar el mismo archivo otra vez no duplica tareas.
 
+## Tareas completadas
+
+Las tareas completadas se archivan: dejan de aparecer en el tablero, la lista y el calendario. Para verlas, elige **Estado → Completada** en la barra de filtros (o el botón **Ver completadas** de la columna Completada del tablero). Desde ahí se pueden reabrir. Inicio y Rendimiento siguen contándolas.
+
 ## Avisos de escritorio
 
 La campana de la barra superior activa los avisos del navegador (cada persona los activa en su equipo; el navegador pide permiso la primera vez):
