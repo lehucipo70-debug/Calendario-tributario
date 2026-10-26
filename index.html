@@ -3224,13 +3224,19 @@ const CLIENTE_SECCIONES = [
 //   excel:   encabezados que se buscan al importar (sin tildes, da igual mayúsculas)
 //   extraer: opcional, convierte el valor de la celda antes de guardarlo
 //   junto:   opcional, en la ficha se muestra delante de este campo (no en su propia fila)
+//   fija:    opcional, se muestra arriba junto al nombre y el NIT (no con los demás datos)
 const CLIENTE_CAMPOS = [
   { id: 'lechera_codigo', label: 'Código empresa lechera', tipo: 'codigo', seccion: 'datos', junto: 'lechera_nombre',
     excel: ['EMPRESA LECHERA'], extraer: v => (String(v).trim().match(/^(\d+)(?:\.0+)?(?=\D|$)/) || [])[1] || '' },
   { id: 'lechera_nombre', label: 'Empresa lechera', tipo: 'texto', seccion: 'datos',
     excel: ['EMPRESA LECHERA'], extraer: v => String(v).trim().replace(/^\d+(?:\.0+)?\s*[-–:]?\s*/, '') },
+  // Persona: su cédula (su NIT es el mismo número). Empresa: la cédula del representante legal
+  // (su nombre no se guarda). La llena el importador.
+  { id: 'cedula', label: 'Cédula', tipo: 'texto', seccion: 'datos', fija: true },
   { id: 'correo', label: 'Correo', tipo: 'correo', seccion: 'datos', excel: ['E-MAIL', 'EMAIL', 'CORREO'] },
+  { id: 'correo_2', label: 'Correo 2', tipo: 'correo', seccion: 'datos', excel: ['E-MAIL 2', 'EMAIL 2', 'CORREO 2'] },
   { id: 'clave_correo', label: 'Clave correo', tipo: 'clave', seccion: 'claves', excel: ['CLAVE E-MAIL', 'CLAVE EMAIL', 'CLAVE CORREO'] },
+  { id: 'clave_correo_2', label: 'Clave correo 2', tipo: 'clave', seccion: 'claves', excel: ['CLAVE E-MAIL 2', 'CLAVE EMAIL 2', 'CLAVE CORREO 2'] },
   { id: 'clave_dian', label: 'Clave DIAN', tipo: 'clave', seccion: 'claves', excel: ['CLAVE DIAN'] },
 ];
 
@@ -3249,12 +3255,11 @@ const Clientes = {
   filtro: { texto: '', lechera: '', venc: '', letra: '' },
   abiertoId: null,
   editando: null,      // { id, que: 'datos' | <id de vencimiento> }
-  reveladas: new Set(), // claves reveladas: "<id>|<campo>"
 
   // ── Ciclo de vida ─────────────────────────────────────────────────
   reiniciar() {
     this.raiz?.remove();
-    Object.assign(this, { raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '' }, abiertoId: null, editando: null, reveladas: new Set() });
+    Object.assign(this, { raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '' }, abiertoId: null, editando: null });
   },
 
   montar(main) {
@@ -3281,6 +3286,9 @@ const Clientes = {
 
   // ── Consultas ─────────────────────────────────────────────────────
   cliente(id) { return this.lista.find(g => g.id === id); },
+
+  // Empresa: NIT de 9 dígitos que empieza por 8 o 9 (el mismo criterio del importador).
+  esEmpresa(g) { return /^[89]\d{8}$/.test(g.nit || ''); },
 
   // vencido | pronto | ok | sin
   estadoVenc(v, hoy = Util.hoyISO()) {
@@ -3349,9 +3357,9 @@ const Clientes = {
     const out = [];
     const agregar = (label, valor) => out.push(conValor ? { label, valor: valor || '(vacío)' } : label);
     if (!igual(a.nombre, b.nombre)) agregar('Nombre', a.nombre);
-    if (!igual(a.nit, b.nit)) agregar('Cédula / NIT', a.nit);
+    if (!igual(a.nit, b.nit)) agregar('NIT', a.nit);
     for (const c of CLIENTE_CAMPOS) {
-      if (!igual(a.datos?.[c.id], b.datos?.[c.id])) agregar(c.label, c.tipo === 'clave' && a.datos?.[c.id] ? 'otra clave' : a.datos?.[c.id]);
+      if (!igual(a.datos?.[c.id], b.datos?.[c.id])) agregar(c.label, a.datos?.[c.id]);
     }
     for (const v of CLIENTE_VENCIMIENTOS) {
       const x = a.vencimientos?.[v.id] || {}, y = b.vencimientos?.[v.id] || {};
@@ -3520,11 +3528,7 @@ const Clientes = {
     if (!v) return '<span class="muted">—</span>';
     const copiar = `<button class="btn-icono btn-sm" data-g="copiar" data-id="${Util.esc(g.id)}" data-campo="${c.id}" title="Copiar" aria-label="Copiar ${Util.esc(c.label)}">📋</button>`;
     switch (c.tipo) {
-      case 'clave': {
-        const ver = this.reveladas.has(g.id + '|' + c.id);
-        return `<span class="cli-clave">${ver ? Util.esc(v) : '••••••••'}</span>
-          <button class="btn-icono btn-sm" data-g="ver" data-id="${Util.esc(g.id)}" data-campo="${c.id}" title="${ver ? 'Ocultar' : 'Mostrar'}" aria-label="${ver ? 'Ocultar' : 'Mostrar'} ${Util.esc(c.label)}">${ver ? '🙈' : '👁'}</button>${copiar}`;
-      }
+      case 'clave': return `<span class="cli-clave">${Util.esc(v)}</span>${copiar}`;
       case 'correo': return `<a href="mailto:${Util.esc(v)}">${Util.esc(v)}</a>${copiar}`;
       case 'telefono': return `<a href="tel:${Util.esc(v.replace(/[^\d+]/g, ''))}">${Util.esc(v)}</a>${copiar}`;
       case 'codigo': return `<code class="cli-codigo">${Util.esc(v)}</code>`;
@@ -3538,21 +3542,25 @@ const Clientes = {
     if (editando) {
       const input = (name, label, valor, tipo = 'text') => `<label>${Util.esc(label)}<input name="${name}" type="${tipo}" value="${Util.esc(valor || '')}" ${name === 'nombre' ? 'required' : ''}></label>`;
       return `<form class="cli-form" data-g="form-datos" data-id="${Util.esc(g.id)}"><h5>${g._nuevo ? 'Nuevo cliente' : 'Editar datos'}</h5>
-        ${input('nombre', 'Nombre o razón social', g.nombre)}${input('nit', 'Cédula / NIT', g.nit)}
-        ${CLIENTE_CAMPOS.map(c => input('d_' + c.id, c.label, g.datos[c.id], c.tipo === 'correo' ? 'email' : 'text')).join('')}
+        ${input('nombre', 'Nombre o razón social', g.nombre)}${input('d_cedula', 'Cédula (empresa: la del representante legal)', g.datos.cedula)}${input('nit', 'NIT', g.nit)}
+        ${CLIENTE_CAMPOS.filter(c => !c.fija).map(c => input('d_' + c.id, c.label, g.datos[c.id], c.tipo === 'correo' ? 'email' : 'text')).join('')}
         <div class="cli-acciones"><button class="btn btn-sm btn-primario" type="submit">Guardar</button><button class="btn btn-sm" type="button" data-g="cancelar">Cancelar</button>
           ${!g._nuevo && Permisos.esAdmin() ? `<span class="separador"></span><button class="btn btn-sm btn-peligro" type="button" data-g="eliminar" data-id="${Util.esc(g.id)}">Eliminar</button>` : ''}</div>
       </form>`;
     }
     const junto = new Map(CLIENTE_CAMPOS.filter(c => c.junto).map(c => [c.junto, c]));
     const secciones = CLIENTE_SECCIONES.map(s => {
-      const campos = CLIENTE_CAMPOS.filter(c => c.seccion === s.id && !c.junto);
+      const campos = CLIENTE_CAMPOS.filter(c => c.seccion === s.id && !c.junto && !c.fija);
       const filas = campos.map(c => {
         const pre = junto.get(c.id);
         const valor = pre && g.datos[pre.id] ? this._valorHtml(g, pre) + ' ' + this._valorHtml(g, c) : this._valorHtml(g, c);
         return fila(c.label, valor);
       }).join('');
-      return `<h5>${Util.esc(s.titulo)}</h5>${s.id === 'datos' ? fila('Nombre', Util.esc(g.nombre)) + fila('Cédula / NIT', g.nit ? Util.esc(g.nit) + ` <button class="btn-icono btn-sm" data-g="copiar" data-id="${Util.esc(g.id)}" data-campo="nit" title="Copiar" aria-label="Copiar NIT">📋</button>` : '<span class="muted">—</span>') : ''}${filas}`;
+      const copiable = (campo, label, v) => v ? Util.esc(v) + ` <button class="btn-icono btn-sm" data-g="copiar" data-id="${Util.esc(g.id)}" data-campo="${campo}" title="Copiar" aria-label="Copiar ${label}">📋</button>` : '<span class="muted">—</span>';
+      const fijos = s.id !== 'datos' ? '' : fila('Nombre', Util.esc(g.nombre))
+        + fila(this.esEmpresa(g) ? 'Cédula rep. legal' : 'Cédula', copiable('cedula', 'cédula', g.datos.cedula))
+        + fila('NIT', copiable('nit', 'NIT', g.nit));
+      return `<h5>${Util.esc(s.titulo)}</h5>${fijos}${filas}`;
     }).join('');
     return `<section class="cli-datos">${secciones}<div class="cli-acciones"><button class="btn btn-sm" data-g="editar" data-id="${Util.esc(g.id)}" data-que="datos">✎ Editar datos</button>
       <button class="btn btn-sm" data-g="versiones" data-id="${Util.esc(g.id)}">🕘 Versiones (${g.historial.length})</button></div></section>`;
@@ -3603,12 +3611,6 @@ const Clientes = {
       case 'cancelar': this.cancelarEdicion(); break;
       case 'eliminar': this.eliminar(b.dataset.id); break;
       case 'versiones': this.verVersiones(b.dataset.id); break;
-      case 'ver': {
-        const k = b.dataset.id + '|' + b.dataset.campo;
-        if (this.reveladas.has(k)) this.reveladas.delete(k); else this.reveladas.add(k);
-        this.pintar();
-        break;
-      }
       case 'copiar': if (g) this.copiar(b.dataset.campo === 'nit' ? g.nit : g.datos[b.dataset.campo] || ''); break;
     }
   },
@@ -3661,7 +3663,9 @@ const Clientes = {
       for (const c of candidatos) { const i = cab.findIndex(h => h.startsWith(c)); if (i >= 0) return i; }
       return -1;
     };
-    const iNit = col(['CEDULA', 'CEDULA / NIT', 'NIT']);
+    // Cédula y NIT pueden venir en columnas separadas: la de cédula manda; si no hay, se usa la de NIT.
+    const iCed = col(['CEDULA', 'CEDULA / NIT']);
+    const iNit = iCed >= 0 ? iCed : col(['NIT']);
     const iNitEmpresa = cab.indexOf('NIT') !== iNit ? cab.indexOf('NIT') : -1;
     const iPrimer = col(['PRIMER NOMBRE', 'NOMBRE', 'RAZON SOCIAL']);
     // Nombre: PRIMER NOMBRE + SEGUNDO NOMBRE + PRIMER APELLIDO + SEGUNDO APELLIDO
@@ -3684,19 +3688,27 @@ const Clientes = {
       const nitCol = iNitEmpresa >= 0 ? texto(f[iNitEmpresa]).replace(/\s+/g, '') : '';
       const nitEmpresa = esNitEmpresa(cedula) ? cedula : esNitEmpresa(nitCol) ? nitCol : '';
       const primer = iPrimer >= 0 ? texto(f[iPrimer]).replace(/\s+/g, ' ') : '';
-      let nombre, nit;
+      let nombre, nit, ced;
       if (primer && !/^\d+$/.test(primer) && (nitEmpresa || RAZON_SOCIAL.test(primer))) {
-        // Empresa: solo la razón social; el representante legal de las otras columnas se ignora
-        // (y lo que venga después de "SAS" en la misma celda, p. ej. "HATO SAMPUES SAS DOMINGO").
+        // Empresa: la razón social y la cédula del representante legal (su nombre se ignora,
+        // igual que lo que venga después de "SAS" en la misma celda, p. ej. "HATO SAMPUES SAS DOMINGO").
         nombre = primer.replace(/^(.*?\bS\.?\s?A\.?\s?S\b\.?).*$/i, '$1');
         nit = nitEmpresa || cedula;
+        ced = [cedula, nitCol, ...partesNombre.map(i => texto(f[i]))].find(x => /^\d{5,}$/.test(x) && x !== nit) || '';
       } else {
         // Persona: los números sueltos en las columnas de nombre (cédulas de otra persona) no son parte del nombre.
         nombre = partesNombre.map(i => texto(f[i])).filter(p => p && !/^\d+$/.test(p)).join(' ').replace(/\s+/g, ' ');
+        // Persona natural: su NIT es el mismo número de la cédula
         nit = cedula;
+        ced = cedula;
       }
-      if (!nombre) continue;
-      const datos = {};
+      if (!nombre) {
+        // Fila con solo una cédula debajo de una empresa: es la del representante legal.
+        const ant = out[out.length - 1];
+        if (cedula && /^\d{5,}$/.test(cedula) && ant && /^[89]\d{8}$/.test(ant.nit) && !ant.datos.cedula) ant.datos.cedula = cedula;
+        continue;
+      }
+      const datos = ced ? { cedula: ced } : {};
       for (const { c, i } of campos) {
         const v = f[i];
         if (v == null || String(v).trim() === '') continue;
