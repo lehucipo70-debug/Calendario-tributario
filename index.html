@@ -2076,6 +2076,8 @@ Vistas.tablero = {
   render() {
     const { campo, cols } = this.columnas();
     const tareas = App.tareasVisibles();
+    // Completadas archivadas: la columna solo muestra cuántas hay y cómo verlas.
+    const archivadas = campo === 'estado' && !App.estado.filtros.estado ? App.tareasVisibles({ estado: 'completada' }).length : 0;
     const orden = (a, b) => (a.fecha_vencimiento || '9999').localeCompare(b.fecha_vencimiento || '9999')
       || PRIORIDADES.findIndex(p => p.id === a.prioridad) - PRIORIDADES.findIndex(p => p.id === b.prioridad);
     const ag = App.estado.tablero.agrupar;
@@ -2089,11 +2091,13 @@ Vistas.tablero = {
       return `<section class="columna ${col.cls || ''}" data-soltar="${campo}" data-valor="${col.valor}" aria-label="${Util.esc(col.titulo.replace(/<[^>]+>/g, ''))}">
         <header class="columna-cab">
           ${col.avatar ? UI.avatar(col.avatar, 22) : ''}
-          <h3>${col.titulo}</h3><span class="contador">${lista.length}</span>
+          <h3>${col.titulo}</h3><span class="contador">${col.valor === 'completada' && archivadas ? archivadas : lista.length}</span>
           <button class="btn-icono btn-sm" data-accion="nueva-tarea" ${datoNueva}="${col.valor}" title="Agregar tarea aquí" aria-label="Agregar tarea">＋</button>
         </header>
         <div class="columna-cuerpo">
-          ${mostradas.map(t => UI.tarjeta(t)).join('') || '<p class="columna-vacia">Suelta tareas aquí</p>'}
+          ${mostradas.map(t => UI.tarjeta(t)).join('') || (col.valor === 'completada' && archivadas
+            ? `<p class="columna-vacia">Suelta tareas aquí para archivarlas<br><button class="btn btn-sm" data-accion="ver-completadas">Ver ${archivadas} completada${archivadas === 1 ? '' : 's'}</button></p>`
+            : '<p class="columna-vacia">Suelta tareas aquí</p>')}
           ${recortar ? `<p class="muted pad centrado">Mostrando las 30 más recientes de ${lista.length}</p>` : ''}
         </div>
       </section>`;
@@ -3737,7 +3741,8 @@ const App = {
   },
 
   // Tareas que el usuario ve en tablero, lista y calendario.
-  tareasVisibles({ sinFiltros = false } = {}) {
+  // Las completadas se archivan: solo aparecen con el filtro de estado "Completada".
+  tareasVisibles({ sinFiltros = false, estado = this.estado.filtros.estado } = {}) {
     const f = this.estado.filtros;
     let lista = this.estado.tareas;
     if (f.alcance === 'mias' || !Permisos.verEquipo()) lista = lista.filter(t => this.esMia(t));
@@ -3746,7 +3751,7 @@ const App = {
     const q = Util.normalizar(f.texto);
     return lista.filter(t =>
       (!f.colaborador || t.asignado_a === f.colaborador) &&
-      (!f.estado || (f.estado === 'vencida' ? Metricas.estadoEfectivo(t, hoy) === 'vencida' : t.estado === f.estado)) &&
+      (estado ? (estado === 'vencida' ? Metricas.estadoEfectivo(t, hoy) === 'vencida' : t.estado === estado) : t.estado !== 'completada') &&
       (!f.prioridad || t.prioridad === f.prioridad) &&
       (!f.categoria || t.categoria === f.categoria) &&
       (!q || Util.normalizar(`${t.titulo} ${t.empresa || ''} ${t.descripcion || ''}`).includes(q)));
@@ -3824,7 +3829,7 @@ const App = {
     const t = this.tarea(id);
     if (!t) return;
     const hecha = t.estado === 'completada';
-    return this.actualizar(id, { estado: hecha ? 'en_progreso' : 'completada' }, { mensaje: hecha ? 'Tarea reabierta' : '✓ Tarea completada' }).catch(() => {});
+    return this.actualizar(id, { estado: hecha ? 'en_progreso' : 'completada' }, { mensaje: hecha ? 'Tarea reabierta' : '✓ Tarea completada · la encuentras en el filtro Completada' }).catch(() => {});
   },
 
   // Arrastrar y soltar: campo = estado | asignado_a | prioridad | fecha_vencimiento
@@ -4031,6 +4036,7 @@ const Acciones = {
   'abrir-tarea': el => TareaModal.abrir(el.dataset.id),
   'completar': el => App.completar(el.dataset.id),
   'alcance': el => { App.estado.filtros.alcance = el.dataset.valor; if (el.dataset.valor === 'mias') App.estado.filtros.colaborador = ''; App.render(); },
+  'ver-completadas': () => { App.estado.filtros.estado = 'completada'; App.render(); },
   'limpiar-filtros': () => { Object.assign(App.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '' }); App.render(); },
   'ver-colaborador': el => {
     Object.assign(App.estado.filtros, { alcance: 'equipo', colaborador: el.dataset.id || '', estado: el.dataset.estado || '' });
