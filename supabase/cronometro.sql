@@ -47,3 +47,6 @@ set iniciada_at = coalesce(
       and a.texto not like '%→ Completada'),
   case when t.estado in ('en_progreso', 'en_revision') then t.created_at end)
 where t.iniciada_at is null and t.estado <> 'pendiente';
+
+-- 4. Que la API vea la columna nueva de inmediato
+notify pgrst, 'reload schema';
