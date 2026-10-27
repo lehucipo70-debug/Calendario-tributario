@@ -326,6 +326,8 @@ body[data-vista="inicio"] .titulo-vista { position: absolute; width: 1px; height
 .fecha { color: var(--text2); white-space: nowrap; }
 .fecha.vencida { color: var(--rojo); font-weight: 600; }
 .fecha.pronto { color: var(--ambar); font-weight: 600; }
+.crono { color: var(--text2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.crono.activo { color: var(--azul); font-weight: 600; }
 .mini-barra { height: 4px; border-radius: 4px; background: var(--bg3); margin-top: 8px; overflow: hidden; }
 .mini-barra span { display: block; height: 100%; background: linear-gradient(90deg, var(--acento-2), var(--acento)); border-radius: 4px; }
 .check {
@@ -769,6 +771,17 @@ const Util = {
     return Util.fmtFecha(iso);
   },
 
+  // Duración legible: "< 1 min", "45 min", "3 h 20 min", "2 d 5 h".
+  fmtDuracion(ms) {
+    if (ms == null || isNaN(ms)) return '—';
+    const min = Math.floor(Math.max(0, ms) / 60000);
+    if (min < 1) return '< 1 min';
+    if (min < 60) return min + ' min';
+    const h = Math.floor(min / 60);
+    if (h < 24) return h + ' h' + (min % 60 ? ' ' + (min % 60) + ' min' : '');
+    return Math.floor(h / 24) + ' d' + (h % 24 ? ' ' + (h % 24) + ' h' : '');
+  },
+
   fmtFechaHora(ts) {
     if (!ts) return '';
     const d = new Date(ts);
@@ -867,6 +880,15 @@ const Metricas = (() => {
     return fin <= t.fecha_vencimiento;
   }
 
+  // Tiempo de ejecución en ms: desde que la tarea salió de "Pendiente" (iniciada_at)
+  // hasta que se completó, o hasta ahora si sigue en curso. null si no se ha iniciado.
+  function tiempoEjecucion(t, ahora = Date.now()) {
+    if (!t.iniciada_at || t.estado === 'pendiente') return null;
+    const ini = Date.parse(t.iniciada_at);
+    const fin = estaCompletada(t) ? Date.parse(t.completada_at) : ahora;
+    return isNaN(ini) || isNaN(fin) ? null : Math.max(0, fin - ini);
+  }
+
   function rangoPeriodo(periodo, hoy) {
     const d = U.deISO(hoy);
     const y = d.getFullYear(), m = d.getMonth();
@@ -899,7 +921,7 @@ const Metricas = (() => {
   }
 
   function calcular(tareas, hoy) {
-    const r = { total: tareas.length, completadas: 0, aTiempo: 0, tarde: 0, conFecha: 0, vencidas: 0, enCurso: 0, porVencer: 0, diasTotales: 0, diasMuestras: 0 };
+    const r = { total: tareas.length, completadas: 0, aTiempo: 0, tarde: 0, conFecha: 0, vencidas: 0, enCurso: 0, porVencer: 0, diasTotales: 0, diasMuestras: 0, ejecucionTotal: 0, ejecucionMuestras: 0 };
     for (const t of tareas) {
       const est = estadoEfectivo(t, hoy);
       if (est === 'completada') {
@@ -908,6 +930,8 @@ const Metricas = (() => {
         if (ok !== null) { r.conFecha++; ok ? r.aTiempo++ : r.tarde++; }
         const ini = U.fechaDeTimestamp(t.created_at), fin = U.fechaDeTimestamp(t.completada_at);
         if (ini && fin) { r.diasTotales += Math.max(0, U.diasEntre(ini, fin)); r.diasMuestras++; }
+        const ms = tiempoEjecucion(t);
+        if (ms !== null) { r.ejecucionTotal += ms; r.ejecucionMuestras++; }
       } else if (est === 'vencida') {
         r.vencidas++;
       } else {
@@ -921,6 +945,7 @@ const Metricas = (() => {
     r.indice = r.cumplimiento === null ? null
       : Math.round(100 * (r.puntualidad === null ? r.cumplimiento : 0.5 * r.cumplimiento + 0.5 * r.puntualidad));
     r.diasPromedio = r.diasMuestras ? r.diasTotales / r.diasMuestras : null;
+    r.ejecucionPromedio = r.ejecucionMuestras ? r.ejecucionTotal / r.ejecucionMuestras : null;
     return r;
   }
 
@@ -981,7 +1006,7 @@ const Metricas = (() => {
     return { id: 'bajo', label: 'Bajo', icon: '▼' };
   }
 
-  return { estadoEfectivo, porVencer, aTiempo, rangoPeriodo, enRango, claveColaborador, calcular, porColaborador, resumenEquipo, tendenciaSemanal, nivel };
+  return { estadoEfectivo, porVencer, aTiempo, tiempoEjecucion, rangoPeriodo, enRango, claveColaborador, calcular, porColaborador, resumenEquipo, tendenciaSemanal, nivel };
 })();
 
 if (typeof module !== 'undefined') module.exports = { Metricas };
@@ -1052,7 +1077,20 @@ class ErrorDatos extends Error {
 }
 
 const CAMPOS_TAREA = ['titulo', 'descripcion', 'asignado_a', 'asignado_nombre', 'empresa', 'categoria', 'prioridad', 'estado',
-  'fecha_inicio', 'fecha_vencimiento', 'progreso', 'checklist', 'etiquetas', 'completada_at', 'origen_ref'];
+  'fecha_inicio', 'fecha_vencimiento', 'progreso', 'checklist', 'etiquetas', 'completada_at', 'iniciada_at', 'origen_ref'];
+
+// Momento en que una tarea empieza a contar tiempo de ejecución, según el cambio de estado
+// (lo mismo hace el trigger de supabase/cronometro.sql). undefined = no cambia.
+//   pendiente → en progreso / en revisión: empieza ahora
+//   pendiente → completada directo:         sin tiempo medido
+//   → pendiente:                            se detiene y se borra
+//   completada → reabierta:                 conserva el inicio original (si no había, empieza ahora)
+function iniciadaAlCambiar(antes, despues, iniciadaAntes) {
+  if (despues === antes) return undefined;
+  if (despues === 'pendiente') return null;
+  if (antes && antes !== 'pendiente' && iniciadaAntes) return undefined;
+  return despues === 'completada' ? null : new Date().toISOString();
+}
 
 function normalizarTarea(t) {
   return {
@@ -1156,15 +1194,34 @@ class SupabaseStore {
     return todas.map(normalizarTarea);
   }
 
+  // Si aún no se ejecutó supabase/cronometro.sql, la columna iniciada_at no existe:
+  // se deja de enviar y la app sigue funcionando sin cronómetro.
+  _limpiar(obj) {
+    const out = limpiarParaGuardar(obj);
+    if (this.sinCronometro) delete out.iniciada_at;
+    return out;
+  }
+
+  async _reintentarSinCronometro(fn) {
+    const r = await fn();
+    if (r.error?.code === 'PGRST204' && /iniciada_at/.test(r.error.message) && !this.sinCronometro) {
+      console.warn('[cronómetro] Falta la columna iniciada_at: ejecuta supabase/cronometro.sql');
+      this.sinCronometro = true;
+      return fn();
+    }
+    return r;
+  }
+
   async crearTarea(t) {
-    const fila = { ...limpiarParaGuardar(t), creado_por: this.usuario?.id };
-    const { data, error } = await this.sb.from(CONFIG.TABLAS.tareas).insert(fila).select().single();
+    const { data, error } = await this._reintentarSinCronometro(() =>
+      this.sb.from(CONFIG.TABLAS.tareas).insert({ ...this._limpiar(t), creado_por: this.usuario?.id }).select().single());
     if (error) throw this._error(error, 'crear la tarea');
     return normalizarTarea(data);
   }
 
   async actualizarTarea(id, cambios) {
-    const { data, error } = await this.sb.from(CONFIG.TABLAS.tareas).update(limpiarParaGuardar(cambios)).eq('id', id).select().single();
+    const { data, error } = await this._reintentarSinCronometro(() =>
+      this.sb.from(CONFIG.TABLAS.tareas).update(this._limpiar(cambios)).eq('id', id).select().single());
     if (error) throw this._error(error, 'modificar esta tarea');
     return normalizarTarea(data);
   }
@@ -1190,14 +1247,14 @@ class SupabaseStore {
 
   async importarTareas(lista, alAvanzar) {
     let hechas = 0;
-    const filas = lista.map(t => ({ ...limpiarParaGuardar(t), creado_por: this.usuario?.id }));
-    for (let i = 0; i < filas.length; i += 500) {
-      const lote = filas.slice(i, i + 500);
+    for (let i = 0; i < lista.length; i += 500) {
+      const lote = lista.slice(i, i + 500);
       // origen_ref evita duplicados al reimportar el mismo archivo
-      const { error } = await this.sb.from(CONFIG.TABLAS.tareas).upsert(lote, { onConflict: 'origen_ref', ignoreDuplicates: true });
+      const { error } = await this._reintentarSinCronometro(() => this.sb.from(CONFIG.TABLAS.tareas)
+        .upsert(lote.map(t => ({ ...this._limpiar(t), creado_por: this.usuario?.id })), { onConflict: 'origen_ref', ignoreDuplicates: true }));
       if (error) throw this._error(error, 'importar tareas');
       hechas += lote.length;
-      alAvanzar?.(hechas, filas.length);
+      alAvanzar?.(hechas, lista.length);
     }
     return hechas;
   }
@@ -1257,6 +1314,7 @@ class LocalStore {
       ...limpiarParaGuardar(t), id: Util.uid(), creado_por: this.perfil?.id, created_at: ahora, updated_at: ahora,
     });
     if (nueva.estado === 'completada' && !nueva.completada_at) nueva.completada_at = ahora;
+    if (nueva.iniciada_at === undefined) nueva.iniciada_at = ['en_progreso', 'en_revision'].includes(nueva.estado) ? ahora : null;
     this.db.tareas.push(nueva);
     this._guardar();
     return structuredClone(nueva);
@@ -1269,6 +1327,10 @@ class LocalStore {
     // Igual que el trigger de la base de datos: completada_at se gestiona solo.
     if (limpio.estado && limpio.estado !== t.estado) {
       limpio.completada_at = limpio.estado === 'completada' ? new Date().toISOString() : null;
+      if (!('iniciada_at' in limpio)) {
+        const ini = iniciadaAlCambiar(t.estado, limpio.estado, t.iniciada_at);
+        if (ini !== undefined) limpio.iniciada_at = ini;
+      }
     }
     Object.assign(t, limpio, { updated_at: new Date().toISOString() });
     this._guardar();
@@ -1378,9 +1440,16 @@ const DatosDemo = {
         empresa: elegir(empresas), categoria, prioridad, estado,
         fecha_inicio: null, fecha_vencimiento: vence,
         progreso: estado === 'completada' ? 100 : estado === 'en_revision' ? 80 : estado === 'en_progreso' ? 40 : 0,
-        checklist, etiquetas: [], completada_at, origen_ref: null,
+        checklist, etiquetas: [], completada_at, iniciada_at: null, origen_ref: null,
         created_at: ts(creada, 9), updated_at: ts(creada, 9),
       });
+    }
+    // Cronómetro: las tareas iniciadas empezaron entre 1 hora y 4 días antes de completarse (o de ahora).
+    for (const t of tareas) {
+      if (t.estado === 'pendiente') continue;
+      const fin = t.completada_at ? Date.parse(t.completada_at) : Date.now();
+      const ini = fin - (1 + azar() * 95) * 3600000, creada = Date.parse(t.created_at);
+      t.iniciada_at = new Date(creada < fin ? Math.max(creada, ini) : ini).toISOString();
     }
     return { colaboradores, tareas, actividad: [] };
   },
@@ -1622,6 +1691,16 @@ const UI = {
     return `<span class="fecha ${cls}" title="${Util.fmtFecha(t.fecha_vencimiento)}">📅 ${Util.fmtRelativa(t.fecha_vencimiento)}</span>`;
   },
 
+  // Tiempo de ejecución. Las insignias con data-crono las actualiza el reloj de App cada 30 s.
+  cronometro(t, { vacio = '' } = {}) {
+    const ms = Metricas.tiempoEjecucion(t);
+    if (ms === null) return vacio;
+    if (t.estado === 'completada') {
+      return `<span class="crono" title="Tiempo de ejecución: del ${Util.esc(Util.fmtFechaHora(t.iniciada_at))} al ${Util.esc(Util.fmtFechaHora(t.completada_at))}">⏱ ${Util.fmtDuracion(ms)}</span>`;
+    }
+    return `<span class="crono activo" data-crono="${Util.esc(t.iniciada_at)}" title="En curso desde el ${Util.esc(Util.fmtFechaHora(t.iniciada_at))}">⏱ ${Util.fmtDuracion(ms)}</span>`;
+  },
+
   progreso(t) {
     const total = t.checklist.length;
     const hechos = t.checklist.filter(i => i.hecho).length;
@@ -1647,6 +1726,7 @@ const UI = {
       <div class="tarjeta-pie">
         ${UI.fecha(t)}
         <span class="pie-der">
+          ${UI.cronometro(t)}
           ${t.checklist.length ? `<span class="muted" title="Lista de verificación">☑ ${p.texto}</span>` : ''}
           ${UI.avatar(t)}
         </span>
@@ -1935,7 +2015,7 @@ Vistas.lista = {
 
   COLUMNAS: [
     ['titulo', 'Tarea'], ['asignado', 'Colaborador'], ['empresa', 'Empresa'], ['prioridad', 'Prioridad'],
-    ['estado', 'Estado'], ['fecha_vencimiento', 'Vence'], ['progreso', 'Progreso'],
+    ['estado', 'Estado'], ['fecha_vencimiento', 'Vence'], ['tiempo', 'Tiempo'], ['progreso', 'Progreso'],
   ],
 
   ordenar(lista) {
@@ -1948,6 +2028,7 @@ Vistas.lista = {
         case 'prioridad': return pesoPrio(t.prioridad);
         case 'estado': return pesoEstado(t.estado);
         case 'progreso': return UI.progreso(t).pct;
+        case 'tiempo': return Metricas.tiempoEjecucion(t) ?? -1;
         case 'fecha_vencimiento': return t.fecha_vencimiento || '9999-99-99';
         default: return String(t[orden] || '~').toLowerCase();
       }
@@ -1986,6 +2067,7 @@ Vistas.lista = {
             </select>${ef === 'vencida' ? ' <span class="chip est-vencida" title="Fecha límite superada">⚠</span>' : ''}`
           : UI.estado(t)}</td>
         <td>${UI.fecha(t)}</td>
+        <td>${UI.cronometro(t, { vacio: '<span class="muted">—</span>' })}</td>
         <td><div class="barra-progreso" title="${p.texto}"><span style="width:${p.pct}%"></span></div><span class="muted mini">${p.texto}</span></td>
       </tr>`;
     }).join('');
@@ -2232,7 +2314,7 @@ Vistas.rendimiento = {
         </header>
         <div class="tabla-scroll"><table class="tabla tabla-rend">
           <thead><tr><th>Colaborador</th><th class="num">Tareas</th><th class="num">Completadas</th><th class="num">Cumplimiento</th><th class="num">Puntualidad</th>
-            <th class="num">En curso</th><th class="num">Vencidas</th><th class="num">Días prom.</th><th>Índice</th></tr></thead>
+            <th class="num">En curso</th><th class="num">Vencidas</th><th class="num">Días prom.</th><th class="num" title="Promedio del tiempo entre salir de Pendiente y completarse">Ejecución prom.</th><th>Índice</th></tr></thead>
           <tbody>${filas.map(f => {
             return `<tr class="fila-click" data-accion="ver-colaborador" data-id="${f.colaborador ? f.clave : ''}" title="Ver tareas de ${Util.esc(f.nombre)}">
               <td><span class="celda-colab">${UI.avatar(f.colaborador || { nombre: f.nombre }, 24)} ${Util.esc(f.nombre)}</span></td>
@@ -2240,9 +2322,10 @@ Vistas.rendimiento = {
               <td class="num">${pct(f.cumplimiento)}</td><td class="num">${pct(f.puntualidad)}</td>
               <td class="num">${f.enCurso}</td><td class="num ${f.vencidas ? 'txt-rojo' : ''}">${f.vencidas}</td>
               <td class="num">${f.diasPromedio === null ? '—' : f.diasPromedio.toFixed(1)}</td>
+              <td class="num">${Util.fmtDuracion(f.ejecucionPromedio)}</td>
               <td>${UI.nivel(f.indice, { texto: true })}</td>
             </tr>`;
-          }).join('') || `<tr><td colspan="9" class="centrado muted pad">Sin datos en este periodo</td></tr>`}</tbody>
+          }).join('') || `<tr><td colspan="10" class="centrado muted pad">Sin datos en este periodo</td></tr>`}</tbody>
         </table></div>
       </section>`;
   },
@@ -2398,6 +2481,7 @@ Vistas.admin = {
             <dt>Tiempo real</dt><dd>${App.estado.conectado ? 'Conectado' : 'Sin conexión'}</dd>
             <dt>Colaboradores</dt><dd>${App.estado.colaboradores.length}</dd>
             <dt>Tareas</dt><dd>${App.estado.tareas.length}</dd>
+            <dt>Cronómetro</dt><dd>${demo || (!Datos.sinCronometro && (!App.estado.tareas.length || 'iniciada_at' in App.estado.tareas[0])) ? 'Activo' : 'Falta ejecutar <code>supabase/cronometro.sql</code> en el SQL Editor de Supabase'}</dd>
             <dt>Teams</dt><dd>${CONFIG.TEAMS_WEBHOOK_URL || Object.keys(CONFIG.TEAMS_WEBHOOKS_POR_COLABORADOR).length ? 'Configurado' : 'No configurado (js/config.js)'}</dd>
           </dl>
           <div class="fila-botones">
@@ -2481,7 +2565,8 @@ const TareaModal = {
           <button type="button" class="btn-icono" data-accion="cerrar-modal" aria-label="Cerrar">✕</button>
         </header>
         ${id ? `<p class="muted mini meta-tarea">${UI.estado(t)} ${creador ? `· Creada por ${Util.esc(creador)}` : ''} ${t.created_at ? '· ' + Util.fmtFechaHora(t.created_at) : ''}
-          ${t.completada_at ? '· Completada ' + Util.fmtFechaHora(t.completada_at) : ''}</p>` : ''}
+          ${t.completada_at ? '· Completada ' + Util.fmtFechaHora(t.completada_at) : ''}
+          ${Metricas.tiempoEjecucion(t) !== null ? `· ${t.estado === 'completada' ? 'Tiempo de ejecución' : 'En curso desde ' + Util.fmtFechaHora(t.iniciada_at) + ', lleva'} ${UI.cronometro(t)}` : ''}</p>` : ''}
         <div class="tarea-grid ${id ? '' : 'sin-seguimiento'}">
           <div class="tarea-principal">
             <div class="campos">
@@ -2870,7 +2955,7 @@ const Importador = (() => {
   }
 
   async function exportar(tareas) {
-    const cab = ['Tarea', 'Colaborador', 'Empresa', 'Categoría', 'Prioridad', 'Estado', 'Fecha inicio', 'Fecha límite', 'Completada el', 'A tiempo', 'Progreso %', 'Descripción'];
+    const cab = ['Tarea', 'Colaborador', 'Empresa', 'Categoría', 'Prioridad', 'Estado', 'Fecha inicio', 'Fecha límite', 'Completada el', 'A tiempo', 'Iniciada el', 'Tiempo de ejecución (h)', 'Progreso %', 'Descripción'];
     const hoy = U.hoyISO();
     const filas = tareas.map(t => {
       const ef = Metricas.estadoEfectivo(t, hoy);
@@ -2878,13 +2963,14 @@ const Importador = (() => {
       return [t.titulo, App.colaboradorDe(t)?.nombre || '', t.empresa || '', t.categoria || '',
         PRIORIDADES.find(p => p.id === t.prioridad)?.label || '', ef === 'vencida' ? 'Vencida' : ESTADOS.find(e => e.id === t.estado)?.label || '',
         t.fecha_inicio || '', t.fecha_vencimiento || '', U.fechaDeTimestamp(t.completada_at) || '', at === null ? '' : at ? 'Sí' : 'No',
+        t.iniciada_at && t.estado !== 'pendiente' ? U.fmtFechaHora(t.iniciada_at) : '', (ms => ms === null ? '' : Math.round(ms / 360000) / 10)(Metricas.tiempoEjecucion(t)),
         UI.progreso(t).pct, t.descripcion || ''];
     });
     const nombre = 'planner_tareas_' + hoy;
     try {
       await cargarXLSX();
       const ws = XLSX.utils.aoa_to_sheet([cab, ...filas]);
-      ws['!cols'] = cab.map((h, i) => ({ wch: i === 0 || i === 11 ? 40 : 16 }));
+      ws['!cols'] = cab.map((h, i) => ({ wch: i === 0 || i === cab.length - 1 ? 40 : 16 }));
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Tareas');
       XLSX.writeFile(wb, nombre + '.xlsx');
@@ -3134,6 +3220,7 @@ const App = {
   async crear(datos) {
     const base = { estado: 'pendiente', prioridad: 'media', categoria: 'Otro', asignado_a: Permisos.uid, ...datos };
     if (base.estado === 'completada') { base.progreso = 100; base.completada_at ??= new Date().toISOString(); }
+    if (['en_progreso', 'en_revision'].includes(base.estado)) base.iniciada_at ??= new Date().toISOString();
     const t = await Datos.crearTarea(base);
     if (!this.tarea(t.id)) { this.estado.tareas.push(t); this._version++; }
     this._registrar(t.id, 'creacion', 'Creó la tarea');
@@ -3152,6 +3239,11 @@ const App = {
     // completada_at se envía siempre: las gráficas dependen de ella y no todas las bases
     // de datos tienen el trigger que la fija (si existe, el trigger tiene la última palabra).
     if (c.estado && c.estado !== t.estado) c.completada_at = c.estado === 'completada' ? new Date().toISOString() : null;
+    // Cronómetro: empieza al salir de Pendiente y se detiene al completar (ver iniciadaAlCambiar).
+    if (c.estado) {
+      const ini = iniciadaAlCambiar(t.estado, c.estado, t.iniciada_at);
+      if (ini !== undefined) c.iniciada_at = ini;
+    }
     return { enviar: c, local: {} };
   },
 
@@ -3331,6 +3423,8 @@ const App = {
     Datos.suscribir((evento, nueva, anterior, conectado) => this._alCambiar(evento, nueva, anterior, conectado));
     clearInterval(this._temporizadorRefresco);
     this._temporizadorRefresco = setInterval(() => this.refrescar(), CONFIG.SEGUNDOS_REFRESCO * 1000);
+    clearInterval(this._temporizadorCrono);
+    this._temporizadorCrono = setInterval(() => this._actualizarCronometros(), 30000);
     const desdeHash = location.hash.replace('#/', '');
     this.ir(Vistas[desdeHash] ? desdeHash : 'inicio');
     Avisos.iniciar();
@@ -3403,9 +3497,18 @@ const App = {
     if (!this.estado.errorCarga) UI.toast('Datos actualizados', { tipo: 'ok' });
   },
 
+  // Avanza los cronómetros visibles sin repintar la vista.
+  _actualizarCronometros() {
+    const ahora = Date.now();
+    document.querySelectorAll('[data-crono]').forEach(el => {
+      el.textContent = '⏱ ' + Util.fmtDuracion(ahora - Date.parse(el.dataset.crono));
+    });
+  },
+
   async salir() {
     Avisos.detener();
     clearInterval(this._temporizadorRefresco);
+    clearInterval(this._temporizadorCrono);
     await Datos.logout();
     this.estado.perfil = null;
     this.estado.tareas = [];
