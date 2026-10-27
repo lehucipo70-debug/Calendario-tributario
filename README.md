@@ -46,6 +46,13 @@ La campana de la barra superior activa los avisos del navegador (cada persona lo
 
 Los avisos llegan mientras la página esté abierta, aunque esté en otra pestaña o minimizada. Si se bloquearon, se vuelven a permitir desde el candado junto a la dirección de la página.
 
+Si no llegan avisos:
+
+- La campana debe estar activa (sin la raya). Al entrar, la página invita a activarla si aún no se ha dado permiso.
+- **Windows**: *Configuración → Sistema → Notificaciones* debe tener activado el navegador (Chrome o Edge), y *No molestar* / *Asistente de concentración* debe estar apagado.
+- **macOS**: *Ajustes del Sistema → Notificaciones →* el navegador debe tener los avisos permitidos.
+- En celulares (Chrome para Android, Safari en iPhone) estos avisos no funcionan: son para el navegador de escritorio.
+
 ## Notas personales
 
 La sección **Notas** es un bloc de notas privado: cada persona ve solo las suyas (carpetas Todas, Favoritas, Recientes, Archivadas y Papelera; fijar, favorita, color, buscador y guardado automático).
@@ -73,3 +80,17 @@ No hace falta cambiar Supabase: los campos se guardan en la columna `datos` (jso
 ## Modo demo
 
 Abre la página con `?demo` al final de la dirección para probarla con datos de ejemplo guardados solo en el navegador.
+
+## Actualización de los datos
+
+Los cambios de otras personas llegan al momento por el tiempo real de Supabase (la tabla `tareas` debe estar en la publicación `supabase_realtime`: **Database → Publications**). Además, la página se resincroniza sola cada `SEGUNDOS_REFRESCO` segundos, al volver a la pestaña y al reconectarse, para recuperar los cambios que el tiempo real no entrega (por ejemplo, mientras el equipo estuvo suspendido).
+
+## Cronómetro de ejecución
+
+Cada tarea mide su **tiempo de ejecución**: empieza a contar cuando sale de *Pendiente* (por ejemplo, pasa a *En progreso*) y se detiene al marcarla *Completada*. Se ve en las tarjetas y en la lista (⏱, en azul mientras corre), en la ventana de la tarea, en la columna **Ejecución prom.** de Rendimiento y en el Excel exportado.
+
+- Si vuelve a *Pendiente*, el cronómetro se reinicia.
+- Si se reabre una completada, sigue contando desde el inicio original.
+- Si pasa de *Pendiente* a *Completada* directo, no hay tiempo medido.
+
+**Activarlo en Supabase (una vez):** ejecuta `supabase/cronometro.sql` en el **SQL Editor**. Crea la columna `iniciada_at`, el trigger que la mantiene y calcula el inicio de las tareas que ya estaban en curso (con el seguimiento o, si no hay registro, su fecha de creación). Mientras no se ejecute, la página funciona igual pero sin cronómetro; en **Administración → Estado del sistema** se ve si está activo.
