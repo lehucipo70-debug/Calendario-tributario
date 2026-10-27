@@ -27,7 +27,7 @@
   --azul: #2563eb; --azul-suave: #e8f0fe;
 
   /* Series de gráficas (validadas para daltonismo, orden fijo) */
-  --serie-ok: #008300; --serie-tarde: #eda100; --serie-curso: #2a78d6; --serie-vencida: #e34948;
+  --serie-ok: #008300; --serie-tarde: #eda100; --serie-pendiente: #71717a; --serie-curso: #2a78d6; --serie-vencida: #e34948;
   --nivel-excelente: #008300; --nivel-bueno: #2a78d6; --nivel-regular: #eda100; --nivel-bajo: #e34948; --nivel-na: #c4c4cc;
 
   /* Prioridades */
@@ -39,6 +39,14 @@
   --sombra: 0 1px 2px rgba(9,9,11,.04); --sombra-2: 0 12px 30px rgba(9,9,11,.08); --sombra-3: 0 24px 60px rgba(9,9,11,.18);
   --r: 20px; --r-lg: 28px;
   --alto-barra: 68px;
+  /* Vidrio de las tablas (tema claro): esmerilado blanco con color detrás */
+  --vidrio-borde: rgba(255,255,255,.9); --vidrio-anim: none;
+  --vidrio-sombra: 0 0 0 1px rgba(9,9,11,.06), 0 24px 60px -24px rgba(9,9,11,.25);
+  --vidrio-fondo: rgba(255,255,255,.35); --vidrio-filo: #ffffff; --vidrio-reflejo: rgba(255,255,255,.5);
+  --vidrio-luz-a: rgba(167,139,250,.5); --vidrio-luz-b: rgba(103,232,249,.42); --vidrio-luz-c: rgba(244,114,182,.32);
+  --vidrio-texto-cab: #3f3f46; --vidrio-fila: rgba(255,255,255,.55); --vidrio-fila-borde: rgba(255,255,255,.9);
+  --vidrio-hover: rgba(255,255,255,.85); --vidrio-brillo-barra: none;
+  --nc-violeta: #7c3aed; --nc-amarillo: #d97706; --nc-azul: #2563eb; --nc-verde: #16a34a; --nc-rosa: #db2777; --nc-gris: #71717a;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -52,10 +60,18 @@
     --ambar: #fbbf24; --ambar-suave: rgba(251,191,36,.12);
     --rojo: #fb7185; --rojo-suave: rgba(251,113,133,.13);
     --azul: #93c5fd; --azul-suave: rgba(147,197,253,.13);
-    --serie-ok: #199e70; --serie-tarde: #c98500; --serie-curso: #3987e5; --serie-vencida: #e66767;
+    --serie-ok: #199e70; --serie-tarde: #c98500; --serie-pendiente: #52525b; --serie-curso: #3987e5; --serie-vencida: #e66767;
     --nivel-excelente: #199e70; --nivel-bueno: #3987e5; --nivel-regular: #c98500; --nivel-bajo: #e66767; --nivel-na: #3f3f46;
     --p-urgente: #fb7185; --p-alta: #fb923c; --p-media: #a5b4fc; --p-baja: #8e8e98;
     --sombra: none; --sombra-2: 0 12px 30px rgba(0,0,0,.45); --sombra-3: 0 24px 60px rgba(0,0,0,.65);
+    /* Vidrio de las tablas (tema oscuro): estilo Aurora Glass */
+    --vidrio-borde: rgba(255,255,255,.10); --vidrio-anim: none;
+    --vidrio-sombra: 0 24px 60px rgba(0,0,0,.35);
+    --vidrio-fondo: rgba(255,255,255,.05); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.05);
+    --vidrio-luz-a: rgba(124,58,237,.55); --vidrio-luz-b: rgba(6,182,212,.45); --vidrio-luz-c: rgba(236,72,153,.32);
+    --vidrio-texto-cab: #c7cbe8; --vidrio-fila: rgba(255,255,255,.04); --vidrio-fila-borde: rgba(255,255,255,.07);
+    --vidrio-hover: rgba(255,255,255,.09); --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.5);
+    --nc-violeta: #a78bfa; --nc-amarillo: #fbbf24; --nc-azul: #60a5fa; --nc-verde: #4ade80; --nc-rosa: #f472b6; --nc-gris: #a1a1aa;
   }
 }
 :root[data-theme="dark"] {
@@ -69,10 +85,18 @@
   --ambar: #fbbf24; --ambar-suave: rgba(251,191,36,.12);
   --rojo: #fb7185; --rojo-suave: rgba(251,113,133,.13);
   --azul: #93c5fd; --azul-suave: rgba(147,197,253,.13);
-  --serie-ok: #199e70; --serie-tarde: #c98500; --serie-curso: #3987e5; --serie-vencida: #e66767;
+  --serie-ok: #199e70; --serie-tarde: #c98500; --serie-pendiente: #52525b; --serie-curso: #3987e5; --serie-vencida: #e66767;
   --nivel-excelente: #199e70; --nivel-bueno: #3987e5; --nivel-regular: #c98500; --nivel-bajo: #e66767; --nivel-na: #3f3f46;
   --p-urgente: #fb7185; --p-alta: #fb923c; --p-media: #a5b4fc; --p-baja: #8e8e98;
   --sombra: none; --sombra-2: 0 12px 30px rgba(0,0,0,.45); --sombra-3: 0 24px 60px rgba(0,0,0,.65);
+  /* Vidrio de las tablas (tema oscuro): estilo Aurora Glass */
+  --vidrio-borde: rgba(255,255,255,.10); --vidrio-anim: none;
+  --vidrio-sombra: 0 24px 60px rgba(0,0,0,.35);
+  --vidrio-fondo: rgba(255,255,255,.05); --vidrio-filo: rgba(255,255,255,.08); --vidrio-reflejo: rgba(255,255,255,.05);
+  --vidrio-luz-a: rgba(124,58,237,.55); --vidrio-luz-b: rgba(6,182,212,.45); --vidrio-luz-c: rgba(236,72,153,.32);
+  --vidrio-texto-cab: #c7cbe8; --vidrio-fila: rgba(255,255,255,.04); --vidrio-fila-borde: rgba(255,255,255,.07);
+  --vidrio-hover: rgba(255,255,255,.09); --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.5);
+  --nc-violeta: #a78bfa; --nc-amarillo: #fbbf24; --nc-azul: #60a5fa; --nc-verde: #4ade80; --nc-rosa: #f472b6; --nc-gris: #a1a1aa;
 }
 
 /* ── Base ─────────────────────────────────────────────────────────── */
@@ -96,6 +120,8 @@ kbd { font-family: inherit; font-size: 11px; border: 1px solid var(--borde); bor
 @keyframes brillo { 0% { transform: translateX(-120%); } 60%, 100% { transform: translateX(260%); } }
 @keyframes girar { to { transform: rotate(360deg); } }
 @keyframes trazo { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes deriva { from { transform: translate(-4%, -3%); } to { transform: translate(4%, 3%); } }
+@keyframes flujo { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
 .muted { color: var(--text2); }
@@ -341,6 +367,7 @@ body[data-vista="inicio"] .titulo-vista { position: absolute; width: 1px; height
 /* ── Barra de filtros ─────────────────────────────────────────────── */
 .barra-filtros { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .barra-filtros input[type="search"] { flex: 1; min-width: 200px; max-width: 360px; }
+.filtro-dia { display: inline-flex; gap: 4px; align-items: center; }
 .barra-vista { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 
 /* ── Tablero ──────────────────────────────────────────────────────── */
@@ -367,11 +394,41 @@ body[data-vista="inicio"] .titulo-vista { position: absolute; width: 1px; height
 .tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
 .th-orden { border: none; background: none; font: inherit; text-transform: inherit; letter-spacing: inherit; color: inherit; }
 .th-orden.on { color: var(--acento-texto); }
-.td-titulo { display: flex; align-items: center; gap: 8px; min-width: 260px; }
+.td-titulo { min-width: 260px; }
+/* La celda sigue siendo de tabla (con display:flex sus líneas no coincidían con las demás columnas) */
+.td-titulo-in { display: flex; align-items: center; gap: 8px; }
 .enlace-tarea { border: none; background: none; text-align: left; font-weight: 600; color: var(--text); }
 .enlace-tarea:hover { color: var(--acento-texto); text-decoration: underline; }
 .fila-hecha .enlace-tarea { text-decoration: line-through; color: var(--text2); }
 .fila-vencida td:first-child { box-shadow: inset 3px 0 0 var(--rojo); }
+
+/* ── Tablas con efecto vidrio, estilo Aurora Glass (los valores cambian por tema en los tokens --vidrio-*) ── */
+.vidrio { position: relative; isolation: isolate; padding: 1px; border-radius: calc(var(--r) + 5px); box-shadow: var(--vidrio-sombra); }
+/* Borde fino de 1px (la máscara recorta el centro para que no tiña el vidrio) */
+.vidrio::after { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; border-radius: inherit; padding: 1px;
+  background: var(--vidrio-borde); background-size: 220% 220%; animation: var(--vidrio-anim);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+/* Luces de aurora (violeta, cian y rosa) que se mueven despacio detrás del vidrio */
+.vidrio::before { content: ''; position: absolute; inset: -40px 0; z-index: -1; pointer-events: none; filter: blur(60px);
+  background: radial-gradient(600px 420px at 12% 60px, var(--vidrio-luz-a), transparent 70%), radial-gradient(560px 420px at 88% 260px, var(--vidrio-luz-b), transparent 70%), radial-gradient(480px 360px at 50% 560px, var(--vidrio-luz-c), transparent 70%);
+  animation: deriva 24s ease-in-out infinite alternate; }
+.vidrio-interior { position: relative; border-radius: calc(var(--r) + 4px); overflow: hidden; background: var(--vidrio-fondo);
+  backdrop-filter: blur(24px) saturate(150%); -webkit-backdrop-filter: blur(24px) saturate(150%); box-shadow: inset 0 1px 0 var(--vidrio-filo); }
+.vidrio-interior::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 120px; pointer-events: none; background: linear-gradient(180deg, var(--vidrio-reflejo), transparent); }
+.vidrio-interior > * { position: relative; }
+.vidrio-interior > .panel-cab { padding: 18px 20px 0; }
+.vidrio .tabla-scroll { padding: 2px 14px 12px; }
+/* Cada fila es una pieza de cristal separada */
+.vidrio .tabla { border-collapse: separate; border-spacing: 0 8px; }
+.vidrio .tabla th { background: transparent; border-bottom: 0; color: var(--vidrio-texto-cab); padding: 12px 14px 0; }
+.vidrio .tabla td { background: var(--vidrio-fila); border-top: 1px solid var(--vidrio-fila-borde); border-bottom: 1px solid var(--vidrio-fila-borde); padding: 11px 14px; transition: background .2s; }
+.vidrio .tabla tr:last-child td { border-bottom: 1px solid var(--vidrio-fila-borde); }
+.vidrio .tabla td:first-child { border-left: 1px solid var(--vidrio-fila-borde); border-radius: 16px 0 0 16px; }
+.vidrio .tabla td:last-child { border-right: 1px solid var(--vidrio-fila-borde); border-radius: 0 16px 16px 0; }
+.vidrio .tabla tbody tr:hover td { background: var(--vidrio-hover); }
+.vidrio .barra-progreso { background: color-mix(in srgb, var(--text) 10%, transparent); }
+.vidrio .barra-progreso span { box-shadow: var(--vidrio-brillo-barra); }
 .celda-colab { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
 .sel-estado { padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; border: none; }
 .barra-progreso { width: 90px; height: 6px; background: var(--bg3); border-radius: 6px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 6px; }
@@ -471,6 +528,143 @@ body[data-vista="inicio"] .titulo-vista { position: absolute; width: 1px; height
 .fila-botones { display: flex; gap: 8px; flex-wrap: wrap; }
 .panel > p, .panel > ul { margin-bottom: 10px; }
 .imp-log { font-size: 12px; color: var(--text2); max-height: 200px; overflow-y: auto; line-height: 1.7; }
+
+/* ── Notas (bloc personal) ────────────────────────────────────────── */
+.panel-vidrio { background: var(--vidrio-fondo); border: 1px solid var(--vidrio-fila-borde); border-radius: calc(var(--r) + 4px);
+  backdrop-filter: blur(24px) saturate(150%); -webkit-backdrop-filter: blur(24px) saturate(150%); box-shadow: inset 0 1px 0 var(--vidrio-filo), var(--vidrio-sombra); }
+.notas { position: relative; isolation: isolate; display: grid; grid-template-columns: 220px minmax(260px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; align-content: start; min-height: calc(100vh - 200px); }
+/* Luces de aurora detrás del bloc (las mismas de las tablas de vidrio) */
+.notas::before { content: ''; position: absolute; inset: -20px 0; z-index: -1; pointer-events: none; filter: blur(60px);
+  background: radial-gradient(520px 420px at 8% 30%, var(--vidrio-luz-a), transparent 70%), radial-gradient(560px 460px at 92% 40%, var(--vidrio-luz-b), transparent 70%), radial-gradient(480px 360px at 50% 100%, var(--vidrio-luz-c), transparent 70%);
+  animation: deriva 24s ease-in-out infinite alternate; }
+.notas-carpetas { display: flex; flex-direction: column; gap: 12px; position: sticky; top: calc(var(--alto-barra) + 16px); }
+.notas-nueva { padding: 12px; }
+.notas-nueva svg { width: 16px; height: 16px; }
+.notas-menu { padding: 10px; display: flex; flex-direction: column; gap: 2px; }
+.notas-etiqueta { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text2); padding: 6px 10px; }
+.notas-carpeta { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 0; border-radius: 12px; background: none; color: var(--text2); font-weight: 500; text-align: left; }
+.notas-carpeta span:first-of-type { flex: 1; }
+.notas-carpeta:hover { background: var(--vidrio-fila); color: var(--text); }
+.notas-carpeta.on { background: var(--vidrio-hover); color: var(--text); box-shadow: inset 0 0 0 1px var(--vidrio-fila-borde); }
+.notas-num { font-size: 12px; color: var(--text2); }
+.notas-privado { display: flex; align-items: center; gap: 8px; padding: 12px 14px; font-size: 12px; color: var(--text2); border-radius: 18px; }
+.notas-privado svg { flex-shrink: 0; }
+.notas-lista { padding: 14px; display: flex; flex-direction: column; gap: 10px; max-height: calc(100vh - var(--alto-barra) - 120px); position: sticky; top: calc(var(--alto-barra) + 16px); }
+.notas-busqueda { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 12px; background: var(--vidrio-fila); border: 1px solid var(--vidrio-fila-borde); color: var(--text2); }
+.notas-busqueda input { flex: 1; border: 0; background: transparent; padding: 10px 0; box-shadow: none; }
+.notas-titulo-lista { font-size: 14px; padding: 2px 4px; }
+.notas-titulo-lista span { font-family: Inter, sans-serif; font-weight: 500; color: var(--text2); }
+.notas-tarjetas { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding: 2px; margin: -2px; }
+.nota-tarjeta { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 12px 14px; border-radius: 16px; text-align: left; color: var(--text);
+  background: var(--nota-fondo, var(--vidrio-fila)); border: 1px solid var(--vidrio-fila-borde); transition: transform .15s ease, background .15s ease, border-color .15s ease; }
+.nota-tarjeta:hover { transform: translateY(-2px); background: var(--vidrio-hover); }
+.nota-tarjeta.on { border-color: var(--nc); box-shadow: 0 0 0 1px color-mix(in srgb, var(--nc) 45%, transparent); }
+.nota-tarjeta-cab { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.nota-tarjeta-cab strong { flex: 1; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nota-punto { width: 10px; height: 10px; border-radius: 50%; background: var(--nc); box-shadow: 0 0 10px var(--nc); flex-shrink: 0; }
+.nota-marcas { display: inline-flex; gap: 4px; }
+.nota-marcas svg { width: 14px; height: 14px; }
+.nota-marca-fija { color: var(--nc-violeta); fill: currentColor; }
+.nota-marca-fav { color: var(--ambar); fill: currentColor; }
+.nota-resumen { font-size: 12.5px; color: var(--text2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.nota-fecha { font-size: 11.5px; color: var(--text3); }
+/* Colores de nota: punto y, en tema claro, un tinte pastel en la tarjeta */
+.nc-violeta { --nc: var(--nc-violeta); } .nc-amarillo { --nc: var(--nc-amarillo); } .nc-azul { --nc: var(--nc-azul); }
+.nc-verde { --nc: var(--nc-verde); } .nc-rosa { --nc: var(--nc-rosa); } .nc-gris { --nc: var(--nc-gris); }
+:root[data-theme="light"] .nota-tarjeta { --nota-fondo: color-mix(in srgb, var(--nc) 16%, rgba(255,255,255,.7)); }
+.notas-editor { min-height: calc(100vh - var(--alto-barra) - 120px); display: flex; flex-direction: column; overflow: hidden; }
+.nota-cab { display: flex; align-items: center; gap: 8px; padding: 16px 18px 10px; }
+.nota-volver { display: none; font-size: 22px; }
+.nota-titulo { flex: 1; min-width: 0; border: 0; background: transparent; box-shadow: none !important; padding: 4px 2px; font-family: Unbounded, Inter, sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -.6px; color: var(--text); }
+.nota-titulo::placeholder { color: var(--text3); }
+.nota-titulo:focus-visible { outline: none; }
+.nota-cab .btn-icono { padding: 0; }
+.nota-cab .btn-icono.nota-on-fija { color: var(--nc-violeta); border-color: color-mix(in srgb, var(--nc-violeta) 50%, var(--borde)); }
+.nota-cab .btn-icono.nota-on-fav { color: var(--ambar); border-color: color-mix(in srgb, var(--ambar) 50%, var(--borde)); }
+.nota-herramientas { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 0 14px; padding: 6px 10px; border-radius: 14px; background: var(--vidrio-fila); border: 1px solid var(--vidrio-fila-borde); }
+.nota-herramientas .btn-icono { width: 32px; height: 32px; padding: 0; border-color: transparent; background: transparent; }
+.nota-herramientas .btn-icono:hover { background: var(--vidrio-hover); }
+.nota-herramientas .btn-icono svg { width: 16px; height: 16px; flex-shrink: 0; }
+.nota-sep { width: 1px; height: 22px; background: var(--vidrio-fila-borde); margin: 0 6px; }
+.nota-color { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; background: var(--nc); padding: 0; }
+.nota-color.on { border-color: var(--text); }
+.nota-aviso { margin: 0 18px; padding: 10px 14px; border-radius: 12px; background: var(--ambar-suave); color: var(--ambar); font-size: 13px; }
+.nota-cuerpo { flex: 1; padding: 20px 26px 32px; max-width: 820px; font-size: 15px; line-height: 1.7; outline: none; overflow-wrap: anywhere; }
+.nota-cuerpo:empty::before { content: attr(data-placeholder); color: var(--text3); }
+.nota-cuerpo h2 { font-size: 18px; margin: 14px 0 6px; }
+.nota-cuerpo ul, .nota-cuerpo ol { padding-left: 24px; margin: 4px 0; }
+.nota-cuerpo a { color: var(--acento-texto); }
+.nota-cuerpo ul.casillas { list-style: none; padding-left: 4px; }
+.nota-cuerpo ul.casillas > li { position: relative; padding-left: 28px; }
+.nota-cuerpo ul.casillas > li::before { content: ''; position: absolute; left: 0; top: .32em; width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--text3); cursor: pointer; }
+.nota-cuerpo ul.casillas > li[data-hecho]::before { background: var(--nc-violeta); border-color: var(--nc-violeta); box-shadow: inset 0 0 0 3px var(--bg2); }
+.nota-cuerpo ul.casillas > li[data-hecho] { text-decoration: line-through; color: var(--text3); }
+.notas-vacio { margin: auto; }
+.notas-vacio svg { color: var(--text3); margin-bottom: 6px; }
+@media (max-width: 1100px) { .notas { grid-template-columns: minmax(240px, 320px) minmax(0, 1fr); } .notas-carpetas { grid-column: 1 / -1; position: static; flex-direction: row; flex-wrap: wrap; align-items: stretch; }
+  .notas-menu { flex-direction: row; flex-wrap: wrap; flex: 1; } .notas-etiqueta, .notas-privado { display: none; } .notas-nueva { width: auto; align-self: center; } }
+@media (max-width: 760px) {
+  .notas { grid-template-columns: minmax(0, 1fr); }
+  .notas-carpetas { flex-direction: column; min-width: 0; }
+  .notas-nueva { width: 100%; align-self: stretch; }
+  .notas-menu { flex: none; width: 100%; flex-wrap: nowrap; overflow-x: auto; padding: 6px; min-width: 0; }
+  .notas-carpeta { white-space: nowrap; flex-shrink: 0; }
+  .notas-lista { position: static; max-height: none; }
+  .nota-cab { flex-wrap: wrap; }
+  .nota-titulo { order: 5; flex-basis: 100%; font-size: 20px; }
+  .notas.con-nota .notas-carpetas, .notas.con-nota .notas-lista { display: none; }
+  .notas:not(.con-nota) .notas-editor { display: none; }
+  .nota-volver { display: inline-flex; }
+  .notas-editor { min-height: 70vh; }
+  .nota-cuerpo { padding: 16px 18px 28px; }
+}
+
+/* ── Clientes (directorio) ───────────────────────────────────────── */
+.cli-letras { display: flex; gap: 4px; flex-wrap: wrap; margin: -4px 0 14px; }
+.cli-letras button { border: 0; background: var(--bg3); color: var(--text2); border-radius: 8px; min-width: 28px; height: 28px; padding: 0 8px; font-size: 12px; font-weight: 600; }
+.cli-letras button:hover { color: var(--text); }
+.cli-letras button.on { background: var(--text); color: var(--bg); }
+.cli-lista { display: flex; flex-direction: column; gap: 8px; }
+.cli-item { background: var(--bg2); border: 1px solid var(--borde); border-radius: 16px; overflow: hidden; }
+.cli-item.abierto { border-color: var(--vidrio-fila-borde); box-shadow: var(--sombra); }
+.cli-cab { display: flex; align-items: center; gap: 14px; width: 100%; padding: 13px 18px; border: 0; background: none; color: inherit; text-align: left; }
+.cli-cab:hover { background: var(--vidrio-fila); }
+.cli-ini { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-weight: 700; font-size: 14px; background: var(--bg3); flex-shrink: 0; }
+.cli-nom { flex: 1; min-width: 0; }
+.cli-nom b { display: block; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cli-nom span { font-size: 12px; color: var(--text2); }
+.cli-flecha { color: var(--text2); transition: transform .2s ease; }
+.abierto .cli-flecha { transform: rotate(90deg); }
+.cli-cuerpo { border-top: 1px solid var(--borde); padding: 18px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 22px; }
+.cli-cuerpo h5 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text2); margin: 0 0 8px; }
+.cli-cuerpo h5:not(:first-child) { margin-top: 18px; }
+.cli-dato { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 0; font-size: 13px; border-bottom: 1px dashed var(--borde); min-height: 36px; }
+.cli-dato > span:first-child { color: var(--text2); flex-shrink: 0; }
+.cli-valor { display: inline-flex; align-items: center; gap: 4px; min-width: 0; text-align: right; overflow-wrap: anywhere; }
+.cli-valor a { color: inherit; }
+.cli-clave { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .5px; }
+.cli-codigo { background: var(--text); color: var(--bg); border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 700; }
+.cli-acciones { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+.cli-form { display: flex; flex-direction: column; gap: 10px; }
+.cli-form label, .cli-venc-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text2); }
+.cli-venc { border: 1px solid var(--borde); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+.cli-venc.editando { border-color: var(--text2); }
+.cli-venc-cab { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; flex-wrap: wrap; }
+.cli-venc-barra { height: 6px; border-radius: 9px; background: var(--bg3); margin-top: 10px; overflow: hidden; }
+.cli-venc-barra span { display: block; height: 100%; border-radius: 9px; background: var(--verde); }
+.gv-pronto .cli-venc-barra span { background: var(--ambar); }
+.gv-vencido .cli-venc-barra span { background: var(--rojo); }
+.cli-venc-fechas { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--text2); margin-top: 8px; }
+.cli-venc-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; margin-top: 10px; }
+.cli-venc-form .cli-acciones { margin-top: 0; }
+.cli-versiones { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cli-version { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--borde); border-radius: 12px; font-size: 13px; }
+@media (max-width: 860px) {
+  .cli-cuerpo { grid-template-columns: minmax(0, 1fr); padding: 14px; }
+  .cli-venc-form { grid-template-columns: 1fr 1fr; }
+  .cli-venc-form .cli-acciones { grid-column: 1 / -1; }
+  .cli-cab { padding: 12px 14px; gap: 10px; }
+}
 
 /* ── Modal ────────────────────────────────────────────────────────── */
 .capa-modal { position: fixed; inset: 0; z-index: 100; background: rgba(9,9,11,.6); backdrop-filter: blur(6px); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px 16px; overflow-y: auto; }
@@ -628,6 +822,8 @@ const CONFIG = {
     tareas: 'tareas',
     actividad: 'tarea_actividad',
     perfiles: 'perfiles',
+    notas: 'notas',
+    clientes: 'clientes',
   },
 
   // ── Microsoft Teams (opcional) ────────────────────────────────────
@@ -903,9 +1099,12 @@ const Metricas = (() => {
     }
   }
 
-  // Fecha con la que una tarea "pertenece" a un periodo: su vencimiento o, si no tiene, su creación.
+  // Fecha con la que una tarea "pertenece" a un periodo: si está completada, el día en que se
+  // completó (entregar antes de tiempo cuenta en el mes en que se hizo); si no, su vencimiento
+  // o, sin fecha límite, su creación.
   function fechaReferencia(t) {
-    return t.fecha_vencimiento || U.fechaDeTimestamp(t.created_at);
+    const completada = estaCompletada(t) ? U.fechaDeTimestamp(t.completada_at) : null;
+    return completada || t.fecha_vencimiento || U.fechaDeTimestamp(t.created_at);
   }
 
   function enRango(t, rango) {
@@ -921,7 +1120,7 @@ const Metricas = (() => {
   }
 
   function calcular(tareas, hoy) {
-    const r = { total: tareas.length, completadas: 0, aTiempo: 0, tarde: 0, conFecha: 0, vencidas: 0, enCurso: 0, porVencer: 0, diasTotales: 0, diasMuestras: 0, ejecucionTotal: 0, ejecucionMuestras: 0 };
+    const r = { total: tareas.length, completadas: 0, aTiempo: 0, tarde: 0, conFecha: 0, vencidas: 0, pendientes: 0, enCurso: 0, porVencer: 0, diasTotales: 0, diasMuestras: 0, ejecucionTotal: 0, ejecucionMuestras: 0 };
     for (const t of tareas) {
       const est = estadoEfectivo(t, hoy);
       if (est === 'completada') {
@@ -935,7 +1134,8 @@ const Metricas = (() => {
       } else if (est === 'vencida') {
         r.vencidas++;
       } else {
-        r.enCurso++;
+        // Abiertas sin vencer: "pendiente" aún no se empieza; en progreso y en revisión sí están en curso.
+        est === 'pendiente' ? r.pendientes++ : r.enCurso++;
         if (porVencer(t, hoy)) r.porVencer++;
       }
     }
@@ -970,7 +1170,7 @@ const Metricas = (() => {
   }
 
   function resumenEquipo(filas) {
-    const s = { total: 0, completadas: 0, aTiempo: 0, conFecha: 0, vencidas: 0, enCurso: 0, porVencer: 0 };
+    const s = { total: 0, completadas: 0, aTiempo: 0, conFecha: 0, vencidas: 0, pendientes: 0, enCurso: 0, porVencer: 0 };
     for (const f of filas) for (const k in s) s[k] += f[k];
     const evaluables = s.completadas + s.vencidas;
     s.cumplimiento = evaluables ? s.completadas / evaluables : null;
@@ -1075,6 +1275,16 @@ class ErrorDatos extends Error {
     this.faltaEsquema = faltaEsquema;
   }
 }
+
+// Filtro por día de la barra de filtros: qué fecha de la tarea se compara con el día elegido.
+// Las fechas con hora se pasan al día local (Colombia), no al de UTC.
+const FILTRO_DIA_SEGUN = [['completada', 'Completada ese día'], ['creada', 'Creada ese día'], ['modificada', 'Modificada ese día'], ['vence', 'Vence ese día']];
+const FILTRO_DIA_FECHA = {
+  completada: t => Util.fechaDeTimestamp(t.completada_at),
+  creada: t => Util.fechaDeTimestamp(t.created_at),
+  modificada: t => Util.fechaDeTimestamp(t.updated_at),
+  vence: t => t.fecha_vencimiento,
+};
 
 const CAMPOS_TAREA = ['titulo', 'descripcion', 'asignado_a', 'asignado_nombre', 'empresa', 'categoria', 'prioridad', 'estado',
   'fecha_inicio', 'fecha_vencimiento', 'progreso', 'checklist', 'etiquetas', 'completada_at', 'iniciada_at', 'origen_ref'];
@@ -1245,6 +1455,58 @@ class SupabaseStore {
     return data;
   }
 
+  // ── Notas personales (RLS: cada usuario solo ve y escribe las suyas) ──
+  async notas() {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.notas).select('*').order('updated_at', { ascending: false });
+    if (error) throw this._error(error, 'leer tus notas');
+    return data || [];
+  }
+
+  async guardarNota(n) {
+    const fila = { id: n.id, titulo: n.titulo, contenido: n.contenido, color: n.color, fijada: n.fijada, favorita: n.favorita, archivada: n.archivada, eliminada_at: n.eliminada_at, updated_at: n.updated_at };
+    const { error } = await this.sb.from(CONFIG.TABLAS.notas).upsert(fila);
+    if (error) throw this._error(error, 'guardar la nota');
+  }
+
+  async borrarNota(id) {
+    const { error } = await this.sb.from(CONFIG.TABLAS.notas).delete().eq('id', id);
+    if (error) throw this._error(error, 'borrar la nota');
+  }
+
+  // ── Clientes (todos los usuarios ven y editan; solo administradores borran) ──
+  async clientes() {
+    const todos = [];
+    const PAGINA = 1000;
+    for (let desde = 0; ; desde += PAGINA) {
+      const { data, error } = await this.sb.from(CONFIG.TABLAS.clientes).select('*').order('nombre').order('id').range(desde, desde + PAGINA - 1);
+      if (error) throw this._error(error, 'leer los clientes');
+      todos.push(...(data || []));
+      if (!data || data.length < PAGINA) return todos;
+    }
+  }
+
+  async guardarCliente(g) {
+    // El historial de versiones lo arma el trigger de supabase/clientes.sql; aquí no se envía.
+    const fila = { id: g.id, nombre: g.nombre, nit: g.nit || null, datos: g.datos, vencimientos: g.vencimientos };
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.clientes).upsert(fila).select().single();
+    if (error) throw this._error(error, 'guardar el cliente');
+    return data;
+  }
+
+  async borrarCliente(id) {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.clientes).delete().eq('id', id).select('id');
+    if (error) throw this._error(error, 'eliminar el cliente');
+    if (!data?.length) throw new ErrorDatos('Solo un administrador puede eliminar clientes.');
+  }
+
+  async importarClientes(lista) {
+    for (let i = 0; i < lista.length; i += 200) {
+      const lote = lista.slice(i, i + 200).map(g => ({ id: g.id, nombre: g.nombre, nit: g.nit || null, datos: g.datos, vencimientos: g.vencimientos }));
+      const { error } = await this.sb.from(CONFIG.TABLAS.clientes).upsert(lote, { onConflict: 'id', ignoreDuplicates: true });
+      if (error) throw this._error(error, 'importar los clientes');
+    }
+  }
+
   async importarTareas(lista, alAvanzar) {
     let hechas = 0;
     for (let i = 0; i < lista.length; i += 500) {
@@ -1352,6 +1614,52 @@ class LocalStore {
     return a;
   }
 
+  async notas() { return (this.db.notas || []).filter(n => n.usuario_id === this.perfil?.id).map(n => ({ ...n })); }
+
+  async guardarNota(n) {
+    this.db.notas ||= [];
+    const i = this.db.notas.findIndex(x => x.id === n.id);
+    const fila = { ...n, usuario_id: this.perfil?.id };
+    if (i >= 0) this.db.notas[i] = fila; else this.db.notas.push(fila);
+    this._guardar();
+  }
+
+  async borrarNota(id) { this.db.notas = (this.db.notas || []).filter(n => n.id !== id); this._guardar(); }
+
+  async clientes() {
+    if (!this.db.clientes) { this.db.clientes = DatosDemo.clientes(); this._guardar(); }
+    return structuredClone(this.db.clientes);
+  }
+
+  async guardarCliente(g) {
+    this.db.clientes ||= [];
+    const i = this.db.clientes.findIndex(x => x.id === g.id);
+    const fila = structuredClone({ id: g.id, nombre: g.nombre, nit: g.nit, datos: g.datos, vencimientos: g.vencimientos,
+      updated_at: new Date().toISOString(), actualizado_nombre: this.perfil?.nombre || null, historial: [] });
+    // Igual que el trigger de la base de datos: la versión anterior pasa al historial.
+    const ant = this.db.clientes[i];
+    if (ant) {
+      const v = { nombre: ant.nombre, nit: ant.nit, datos: ant.datos, vencimientos: ant.vencimientos, fecha: ant.updated_at || null, autor: ant.actualizado_nombre || null };
+      fila.historial = [v, ...(ant.historial || [])].slice(0, CLIENTE_VERSIONES);
+    }
+    if (i >= 0) this.db.clientes[i] = fila; else this.db.clientes.push(fila);
+    this._guardar();
+    return structuredClone(fila);
+  }
+
+  async borrarCliente(id) {
+    if (!Permisos.esAdmin()) throw new ErrorDatos('Solo un administrador puede eliminar clientes.');
+    this.db.clientes = (this.db.clientes || []).filter(g => g.id !== id);
+    this._guardar();
+  }
+
+  async importarClientes(lista) {
+    this.db.clientes ||= [];
+    const ids = new Set(this.db.clientes.map(g => g.id));
+    for (const g of lista) if (!ids.has(g.id)) this.db.clientes.push(structuredClone(g));
+    this._guardar();
+  }
+
   async importarTareas(lista, alAvanzar) {
     const refs = new Set(this.db.tareas.map(t => t.origen_ref).filter(Boolean));
     let n = 0;
@@ -1452,6 +1760,23 @@ const DatosDemo = {
       t.iniciada_at = new Date(creada < fin ? Math.max(creada, ini) : ini).toISOString();
     }
     return { colaboradores, tareas, actividad: [] };
+  },
+
+  clientes() {
+    const d = n => Util.sumarDias(Util.hoyISO(), n);
+    const g = (id, nombre, nit, codigo, lechera, correo, venc) => ({
+      id, nombre, nit,
+      datos: { lechera_codigo: codigo, lechera_nombre: lechera, correo, clave_correo: 'Demo' + nit.slice(-4) + '*', clave_dian: 'Dian' + nit.slice(-4) + '*' },
+      vencimientos: Object.fromEntries(Object.entries(venc).map(([k, [ini, fin]]) => [k, { inicio: ini === null ? null : d(ini), fin: d(fin) }])),
+    });
+    return [
+      g('g-demo-1', 'Agropecuaria La Esperanza', '900775321', '4008', 'Lácteos Betania', 'esperanza@demo.co', { certificado: [-200, 165], resolucion: [-300, 430], soporte: [-100, 265] }),
+      g('g-demo-2', 'Benicio Mazo García', '70194642', '4642', 'Colanta', 'benicio@demo.co', { certificado: [-400, -35], resolucion: [-100, 200], soporte: [-50, 315] }),
+      g('g-demo-3', 'Carlos Mario Zapata Mesa', '70196888', '6051', 'Colanta', 'carlos@demo.co', { certificado: [-30, 335], resolucion: [-200, 165], soporte: [-357, 8] }),
+      g('g-demo-4', 'Inversiones El Roble SAS', '901280555', '', 'Auralac', 'roble@demo.co', { certificado: [-10, 355], resolucion: [-730, -70] }),
+      g('g-demo-5', 'Jorge Restrepo Gil', '71234567', '8342', 'Lácteos Betania', 'jorge@demo.co', { certificado: [-640, -270], resolucion: [-760, -30], soporte: [-332, 33] }),
+      g('g-demo-6', 'Luz Dary Henao Tobón', '39441902', '1749', 'Alquería', 'luzdary@demo.co', { certificado: [null, 500] }),
+    ];
   },
 };
 
@@ -1606,8 +1931,31 @@ const Avisos = {
     try { localStorage.setItem(this.CLAVE_VISTOS, JSON.stringify(vistos)); } catch { /* sin almacenamiento */ }
   },
 
-  // Cambio en tiempo real hecho por otra persona: ¿me asignaron una tarea?
+  // Cambio en tiempo real hecho por otra persona.
   alCambiarRemoto(evento, nueva, previa) {
+    this._avisarAsignacion(evento, nueva, previa);
+    this._avisarActividad(evento, nueva, previa);
+  },
+
+  // Administradores (y quien creó la tarea) se enteran cuando un colaborador crea una tarea o le
+  // cambia el estado. Los cambios propios no avisan: la copia local ya trae el estado nuevo
+  // antes de que llegue el eco en tiempo real.
+  _avisarActividad(evento, nueva, previa) {
+    if (!nueva || !Permisos.uid || nueva.asignado_a === Permisos.uid) return;
+    if (!Permisos.esAdmin() && nueva.creado_por !== Permisos.uid) return;
+    const quien = App.colaboradorDe(nueva)?.nombre || 'Un colaborador';
+    const detalle = `${nueva.titulo}${nueva.empresa ? ' · ' + nueva.empresa : ''}`;
+    const estado = id => ESTADOS.find(e => e.id === id)?.label || id;
+    if (evento === 'INSERT' && !previa && nueva.creado_por !== Permisos.uid) {
+      this.mostrar(`🆕 ${quien} tiene una tarea nueva`, detalle, { tag: 'nueva-' + nueva.id, tareaId: nueva.id });
+    } else if (evento === 'UPDATE' && previa && previa.estado !== nueva.estado) {
+      const titulo = nueva.estado === 'completada' ? `✅ ${quien} completó una tarea` : `🔄 ${quien} actualizó una tarea`;
+      this.mostrar(titulo, `${detalle}\n${estado(previa.estado)} → ${estado(nueva.estado)}`, { tag: 'estado-' + nueva.id, tareaId: nueva.id });
+    }
+  },
+
+  // ¿Me asignaron una tarea?
+  _avisarAsignacion(evento, nueva, previa) {
     if (!nueva || !Permisos.uid || nueva.asignado_a !== Permisos.uid) return;
     if (previa?.asignado_a === Permisos.uid) return;          // ya era mía (o el cambio lo hice yo)
     if (evento === 'INSERT' && nueva.creado_por === Permisos.uid) return;
@@ -1742,7 +2090,7 @@ const UI = {
         ${opciones.map(([v, l]) => `<option value="${Util.esc(v)}" ${f[campo] === v ? 'selected' : ''}>${Util.esc(l)}</option>`).join('')}
       </select>`;
     const colabs = App.estado.colaboradores.map(c => [c.id, c.nombre]);
-    const activos = ['texto', 'colaborador', 'estado', 'prioridad', 'categoria'].some(k => f[k]);
+    const activos = ['texto', 'colaborador', 'estado', 'prioridad', 'categoria', 'dia'].some(k => f[k]);
     return `<div class="barra-filtros">
       ${Permisos.verEquipo() ? `<div class="segmentado" role="group" aria-label="Alcance">
         <button class="${f.alcance === 'mias' ? 'on' : ''}" data-accion="alcance" data-valor="mias">Mis tareas</button>
@@ -1753,6 +2101,12 @@ const UI = {
       ${sel('estado', 'Estado', [...ESTADOS.map(e => [e.id, e.label]), ['vencida', 'Vencida']])}
       ${sel('prioridad', 'Prioridad', PRIORIDADES.map(p => [p.id, p.label]))}
       ${sel('categoria', 'Categoría', App.categorias().map(c => [c, c]))}
+      <span class="filtro-dia">
+        <input type="date" data-filtro="dia" value="${Util.esc(f.dia)}" aria-label="Día" title="Filtrar por día">
+        <select data-filtro="diaSegun" aria-label="Fecha que se filtra" title="Qué fecha de la tarea se compara con el día">
+          ${FILTRO_DIA_SEGUN.map(([v, l]) => `<option value="${v}" ${f.diaSegun === v ? 'selected' : ''}>${l}</option>`).join('')}
+        </select>
+      </span>
       ${activos ? '<button class="btn btn-sm" data-accion="limpiar-filtros">✕ Limpiar</button>' : ''}
     </div>`;
   },
@@ -1960,6 +2314,8 @@ Vistas.tablero = {
   render() {
     const { campo, cols } = this.columnas();
     const tareas = App.tareasVisibles();
+    // Completadas archivadas: la columna solo muestra cuántas hay y cómo verlas.
+    const archivadas = campo === 'estado' && !App.estado.filtros.estado ? App.tareasVisibles({ estado: 'completada' }).length : 0;
     const orden = (a, b) => (a.fecha_vencimiento || '9999').localeCompare(b.fecha_vencimiento || '9999')
       || PRIORIDADES.findIndex(p => p.id === a.prioridad) - PRIORIDADES.findIndex(p => p.id === b.prioridad);
     const ag = App.estado.tablero.agrupar;
@@ -1973,11 +2329,13 @@ Vistas.tablero = {
       return `<section class="columna ${col.cls || ''}" data-soltar="${campo}" data-valor="${col.valor}" aria-label="${Util.esc(col.titulo.replace(/<[^>]+>/g, ''))}">
         <header class="columna-cab">
           ${col.avatar ? UI.avatar(col.avatar, 22) : ''}
-          <h3>${col.titulo}</h3><span class="contador">${lista.length}</span>
+          <h3>${col.titulo}</h3><span class="contador">${col.valor === 'completada' && archivadas ? archivadas : lista.length}</span>
           <button class="btn-icono btn-sm" data-accion="nueva-tarea" ${datoNueva}="${col.valor}" title="Agregar tarea aquí" aria-label="Agregar tarea">＋</button>
         </header>
         <div class="columna-cuerpo">
-          ${mostradas.map(t => UI.tarjeta(t)).join('') || '<p class="columna-vacia">Suelta tareas aquí</p>'}
+          ${mostradas.map(t => UI.tarjeta(t)).join('') || (col.valor === 'completada' && archivadas
+            ? `<p class="columna-vacia">Suelta tareas aquí para archivarlas<br><button class="btn btn-sm" data-accion="ver-completadas">Ver ${archivadas} completada${archivadas === 1 ? '' : 's'}</button></p>`
+            : '<p class="columna-vacia">Suelta tareas aquí</p>')}
           ${recortar ? `<p class="muted pad centrado">Mostrando las 30 más recientes de ${lista.length}</p>` : ''}
         </div>
       </section>`;
@@ -2053,11 +2411,11 @@ Vistas.lista = {
       const puede = Permisos.editarTarea(t);
       const c = App.colaboradorDe(t);
       return `<tr class="fila ${ef === 'vencida' ? 'fila-vencida' : ''} ${t.estado === 'completada' ? 'fila-hecha' : ''}">
-        <td class="td-titulo">
+        <td class="td-titulo"><div class="td-titulo-in">
           ${puede ? `<button class="check ${t.estado === 'completada' ? 'on' : ''}" data-accion="completar" data-id="${t.id}" aria-label="Completar">✓</button>` : ''}
           <button class="enlace-tarea" data-accion="abrir-tarea" data-id="${t.id}">${Util.esc(t.titulo)}</button>
           ${t.categoria ? `<span class="chip chip-suave">${Util.esc(t.categoria)}</span>` : ''}
-        </td>
+        </div></td>
         <td><span class="celda-colab">${UI.avatar(t, 22)} ${Util.esc(c?.nombre || 'Sin asignar')}</span></td>
         <td class="muted">${Util.esc(t.empresa || '—')}</td>
         <td>${UI.prioridad(t.prioridad)}</td>
@@ -2078,11 +2436,11 @@ Vistas.lista = {
         <span class="separador"></span>
         <button class="btn btn-sm" data-accion="exportar">⬇ Exportar a Excel</button>
       </div>
-      <div class="tarjeta-tabla">
+      <div class="vidrio"><div class="vidrio-interior">
         ${todas.length ? `<div class="tabla-scroll"><table class="tabla"><thead><tr>${cab}</tr></thead><tbody>${cuerpo}</tbody></table></div>` :
           UI.vacio('🔎', 'Sin tareas', 'No hay tareas con estos filtros.', '<button class="btn btn-primario" data-accion="nueva-tarea">＋ Nueva tarea</button>')}
         ${todas.length > filas.length ? `<div class="centrado pad"><button class="btn" data-accion="ver-mas">Ver ${Math.min(CONFIG.LIMITE_LISTA, todas.length - filas.length)} más</button></div>` : ''}
-      </div>`;
+      </div></div>`;
   },
 
   acciones: {
@@ -2259,6 +2617,7 @@ Vistas.rendimiento = {
   SEGMENTOS: [
     { clave: 'completadasOk', label: 'Completadas', color: 'var(--serie-ok)', icono: '✓' },
     { clave: 'tarde', label: 'Completadas con retraso', color: 'var(--serie-tarde)', icono: '◷' },
+    { clave: 'pendientes', label: 'Pendientes', color: 'var(--serie-pendiente)', icono: '○' },
     { clave: 'enCurso', label: 'En curso', color: 'var(--serie-curso)', icono: '▷' },
     { clave: 'vencidas', label: 'Vencidas', color: 'var(--serie-vencida)', icono: '⚠' },
   ],
@@ -2286,7 +2645,7 @@ Vistas.rendimiento = {
         <div class="segmentado" role="group" aria-label="Periodo">
           ${this.PERIODOS.map(([v, l]) => `<button class="${periodo === v ? 'on' : ''}" data-accion="periodo" data-valor="${v}">${l}</button>`).join('')}
         </div>
-        <span class="muted mini">${equipo ? 'Todo el equipo' : 'Tus indicadores personales'} · por fecha límite de la tarea</span>
+        <span class="muted mini">${equipo ? 'Todo el equipo' : 'Tus indicadores personales'} · ${this.alcance(periodo, hoy)}</span>
       </div>
 
       <div class="kpis kpis-5">
@@ -2308,26 +2667,33 @@ Vistas.rendimiento = {
         </section>
       </div>
 
-      <section class="panel mt">
+      <section class="vidrio mt"><div class="vidrio-interior">
         <header class="panel-cab"><h3>Tabla de rendimiento</h3>
           <span class="muted mini" title="Cumplimiento = completadas ÷ (completadas + vencidas). Puntualidad = completadas a tiempo ÷ completadas con fecha límite.">ⓘ Índice = 50 % cumplimiento + 50 % puntualidad</span>
         </header>
         <div class="tabla-scroll"><table class="tabla tabla-rend">
           <thead><tr><th>Colaborador</th><th class="num">Tareas</th><th class="num">Completadas</th><th class="num">Cumplimiento</th><th class="num">Puntualidad</th>
-            <th class="num">En curso</th><th class="num">Vencidas</th><th class="num">Días prom.</th><th class="num" title="Promedio del tiempo entre salir de Pendiente y completarse">Ejecución prom.</th><th>Índice</th></tr></thead>
+            <th class="num">Pendientes</th><th class="num">En curso</th><th class="num">Vencidas</th><th class="num">Días prom.</th><th class="num" title="Promedio del tiempo entre salir de Pendiente y completarse">Ejecución prom.</th><th>Índice</th></tr></thead>
           <tbody>${filas.map(f => {
             return `<tr class="fila-click" data-accion="ver-colaborador" data-id="${f.colaborador ? f.clave : ''}" title="Ver tareas de ${Util.esc(f.nombre)}">
               <td><span class="celda-colab">${UI.avatar(f.colaborador || { nombre: f.nombre }, 24)} ${Util.esc(f.nombre)}</span></td>
               <td class="num">${f.total}</td><td class="num">${f.completadas}</td>
               <td class="num">${pct(f.cumplimiento)}</td><td class="num">${pct(f.puntualidad)}</td>
-              <td class="num">${f.enCurso}</td><td class="num ${f.vencidas ? 'txt-rojo' : ''}">${f.vencidas}</td>
+              <td class="num">${f.pendientes}</td><td class="num">${f.enCurso}</td><td class="num ${f.vencidas ? 'txt-rojo' : ''}">${f.vencidas}</td>
               <td class="num">${f.diasPromedio === null ? '—' : f.diasPromedio.toFixed(1)}</td>
               <td class="num">${Util.fmtDuracion(f.ejecucionPromedio)}</td>
               <td>${UI.nivel(f.indice, { texto: true })}</td>
             </tr>`;
-          }).join('') || `<tr><td colspan="10" class="centrado muted pad">Sin datos en este periodo</td></tr>`}</tbody>
+          }).join('') || `<tr><td colspan="11" class="centrado muted pad">Sin datos en este periodo</td></tr>`}</tbody>
         </table></div>
-      </section>`;
+      </div></section>`;
+  },
+
+  // Qué tareas entran en el periodo elegido, dicho en palabras.
+  alcance(periodo, hoy) {
+    if (periodo === 'todo') return 'todas las tareas';
+    const { desde, hasta } = Metricas.rangoPeriodo(periodo, hoy);
+    return `del ${Util.fmtFecha(desde)} al ${Util.fmtFecha(hasta)}: tareas que vencen o se completaron en esas fechas`;
   },
 
   // Barras horizontales apiladas; la longitud es proporcional al total (escala común).
@@ -2517,6 +2883,994 @@ Vistas.admin = {
       await App.sincronizar();
     },
   },
+};
+
+</script>
+<script>
+/* ── js/vistas/notas.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// VISTA: NOTAS — bloc de notas personal (cada usuario ve solo las suyas)
+// La vista se conserva entre repintados (persistente) para no perder lo
+// que se está escribiendo cuando llega un cambio de tareas en tiempo real.
+// Guardado automático con espera corta; la tabla y su RLS: supabase/notas.sql
+// ═══════════════════════════════════════════════════════════════════
+
+const NOTA_COLORES = [
+  { id: 'violeta', label: 'Violeta' }, { id: 'amarillo', label: 'Amarillo' }, { id: 'azul', label: 'Azul' },
+  { id: 'verde', label: 'Verde' }, { id: 'rosa', label: 'Rosa' }, { id: 'gris', label: 'Gris' },
+];
+
+const NOTA_CARPETAS = [
+  { id: 'todas', label: 'Todas las notas', icono: 'M5 4h10l4 4v12H5zM14 4v5h5' },
+  { id: 'favoritas', label: 'Favoritas', icono: 'M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z' },
+  { id: 'recientes', label: 'Recientes', icono: 'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z' },
+  { id: 'archivadas', label: 'Archivadas', icono: 'M3 4h18v4H3zM5 8v12h14V8M10 12h4' },
+  { id: 'papelera', label: 'Papelera', icono: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13' },
+];
+
+const Notas = {
+  raiz: null,
+  lista: [],
+  cargada: false,
+  error: null,
+  carpeta: 'todas',
+  busqueda: '',
+  actualId: null,
+  pendientes: new Map(),   // id → temporizador de guardado
+  estadoGuardado: '',
+
+  // ── Ciclo de vida ─────────────────────────────────────────────────
+  reiniciar() {
+    this.guardarTodo();
+    this.raiz?.remove();
+    Object.assign(this, { raiz: null, lista: [], cargada: false, error: null, carpeta: 'todas', busqueda: '', actualId: null, estadoGuardado: '' });
+  },
+
+  montar(main) {
+    if (!this.raiz) this._crearRaiz();
+    main.appendChild(this.raiz);
+    if (!this.cargada) this.cargar();
+  },
+
+  async cargar() {
+    this.error = null;
+    try {
+      this.lista = await Datos.notas();
+    } catch (e) {
+      console.error(e);
+      this.error = e;
+    }
+    this.cargada = true;
+    this.pintar();
+  },
+
+  // ── Consultas ─────────────────────────────────────────────────────
+  nota(id) { return this.lista.find(n => n.id === id); },
+
+  texto(html) {
+    const d = document.createElement('div');
+    d.innerHTML = Notas.limpiar(html || '').replace(/<\/?(div|p|li|h2|h3|ul|ol)\b[^>]*>|<br\s*\/?>/gi, ' $&');
+    return (d.textContent || '').replace(/\s+/g, ' ').trim();
+  },
+
+  enCarpeta(n, carpeta) {
+    const borrada = !!n.eliminada_at;
+    switch (carpeta) {
+      case 'papelera': return borrada;
+      case 'archivadas': return !borrada && n.archivada;
+      case 'favoritas': return !borrada && !n.archivada && n.favorita;
+      case 'recientes': return !borrada && (Date.now() - new Date(n.updated_at).getTime()) < 7 * 864e5;
+      default: return !borrada && !n.archivada;
+    }
+  },
+
+  visibles() {
+    const q = Util.normalizar(this.busqueda);
+    return this.lista
+      .filter(n => this.enCarpeta(n, this.carpeta))
+      .filter(n => !q || Util.normalizar(n.titulo + ' ' + this.texto(n.contenido) + ' ' + (n.color || '')).includes(q))
+      .sort((a, b) => (b.fijada - a.fijada) || String(b.updated_at).localeCompare(String(a.updated_at)));
+  },
+
+  hace(ts) {
+    const s = (Date.now() - new Date(ts).getTime()) / 1000;
+    if (s < 60) return 'Hace un momento';
+    if (s < 3600) return `Hace ${Math.floor(s / 60)} min`;
+    if (s < 86400) return `Hace ${Math.floor(s / 3600)} h`;
+    const d = Math.floor(s / 86400);
+    if (d < 7) return d === 1 ? 'Ayer' : `Hace ${d} días`;
+    return Util.fmtFecha(String(ts).slice(0, 10));
+  },
+
+  // Solo se conserva el formato que ofrece la barra; todo lo demás se quita.
+  limpiar(html) {
+    const doc = new DOMParser().parseFromString('<div>' + (html || '') + '</div>', 'text/html');
+    const permitidos = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'H2', 'H3', 'P', 'DIV', 'BR', 'UL', 'OL', 'LI', 'A']);
+    const recorrer = nodo => {
+      for (const hijo of [...nodo.childNodes]) {
+        if (hijo.nodeType === Node.TEXT_NODE) continue;
+        if (hijo.nodeType !== Node.ELEMENT_NODE) { hijo.remove(); continue; }
+        if (['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'TEMPLATE'].includes(hijo.tagName)) { hijo.remove(); continue; }
+        recorrer(hijo);
+        if (!permitidos.has(hijo.tagName)) { hijo.replaceWith(...hijo.childNodes); continue; }
+        for (const a of [...hijo.attributes]) {
+          const ok = (hijo.tagName === 'A' && a.name === 'href' && /^(https?:|mailto:)/i.test(a.value.trim()))
+            || (hijo.tagName === 'UL' && a.name === 'class' && a.value === 'casillas')
+            || (hijo.tagName === 'LI' && a.name === 'data-hecho' && a.value === '1');
+          if (!ok) hijo.removeAttribute(a.name);
+        }
+        if (hijo.tagName === 'A') { hijo.setAttribute('target', '_blank'); hijo.setAttribute('rel', 'noopener noreferrer'); }
+      }
+    };
+    recorrer(doc.body.firstChild);
+    return doc.body.firstChild.innerHTML;
+  },
+
+  // ── Cambios ───────────────────────────────────────────────────────
+  async nueva() {
+    const ahora = new Date().toISOString();
+    const n = { id: Util.uid(), titulo: '', contenido: '', color: 'violeta', fijada: false, favorita: false, archivada: false, eliminada_at: null, created_at: ahora, updated_at: ahora };
+    this.lista.unshift(n);
+    if (this.carpeta !== 'todas' && this.carpeta !== 'recientes') this.carpeta = 'todas';
+    this.busqueda = '';
+    this.actualId = n.id;
+    this.raiz.classList.add('con-nota');
+    this.pintar();
+    this.raiz.querySelector('.nota-titulo')?.focus();
+    await this.guardar(n.id, { inmediato: true });
+  },
+
+  cambiar(id, cambios, { repintar = true } = {}) {
+    const n = this.nota(id);
+    if (!n) return;
+    Object.assign(n, cambios, { updated_at: new Date().toISOString() });
+    if (repintar) this.pintar();
+    this.guardar(id);
+  },
+
+  guardar(id, { inmediato = false } = {}) {
+    clearTimeout(this.pendientes.get(id));
+    this._estado('Guardando…');
+    const hacer = async () => {
+      this.pendientes.delete(id);
+      const n = this.nota(id);
+      if (!n) return;
+      try {
+        await Datos.guardarNota({ ...n, contenido: this.limpiar(n.contenido) });
+        if (!this.pendientes.size) this._estado('Guardado · ' + this.hace(n.updated_at).toLowerCase());
+      } catch (e) {
+        console.error(e);
+        this._estado('No se pudo guardar');
+        UI.toast(e.message, { tipo: 'error' });
+      }
+    };
+    if (inmediato) return hacer();
+    this.pendientes.set(id, setTimeout(hacer, 700));
+  },
+
+  guardarTodo() {
+    for (const id of [...this.pendientes.keys()]) this.guardar(id, { inmediato: true });
+  },
+
+  async borrarParaSiempre(id) {
+    if (!confirm('¿Borrar esta nota para siempre? No se puede deshacer.')) return;
+    try {
+      await Datos.borrarNota(id);
+      this.lista = this.lista.filter(n => n.id !== id);
+      if (this.actualId === id) this.actualId = null;
+      this.pintar();
+    } catch (e) { UI.toast(e.message, { tipo: 'error' }); }
+  },
+
+  _estado(txt) {
+    this.estadoGuardado = txt;
+    const el = this.raiz?.querySelector('.nota-guardado');
+    if (el) el.textContent = txt;
+  },
+
+  // ── Interfaz ──────────────────────────────────────────────────────
+  _crearRaiz() {
+    const r = document.createElement('div');
+    r.className = 'notas';
+    r.addEventListener('click', e => this._alClic(e));
+    r.addEventListener('input', e => this._alEscribir(e));
+    r.addEventListener('keydown', e => this._alTecla(e));
+    r.addEventListener('paste', e => this._alPegar(e));
+    this.raiz = r;
+  },
+
+  _svg(d, extra = '') { return `<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}><path d="${d}"/></svg>`; },
+
+  pintar() {
+    if (!this.raiz) return;
+    const visibles = this.visibles();
+    if (this.actualId && !this.nota(this.actualId)) this.actualId = null;
+    const n = this.nota(this.actualId);
+    const cuenta = c => this.lista.filter(x => this.enCarpeta(x, c)).length;
+    const carpeta = NOTA_CARPETAS.find(c => c.id === this.carpeta);
+    const enfocado = document.activeElement;
+    const buscando = enfocado?.classList?.contains('notas-buscar');
+
+    this.raiz.innerHTML = `
+      <aside class="notas-carpetas">
+        <button class="btn btn-primario ancho notas-nueva" data-n="nueva">${this._svg('M12 5v14M5 12h14')} Nueva nota</button>
+        <nav class="panel-vidrio notas-menu" aria-label="Carpetas">
+          <div class="notas-etiqueta">Carpetas</div>
+          ${NOTA_CARPETAS.map(c => `<button class="notas-carpeta ${c.id === this.carpeta ? 'on' : ''}" data-n="carpeta" data-c="${c.id}" ${c.id === this.carpeta ? 'aria-current="true"' : ''}>
+            ${this._svg(c.icono)}<span>${c.label}</span><span class="notas-num">${cuenta(c.id)}</span></button>`).join('')}
+        </nav>
+        <p class="panel-vidrio notas-privado">${this._svg('M7 11V7a5 5 0 0 1 10 0v4M5 11h14v10H5z')} Solo tú ves tus notas.</p>
+      </aside>
+
+      <section class="panel-vidrio notas-lista" aria-label="Lista de notas">
+        <label class="notas-busqueda">${this._svg('M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4')}
+          <input type="search" class="notas-buscar" placeholder="Buscar en tus notas" aria-label="Buscar notas" value="${Util.esc(this.busqueda)}"></label>
+        <h3 class="notas-titulo-lista">${carpeta.label} <span>(${visibles.length})</span></h3>
+        <div class="notas-tarjetas">
+          ${this.error ? '' : !this.cargada ? '<p class="muted pad">Cargando notas…</p>' : visibles.length ? visibles.map(x => `
+            <button class="nota-tarjeta nc-${Util.esc(x.color || 'violeta')} ${x.id === this.actualId ? 'on' : ''}" data-n="abrir" data-id="${Util.esc(x.id)}">
+              <span class="nota-tarjeta-cab"><span class="nota-punto"></span><strong>${Util.esc(x.titulo || 'Sin título')}</strong>
+                <span class="nota-marcas">${x.fijada ? this._svg('M9 3h6l-1 6 4 3v2H6v-2l4-3zM12 14v7', 'class="nota-marca-fija"') : ''}${x.favorita ? this._svg('M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z', 'class="nota-marca-fav"') : ''}</span></span>
+              <span class="nota-resumen">${Util.esc(this.texto(x.contenido).slice(0, 160)) || '<em>Nota vacía</em>'}</span>
+              <span class="nota-fecha">${this.hace(x.updated_at)}</span>
+            </button>`).join('') : `<p class="muted pad">${this.busqueda ? 'Ninguna nota coincide con la búsqueda.' : this.carpeta === 'papelera' ? 'La papelera está vacía.' : 'Aún no hay notas aquí.'}</p>`}
+        </div>
+      </section>
+
+      <section class="panel-vidrio notas-editor" aria-label="Editor de notas">
+        ${this.error ? this._errorHtml() : n ? this._editorHtml(n) : `
+          <div class="vacio notas-vacio">${this._svg('M5 4h10l4 4v12H5zM14 4v5h5M8 13h8M8 17h5', 'width="40" height="40"')}
+            <h3>Tu bloc de notas</h3><p>Elige una nota de la lista o crea una nueva.</p>
+            <button class="btn btn-primario" data-n="nueva">＋ Nueva nota</button></div>`}
+      </section>`;
+
+    if (buscando) {
+      const b = this.raiz.querySelector('.notas-buscar');
+      b.focus(); b.setSelectionRange(b.value.length, b.value.length);
+    }
+  },
+
+  _errorHtml() {
+    const falta = this.error?.faltaEsquema;
+    return `<div class="vacio notas-vacio"><h3>${falta ? 'Falta activar las notas en Supabase' : 'No se pudieron cargar las notas'}</h3>
+      <p>${falta ? 'El administrador debe ejecutar una sola vez el archivo <code>supabase/notas.sql</code> en el SQL Editor de Supabase.' : Util.esc(this.error?.message || '')}</p>
+      <button class="btn" data-n="reintentar">Reintentar</button></div>`;
+  },
+
+  _editorHtml(n) {
+    const enPapelera = !!n.eliminada_at;
+    const herr = [
+      ['bold', 'Negrita', 'M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z'],
+      ['italic', 'Cursiva', 'M14 5h-4M14 19h-4M14 5l-4 14'],
+      ['underline', 'Subrayado', 'M7 4v7a5 5 0 0 0 10 0V4M5 20h14'],
+      ['titulo', 'Título', 'M5 5v14M15 5v14M5 12h10M19 10v9'],
+      ['insertUnorderedList', 'Viñetas', 'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01'],
+      ['insertOrderedList', 'Numeración', 'M10 6h10M10 12h10M10 18h10M4 5h1v4M4 15h2l-2 3h2'],
+      ['casillas', 'Casillas', 'M4 4h7v7H4zM6 7.5l1.5 1.5 2.5-3M14 7h6M4 14h7v7H4zM14 17h6'],
+      ['enlace', 'Enlace', 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'],
+    ];
+    const botones = enPapelera ? `
+        <button class="btn btn-sm" data-n="restaurar">Restaurar</button>
+        <button class="btn btn-sm btn-peligro" data-n="borrar">Borrar para siempre</button>` : `
+        <button class="btn-icono ${n.fijada ? 'nota-on-fija' : ''}" data-n="fijar" aria-pressed="${n.fijada}" aria-label="${n.fijada ? 'Desfijar nota' : 'Fijar nota'}" title="${n.fijada ? 'Desfijar' : 'Fijar arriba'}">${this._svg('M9 3h6l-1 6 4 3v2H6v-2l4-3zM12 14v7', n.fijada ? 'fill="currentColor"' : '')}</button>
+        <button class="btn-icono ${n.favorita ? 'nota-on-fav' : ''}" data-n="favorita" aria-pressed="${n.favorita}" aria-label="${n.favorita ? 'Quitar de favoritas' : 'Marcar como favorita'}" title="Favorita">${this._svg('M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z', n.favorita ? 'fill="currentColor"' : '')}</button>
+        <button class="btn-icono" data-n="archivar" aria-label="${n.archivada ? 'Sacar del archivo' : 'Archivar nota'}" title="${n.archivada ? 'Desarchivar' : 'Archivar'}">${this._svg('M3 4h18v4H3zM5 8v12h14V8M10 12h4')}</button>
+        <button class="btn-icono" data-n="papelera" aria-label="Mover a la papelera" title="Mover a la papelera">${this._svg('M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13')}</button>`;
+    return `
+      <header class="nota-cab">
+        <button class="btn-icono nota-volver" data-n="volver" aria-label="Volver a la lista">‹</button>
+        <input class="nota-titulo" value="${Util.esc(n.titulo)}" placeholder="Sin título" aria-label="Título de la nota" maxlength="200" ${enPapelera ? 'readonly' : ''}>
+        ${botones}
+      </header>
+      ${enPapelera ? '<p class="nota-aviso">Esta nota está en la papelera. Restáurala para editarla.</p>' : `
+      <div class="nota-herramientas" role="toolbar" aria-label="Formato">
+        ${herr.map(([cmd, label, d]) => `<button class="btn-icono btn-sm" data-n="formato" data-cmd="${cmd}" aria-label="${label}" title="${label}">${this._svg(d)}</button>`).join('')}
+        <span class="nota-sep"></span>
+        ${NOTA_COLORES.map(c => `<button class="nota-color nc-${c.id} ${n.color === c.id ? 'on' : ''}" data-n="color" data-color="${c.id}" aria-label="Color ${c.label.toLowerCase()}" aria-pressed="${n.color === c.id}" title="${c.label}"></button>`).join('')}
+        <span class="separador"></span>
+        <span class="nota-guardado mini muted" aria-live="polite">${Util.esc(this.estadoGuardado || 'Guardado · ' + this.hace(n.updated_at).toLowerCase())}</span>
+      </div>`}
+      <div class="nota-cuerpo" ${enPapelera ? '' : 'contenteditable="true"'} role="textbox" aria-multiline="true" aria-label="Contenido de la nota" data-placeholder="Escribe aquí…">${this.limpiar(n.contenido)}</div>`;
+  },
+
+  // ── Eventos ───────────────────────────────────────────────────────
+  _alClic(e) {
+    const cuerpo = e.target.closest('.nota-cuerpo');
+    // Casillas: clic a la izquierda del renglón marca o desmarca
+    const li = e.target.closest('.nota-cuerpo ul.casillas > li');
+    if (li && cuerpo?.isContentEditable && e.clientX - li.getBoundingClientRect().left < 26) {
+      e.preventDefault();
+      li.toggleAttribute('data-hecho');
+      if (li.hasAttribute('data-hecho')) li.setAttribute('data-hecho', '1');
+      this._guardarCuerpo();
+      return;
+    }
+    // Enlaces dentro de la nota: Ctrl/Cmd + clic los abre
+    const a = e.target.closest('.nota-cuerpo a[href]');
+    if (a && (e.ctrlKey || e.metaKey)) { e.preventDefault(); window.open(a.href, '_blank', 'noopener'); return; }
+
+    const b = e.target.closest('[data-n]');
+    if (!b) return;
+    e.preventDefault();
+    const n = this.nota(this.actualId);
+    switch (b.dataset.n) {
+      case 'nueva': this.nueva(); break;
+      case 'carpeta': this.carpeta = b.dataset.c; this.pintar(); break;
+      case 'abrir':
+        this.guardarTodo();
+        this.actualId = b.dataset.id; this.estadoGuardado = '';
+        this.raiz.classList.add('con-nota');
+        this.pintar();
+        break;
+      case 'volver': this.raiz.classList.remove('con-nota'); break;
+      case 'reintentar': this.cargada = false; this.pintar(); this.cargar(); break;
+      case 'fijar': n && this.cambiar(n.id, { fijada: !n.fijada }); break;
+      case 'favorita': n && this.cambiar(n.id, { favorita: !n.favorita }); break;
+      case 'archivar':
+        if (!n) break;
+        this.cambiar(n.id, { archivada: !n.archivada });
+        UI.toast(n.archivada ? 'Nota archivada' : 'Nota sacada del archivo');
+        break;
+      case 'papelera':
+        if (!n) break;
+        this.cambiar(n.id, { eliminada_at: new Date().toISOString() }, { repintar: false });
+        this.actualId = null; this.raiz.classList.remove('con-nota'); this.pintar();
+        UI.toast('Nota movida a la papelera', { deshacer: () => this.cambiar(n.id, { eliminada_at: null }) });
+        break;
+      case 'restaurar': n && this.cambiar(n.id, { eliminada_at: null }); break;
+      case 'borrar': n && this.borrarParaSiempre(n.id); break;
+      case 'color': n && this.cambiar(n.id, { color: b.dataset.color }); break;
+      case 'formato': this._formato(b.dataset.cmd); break;
+    }
+  },
+
+  _formato(cmd) {
+    const cuerpo = this.raiz.querySelector('.nota-cuerpo');
+    if (!cuerpo) return;
+    cuerpo.focus();
+    if (cmd === 'titulo') {
+      const actual = document.queryCommandValue('formatBlock').toLowerCase();
+      document.execCommand('formatBlock', false, actual === 'h2' ? 'div' : 'h2');
+    } else if (cmd === 'casillas') {
+      const sel = getSelection();
+      let ul = sel.anchorNode && (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement)?.closest('ul');
+      if (!ul || !cuerpo.contains(ul)) {
+        document.execCommand('insertUnorderedList');
+        ul = (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement)?.closest('ul');
+      }
+      if (ul && cuerpo.contains(ul)) ul.classList.toggle('casillas');
+    } else if (cmd === 'enlace') {
+      const url = prompt('Dirección del enlace (https://…)');
+      if (url && /^(https?:\/\/|mailto:)/i.test(url.trim())) document.execCommand('createLink', false, url.trim());
+      else if (url) UI.toast('El enlace debe empezar por https:// o mailto:', { tipo: 'error' });
+    } else {
+      document.execCommand(cmd);
+    }
+    this._guardarCuerpo();
+  },
+
+  _guardarCuerpo() {
+    const n = this.nota(this.actualId);
+    const cuerpo = this.raiz.querySelector('.nota-cuerpo');
+    if (!n || !cuerpo) return;
+    this.cambiar(n.id, { contenido: cuerpo.innerHTML }, { repintar: false });
+    this._refrescarTarjeta(n);
+  },
+
+  _alEscribir(e) {
+    if (e.target.classList.contains('notas-buscar')) { this.busqueda = e.target.value; this.pintar(); return; }
+    const n = this.nota(this.actualId);
+    if (!n) return;
+    if (e.target.classList.contains('nota-titulo')) {
+      this.cambiar(n.id, { titulo: e.target.value }, { repintar: false });
+      this._refrescarTarjeta(n);
+    } else if (e.target.classList.contains('nota-cuerpo')) {
+      this._guardarCuerpo();
+    }
+  },
+
+  _alTecla(e) {
+    if (e.target.classList.contains('nota-titulo') && e.key === 'Enter') { e.preventDefault(); this.raiz.querySelector('.nota-cuerpo')?.focus(); }
+  },
+
+  // Al pegar se conserva solo el texto (sin estilos de otras páginas)
+  _alPegar(e) {
+    if (!e.target.closest('.nota-cuerpo')) return;
+    e.preventDefault();
+    document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
+  },
+
+  // Actualiza la tarjeta de la nota en la lista sin repintar el editor
+  _refrescarTarjeta(n) {
+    const t = this.raiz.querySelector(`.nota-tarjeta[data-id="${CSS.escape(n.id)}"]`);
+    if (!t) return;
+    t.querySelector('strong').textContent = n.titulo || 'Sin título';
+    t.querySelector('.nota-resumen').textContent = this.texto(n.contenido).slice(0, 160) || 'Nota vacía';
+    t.querySelector('.nota-fecha').textContent = this.hace(n.updated_at);
+  },
+};
+
+addEventListener('beforeunload', () => Notas.guardarTodo());
+
+Vistas.notas = {
+  titulo: 'Notas',
+  icono: '📝',
+  orden: 7,
+  visible: () => true,
+  persistente: true,
+  nodo: () => Notas.raiz,
+  render: () => '',
+  montar: main => Notas.montar(main),
+};
+
+/* ── js/vistas/clientes.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// VISTA: CLIENTES — directorio de clientes con sus claves y vencimientos
+//
+// La ficha se arma con las listas CLIENTE_CAMPOS y CLIENTE_VENCIMIENTOS:
+// para agregar un dato nuevo basta con sumar una línea a la lista. No hace
+// falta tocar Supabase: los campos se guardan en la columna jsonb "datos" y
+// los vencimientos en "vencimientos". La tabla y su RLS: supabase/clientes.sql
+// La vista es persistente (como Notas) para no perder una edición en curso
+// cuando llega un cambio de tareas en tiempo real.
+// ═══════════════════════════════════════════════════════════════════
+
+// Días antes del vencimiento en que la fila empieza a avisar (amarillo).
+const CLIENTE_DIAS_ALERTA = 30;
+
+// Versiones anteriores que se guardan de cada cliente. Si se cambia, cambiar también
+// el número en el trigger de supabase/clientes.sql (allí está el límite real).
+const CLIENTE_VERSIONES = 5;
+
+// Secciones de la ficha, en orden.
+const CLIENTE_SECCIONES = [
+  { id: 'datos', titulo: 'Datos' },
+  { id: 'claves', titulo: '🔒 Claves' },
+];
+
+// Campos de la ficha (además del nombre y la cédula/NIT, que son fijos).
+//   tipo:    texto | correo | clave | telefono | codigo
+//   excel:   encabezados que se buscan al importar (sin tildes, da igual mayúsculas)
+//   extraer: opcional, convierte el valor de la celda antes de guardarlo
+//   junto:   opcional, en la ficha se muestra delante de este campo (no en su propia fila)
+//   fija:    opcional, se muestra arriba junto al nombre y el NIT (no con los demás datos)
+const CLIENTE_CAMPOS = [
+  { id: 'lechera_codigo', label: 'Código empresa lechera', tipo: 'codigo', seccion: 'datos', junto: 'lechera_nombre',
+    excel: ['EMPRESA LECHERA'], extraer: v => (String(v).trim().match(/^(\d+)(?:\.0+)?(?=\D|$)/) || [])[1] || '' },
+  { id: 'lechera_nombre', label: 'Empresa lechera', tipo: 'texto', seccion: 'datos',
+    excel: ['EMPRESA LECHERA'], extraer: v => String(v).trim().replace(/^\d+(?:\.0+)?\s*[-–:]?\s*/, '') },
+  // Persona: su cédula (su NIT es el mismo número). Empresa: la cédula del representante legal
+  // (su nombre no se guarda). La llena el importador.
+  { id: 'cedula', label: 'Cédula', tipo: 'texto', seccion: 'datos', fija: true },
+  { id: 'correo', label: 'Correo', tipo: 'correo', seccion: 'datos', excel: ['E-MAIL', 'EMAIL', 'CORREO'] },
+  { id: 'correo_2', label: 'Correo 2', tipo: 'correo', seccion: 'datos', excel: ['E-MAIL 2', 'EMAIL 2', 'CORREO 2'] },
+  { id: 'clave_correo', label: 'Clave correo', tipo: 'clave', seccion: 'claves', excel: ['CLAVE E-MAIL', 'CLAVE EMAIL', 'CLAVE CORREO'] },
+  { id: 'clave_correo_2', label: 'Clave correo 2', tipo: 'clave', seccion: 'claves', excel: ['CLAVE E-MAIL 2', 'CLAVE EMAIL 2', 'CLAVE CORREO 2'] },
+  { id: 'clave_dian', label: 'Clave DIAN', tipo: 'clave', seccion: 'claves', excel: ['CLAVE DIAN'] },
+];
+
+// Vencimientos: cada uno guarda { inicio, fin } (fechas AAAA-MM-DD).
+const CLIENTE_VENCIMIENTOS = [
+  { id: 'certificado', label: 'Certificado de firma', corto: 'Firma', icono: '🔏', excel: ['VENCIMIENTO CERTIFICADO'] },
+  { id: 'resolucion', label: 'Resolución de facturación', corto: 'Resolución', icono: '🧾', excel: ['VENCIMIENTO DE RESOLUCION FACTURACION', 'VENCIMIENTO RESOLUCION FACTURACION', 'VENCIMIENTO RESOLUCION'] },
+  { id: 'soporte', label: 'Documento soporte', corto: 'Doc. soporte', icono: '📄', excel: ['VENCIMIENTO DOCUMENTO SOPORTE', 'VENCIMIENTO SOPORTE'] },
+];
+
+const Clientes = {
+  raiz: null,
+  lista: [],
+  cargada: false,
+  error: null,
+  filtro: { texto: '', lechera: '', venc: '', letra: '' },
+  abiertoId: null,
+  editando: null,      // { id, que: 'datos' | <id de vencimiento> }
+
+  // ── Ciclo de vida ─────────────────────────────────────────────────
+  reiniciar() {
+    this.raiz?.remove();
+    Object.assign(this, { raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '' }, abiertoId: null, editando: null });
+  },
+
+  montar(main) {
+    if (!this.raiz) this._crearRaiz();
+    main.appendChild(this.raiz);
+    if (!this.cargada) this.cargar(); else this.pintar();
+  },
+
+  async cargar() {
+    this.error = null;
+    try {
+      this.lista = (await Datos.clientes()).map(g => this.normalizar(g));
+    } catch (e) {
+      console.error(e);
+      this.error = e;
+    }
+    this.cargada = true;
+    this.pintar();
+  },
+
+  normalizar(g) {
+    return { ...g, nit: g.nit || '', nombre: g.nombre || '', datos: g.datos || {}, vencimientos: g.vencimientos || {}, historial: Array.isArray(g.historial) ? g.historial : [] };
+  },
+
+  // ── Consultas ─────────────────────────────────────────────────────
+  cliente(id) { return this.lista.find(g => g.id === id); },
+
+  // Empresa: NIT de 9 dígitos que empieza por 8 o 9 (el mismo criterio del importador).
+  esEmpresa(g) { return /^[89]\d{8}$/.test(g.nit || ''); },
+
+  // vencido | pronto | ok | sin
+  estadoVenc(v, hoy = Util.hoyISO()) {
+    if (!v?.fin) return { estado: 'sin', dias: null };
+    const dias = Util.diasEntre(hoy, v.fin);
+    return { estado: dias < 0 ? 'vencido' : dias <= CLIENTE_DIAS_ALERTA ? 'pronto' : 'ok', dias };
+  },
+
+  // Lo más urgente del cliente, para la etiqueta de la fila (null si no hay nada que avisar).
+  alerta(g) {
+    const hoy = Util.hoyISO();
+    const est = CLIENTE_VENCIMIENTOS.map(v => ({ v, ...this.estadoVenc(g.vencimientos[v.id], hoy) }));
+    const vencidos = est.filter(e => e.estado === 'vencido');
+    if (vencidos.length > 1) return { estado: 'vencido', texto: `${vencidos.length} vencidos` };
+    if (vencidos.length) return { estado: 'vencido', texto: `Vencido: ${vencidos[0].v.corto}` };
+    const pronto = est.filter(e => e.estado === 'pronto').sort((a, b) => a.dias - b.dias)[0];
+    if (pronto) return { estado: 'pronto', texto: `${pronto.v.corto} ${pronto.dias === 0 ? 'vence hoy' : `en ${pronto.dias} día${pronto.dias === 1 ? '' : 's'}`}` };
+    return null;
+  },
+
+  // Estado general para el filtro de vencimientos
+  estadoGeneral(g) {
+    const a = this.alerta(g);
+    if (a) return a.estado;
+    return CLIENTE_VENCIMIENTOS.some(v => g.vencimientos[v.id]?.fin) ? 'ok' : 'sin';
+  },
+
+  letra(g) { return Util.normalizar(g.nombre).charAt(0) || '#'; },
+
+  visibles() {
+    const f = this.filtro;
+    const q = Util.normalizar(f.texto);
+    const textoBusqueda = g => Util.normalizar([g.nombre, g.nit, ...CLIENTE_CAMPOS.filter(c => c.tipo !== 'clave').map(c => g.datos[c.id] || '')].join(' '));
+    return this.lista
+      .filter(g => !f.letra || this.letra(g) === f.letra)
+      .filter(g => !f.lechera || Util.normalizar(g.datos.lechera_nombre) === f.lechera)
+      .filter(g => !f.venc || this.estadoGeneral(g) === f.venc)
+      .filter(g => !q || textoBusqueda(g).includes(q))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  },
+
+  // ── Cambios ───────────────────────────────────────────────────────
+  async guardar(g, mensaje = 'Guardado') {
+    const antes = this.cliente(g.id);
+    const copia = antes && structuredClone(antes);
+    g.updated_at = new Date().toISOString();
+    if (antes) { Object.assign(antes, g); delete antes._nuevo; } else this.lista.push(g);
+    this.editando = null;
+    this.pintar();
+    try {
+      const fila = await Datos.guardarCliente(g);
+      const actual = this.cliente(g.id);
+      if (fila && actual) { Object.assign(actual, this.normalizar(fila)); this.pintar(); }
+      UI.toast(mensaje, { tipo: 'ok' });
+    } catch (e) {
+      console.error(e);
+      if (copia) Object.assign(antes, copia); else this.lista = this.lista.filter(x => x.id !== g.id);
+      this.pintar();
+      UI.toast(e.message, { tipo: 'error' });
+    }
+  },
+
+  // Lo que cambia entre dos versiones de un cliente: etiquetas, o { label, valor } con el valor de "a".
+  diferencias(a, b, { conValor = false } = {}) {
+    const igual = (x, y) => (x || '') === (y || '');
+    const out = [];
+    const agregar = (label, valor) => out.push(conValor ? { label, valor: valor || '(vacío)' } : label);
+    if (!igual(a.nombre, b.nombre)) agregar('Nombre', a.nombre);
+    if (!igual(a.nit, b.nit)) agregar('NIT', a.nit);
+    for (const c of CLIENTE_CAMPOS) {
+      if (!igual(a.datos?.[c.id], b.datos?.[c.id])) agregar(c.label, a.datos?.[c.id]);
+    }
+    for (const v of CLIENTE_VENCIMIENTOS) {
+      const x = a.vencimientos?.[v.id] || {}, y = b.vencimientos?.[v.id] || {};
+      if (!igual(x.inicio, y.inicio) || !igual(x.fin, y.fin)) {
+        agregar(v.label, x.inicio || x.fin ? `${x.inicio ? Util.fmtFecha(x.inicio) : '—'} → ${x.fin ? Util.fmtFecha(x.fin) : '—'}` : '');
+      }
+    }
+    return out;
+  },
+
+  // Guarda un cambio sobre un cliente existente pidiendo confirmación.
+  confirmarYGuardar(antes, despues, mensaje) {
+    const cambios = this.diferencias(antes, despues);
+    if (!cambios.length) { this.editando = null; this.pintar(); return; }
+    if (!confirm(`¿Seguro desea hacer este cambio?\n\nCambia: ${cambios.join(', ')}`)) return;
+    this.guardar(despues, mensaje);
+  },
+
+  // ── Versiones ─────────────────────────────────────────────────────
+  verVersiones(id) {
+    const g = this.cliente(id);
+    if (!g) return;
+    const versiones = g.historial || [];
+    // Cada versión se compara con la que la reemplazó (la siguiente más nueva).
+    const filas = versiones.map((v, i) => {
+      const siguiente = i === 0 ? g : versiones[i - 1];
+      const cambios = this.diferencias(v, siguiente, { conValor: true });
+      return `<li class="cli-version">
+        <div><b>${v.fecha ? Util.fmtFechaHora(v.fecha) : 'Versión importada'}</b>${v.autor ? ` · ${Util.esc(v.autor)}` : ''}
+          <div class="muted mini">${cambios.length ? cambios.map(c => `${Util.esc(c.label)}: <b>${Util.esc(c.valor)}</b>`).join(' · ') : 'Igual a la versión siguiente'}</div></div>
+        <button class="btn btn-sm" data-cv="restaurar" data-i="${i}">↺ Restaurar</button></li>`;
+    }).join('');
+    UI.abrirModal(`<header class="modal-cab"><h3>🕘 Versiones de ${Util.esc(g.nombre)}</h3>
+        <button class="btn-icono" data-accion="cerrar-modal" aria-label="Cerrar">✕</button></header>
+      <p class="muted mini">Actual: ${Util.fmtFechaHora(g.updated_at) || '—'}${g.actualizado_nombre ? ' · ' + Util.esc(g.actualizado_nombre) : ''}. Se guardan las últimas ${CLIENTE_VERSIONES} versiones anteriores.</p>
+      ${filas ? `<ul class="cli-versiones">${filas}</ul>` : '<p class="muted pad centrado">Aún no hay versiones anteriores: aparecen cuando alguien cambia este cliente.</p>'}`, { ancho: 600 });
+    document.querySelector('#modal .modal').addEventListener('click', e => {
+      const b = e.target.closest('[data-cv="restaurar"]');
+      if (!b) return;
+      const v = versiones[Number(b.dataset.i)];
+      const despues = { ...structuredClone(g), nombre: v.nombre || '', nit: v.nit || '', datos: structuredClone(v.datos || {}), vencimientos: structuredClone(v.vencimientos || {}) };
+      const cambios = this.diferencias(g, despues);
+      if (!cambios.length) { UI.toast('Esa versión es igual a la actual'); return; }
+      if (!confirm(`¿Seguro desea hacer este cambio?\n\nSe restaura la versión del ${v.fecha ? Util.fmtFechaHora(v.fecha) : 'archivo importado'}\nCambia: ${cambios.join(', ')}`)) return;
+      UI.cerrarModal();
+      this.guardar(despues, 'Versión restaurada');
+    });
+  },
+
+  nuevo() {
+    const g = this.normalizar({ id: Util.uid(), nombre: '', nit: '', _nuevo: true });
+    this.lista.push(g);
+    Object.assign(this.filtro, { texto: '', lechera: '', venc: '', letra: '' });
+    this.abiertoId = g.id;
+    this.editando = { id: g.id, que: 'datos' };
+    this.pintar();
+    this.raiz.querySelector('[name="nombre"]')?.focus();
+  },
+
+  async eliminar(id) {
+    const g = this.cliente(id);
+    if (!g || !confirm(`¿Eliminar a ${g.nombre || 'este cliente'}? No se puede deshacer.`)) return;
+    try {
+      await Datos.borrarCliente(id);
+      this.lista = this.lista.filter(x => x.id !== id);
+      this.abiertoId = this.editando = null;
+      this.pintar();
+      UI.toast('Cliente eliminado');
+    } catch (e) { UI.toast(e.message, { tipo: 'error' }); }
+  },
+
+  cancelarEdicion() {
+    const g = this.cliente(this.editando?.id);
+    if (g?._nuevo) { this.lista = this.lista.filter(x => x !== g); this.abiertoId = null; }
+    this.editando = null;
+    this.pintar();
+  },
+
+  async copiar(texto) {
+    try { await navigator.clipboard.writeText(texto); UI.toast('Copiado', { tipo: 'ok', ms: 1500 }); }
+    catch { UI.toast('No se pudo copiar', { tipo: 'error' }); }
+  },
+
+  // ── Interfaz ──────────────────────────────────────────────────────
+  _crearRaiz() {
+    const r = document.createElement('div');
+    r.className = 'clientes';
+    r.addEventListener('click', e => this._alClic(e));
+    r.addEventListener('input', e => this._alEscribir(e));
+    r.addEventListener('change', e => this._alCambiar(e));
+    r.addEventListener('submit', e => this._alEnviar(e));
+    this.raiz = r;
+  },
+
+  chip(estado, texto) {
+    const cls = { vencido: 'est-vencida', pronto: 'est-en_revision', ok: 'est-completada', sin: 'chip-suave' }[estado];
+    const ico = { vencido: '⚠', pronto: '◷', ok: '✓', sin: '·' }[estado];
+    return `<span class="chip ${cls}">${ico} ${Util.esc(texto)}</span>`;
+  },
+
+  pintar() {
+    if (!this.raiz) return;
+    const enfocado = document.activeElement;
+    const buscando = enfocado?.classList?.contains('cli-buscar');
+    const cursor = buscando ? enfocado.selectionStart : null;
+
+    if (this.error) {
+      const falta = this.error.faltaEsquema;
+      this.raiz.innerHTML = `<div class="vacio"><h3>${falta ? 'Falta activar Clientes en Supabase' : 'No se pudieron cargar los clientes'}</h3>
+        <p>${falta ? 'El administrador debe ejecutar una sola vez el archivo <code>supabase/clientes.sql</code> en el SQL Editor de Supabase.' : Util.esc(this.error.message || '')}</p>
+        <button class="btn" data-g="reintentar">Reintentar</button></div>`;
+      return;
+    }
+
+    const f = this.filtro;
+    const visibles = this.visibles();
+    const lecheras = [...new Map(this.lista.filter(g => g.datos.lechera_nombre).map(g => [Util.normalizar(g.datos.lechera_nombre), g.datos.lechera_nombre.trim()])).entries()]
+      .sort((a, b) => a[1].localeCompare(b[1], 'es'));
+    const letras = [...new Set(this.lista.map(g => this.letra(g)))].sort();
+    const opt = (v, l, actual) => `<option value="${Util.esc(v)}" ${actual === v ? 'selected' : ''}>${Util.esc(l)}</option>`;
+
+    this.raiz.innerHTML = `
+      <div class="barra-filtros">
+        <input type="search" class="cli-buscar" placeholder="🔍 Nombre, cédula, NIT, código o empresa lechera…" value="${Util.esc(f.texto)}" aria-label="Buscar cliente">
+        <select data-gf="lechera" aria-label="Empresa lechera"><option value="">Empresa lechera</option>${lecheras.map(([v, l]) => opt(v, l, f.lechera)).join('')}</select>
+        <select data-gf="venc" aria-label="Vencimientos"><option value="">Vencimientos</option>
+          ${opt('vencido', 'Con algo vencido', f.venc)}${opt('pronto', `Vence en ${CLIENTE_DIAS_ALERTA} días`, f.venc)}${opt('ok', 'Todo al día', f.venc)}${opt('sin', 'Sin fechas', f.venc)}</select>
+        ${f.texto || f.lechera || f.venc || f.letra ? '<button class="btn btn-sm" data-g="limpiar">✕ Limpiar</button>' : ''}
+      </div>
+      <div class="cli-letras" role="group" aria-label="Inicial">
+        <button class="${f.letra ? '' : 'on'}" data-g="letra" data-l="">Todos</button>
+        ${letras.map(l => `<button class="${f.letra === l ? 'on' : ''}" data-g="letra" data-l="${Util.esc(l)}">${Util.esc(l)}</button>`).join('')}
+      </div>
+      <div class="barra-vista">
+        <span class="muted">${this.cargada ? `${visibles.length === this.lista.length ? '' : visibles.length + ' de '}${this.lista.length} clientes · toca un nombre para ver su información` : 'Cargando clientes…'}</span>
+        <span class="separador"></span>
+        ${Permisos.importar() ? `<label class="btn btn-sm">⬆ Importar Excel<input type="file" accept=".xlsx,.xls" data-g="importar" hidden></label>` : ''}
+        <button class="btn btn-sm btn-primario" data-g="nuevo">＋ Nuevo cliente</button>
+      </div>
+      <div class="cli-lista">
+        ${visibles.map(g => this._filaHtml(g)).join('') || (this.cargada ? `<p class="muted pad centrado">${this.lista.length ? 'Ningún cliente coincide con la búsqueda.' : 'Aún no hay clientes. Importa el Excel o crea uno nuevo.'}</p>` : '')}
+      </div>`;
+
+    if (buscando) {
+      const b = this.raiz.querySelector('.cli-buscar');
+      b.focus(); b.setSelectionRange(cursor, cursor);
+    }
+  },
+
+  _filaHtml(g) {
+    const abierto = g.id === this.abiertoId;
+    const a = this.alerta(g);
+    return `<div class="cli-item ${abierto ? 'abierto' : ''}">
+      <button class="cli-cab" data-g="abrir" data-id="${Util.esc(g.id)}" aria-expanded="${abierto}">
+        <span class="cli-ini">${Util.esc(Util.iniciales(g.nombre || '?'))}</span>
+        <span class="cli-nom"><b>${Util.esc(g.nombre || 'Sin nombre')}</b><span>${g.nit ? 'NIT ' + Util.esc(g.nit) : 'Sin NIT'}</span></span>
+        ${a ? this.chip(a.estado, a.texto) : ''}
+        <span class="cli-flecha" aria-hidden="true">›</span>
+      </button>
+      ${abierto ? `<div class="cli-cuerpo">${this._datosHtml(g)}<section><h5>Vencimientos</h5>${CLIENTE_VENCIMIENTOS.map(v => this._vencHtml(g, v)).join('')}</section></div>` : ''}
+    </div>`;
+  },
+
+  _valorHtml(g, c) {
+    const v = g.datos[c.id] || '';
+    if (!v) return '<span class="muted">—</span>';
+    const copiar = `<button class="btn-icono btn-sm" data-g="copiar" data-id="${Util.esc(g.id)}" data-campo="${c.id}" title="Copiar" aria-label="Copiar ${Util.esc(c.label)}">📋</button>`;
+    switch (c.tipo) {
+      case 'clave': return `<span class="cli-clave">${Util.esc(v)}</span>${copiar}`;
+      case 'correo': return `<a href="mailto:${Util.esc(v)}">${Util.esc(v)}</a>${copiar}`;
+      case 'telefono': return `<a href="tel:${Util.esc(v.replace(/[^\d+]/g, ''))}">${Util.esc(v)}</a>${copiar}`;
+      case 'codigo': return `<code class="cli-codigo">${Util.esc(v)}</code>`;
+      default: return `<span>${Util.esc(v)}</span>`;
+    }
+  },
+
+  _datosHtml(g) {
+    const editando = this.editando?.id === g.id && this.editando.que === 'datos';
+    const fila = (label, valor) => `<div class="cli-dato"><span>${Util.esc(label)}</span><span class="cli-valor">${valor}</span></div>`;
+    if (editando) {
+      const input = (name, label, valor, tipo = 'text') => `<label>${Util.esc(label)}<input name="${name}" type="${tipo}" value="${Util.esc(valor || '')}" ${name === 'nombre' ? 'required' : ''}></label>`;
+      return `<form class="cli-form" data-g="form-datos" data-id="${Util.esc(g.id)}"><h5>${g._nuevo ? 'Nuevo cliente' : 'Editar datos'}</h5>
+        ${input('nombre', 'Nombre o razón social', g.nombre)}${input('d_cedula', 'Cédula (empresa: la del representante legal)', g.datos.cedula)}${input('nit', 'NIT', g.nit)}
+        ${CLIENTE_CAMPOS.filter(c => !c.fija).map(c => input('d_' + c.id, c.label, g.datos[c.id], c.tipo === 'correo' ? 'email' : 'text')).join('')}
+        <div class="cli-acciones"><button class="btn btn-sm btn-primario" type="submit">Guardar</button><button class="btn btn-sm" type="button" data-g="cancelar">Cancelar</button>
+          ${!g._nuevo && Permisos.esAdmin() ? `<span class="separador"></span><button class="btn btn-sm btn-peligro" type="button" data-g="eliminar" data-id="${Util.esc(g.id)}">Eliminar</button>` : ''}</div>
+      </form>`;
+    }
+    const junto = new Map(CLIENTE_CAMPOS.filter(c => c.junto).map(c => [c.junto, c]));
+    const secciones = CLIENTE_SECCIONES.map(s => {
+      const campos = CLIENTE_CAMPOS.filter(c => c.seccion === s.id && !c.junto && !c.fija);
+      const filas = campos.map(c => {
+        const pre = junto.get(c.id);
+        const valor = pre && g.datos[pre.id] ? this._valorHtml(g, pre) + ' ' + this._valorHtml(g, c) : this._valorHtml(g, c);
+        return fila(c.label, valor);
+      }).join('');
+      const copiable = (campo, label, v) => v ? Util.esc(v) + ` <button class="btn-icono btn-sm" data-g="copiar" data-id="${Util.esc(g.id)}" data-campo="${campo}" title="Copiar" aria-label="Copiar ${label}">📋</button>` : '<span class="muted">—</span>';
+      const fijos = s.id !== 'datos' ? '' : fila('Nombre', Util.esc(g.nombre))
+        + fila(this.esEmpresa(g) ? 'Cédula rep. legal' : 'Cédula', copiable('cedula', 'cédula', g.datos.cedula))
+        + fila('NIT', copiable('nit', 'NIT', g.nit));
+      return `<h5>${Util.esc(s.titulo)}</h5>${fijos}${filas}`;
+    }).join('');
+    return `<section class="cli-datos">${secciones}<div class="cli-acciones"><button class="btn btn-sm" data-g="editar" data-id="${Util.esc(g.id)}" data-que="datos">✎ Editar datos</button>
+      <button class="btn btn-sm" data-g="versiones" data-id="${Util.esc(g.id)}">🕘 Versiones (${g.historial.length})</button></div></section>`;
+  },
+
+  _vencHtml(g, v) {
+    const val = g.vencimientos[v.id] || {};
+    const editando = this.editando?.id === g.id && this.editando.que === v.id;
+    const { estado, dias } = this.estadoVenc(val);
+    if (editando) {
+      return `<form class="cli-venc editando" data-g="form-venc" data-id="${Util.esc(g.id)}" data-venc="${v.id}">
+        <div class="cli-venc-cab">${v.icono} ${Util.esc(v.label)}<span class="separador"></span><span class="muted mini">Editando</span></div>
+        <div class="cli-venc-form">
+          <label>Fecha de inicio<input type="date" name="inicio" value="${Util.esc(val.inicio || '')}"></label>
+          <label>Fecha de vencimiento<input type="date" name="fin" value="${Util.esc(val.fin || '')}"></label>
+          <div class="cli-acciones"><button class="btn btn-sm" type="button" data-g="cancelar">Cancelar</button><button class="btn btn-sm btn-primario" type="submit">Guardar</button></div>
+        </div></form>`;
+    }
+    const texto = estado === 'sin' ? 'Sin fecha'
+      : estado === 'vencido' ? `Venció hace ${-dias} día${dias === -1 ? '' : 's'}`
+      : dias === 0 ? 'Vence hoy' : `Vence en ${dias} día${dias === 1 ? '' : 's'}`;
+    const total = val.inicio && val.fin ? Util.diasEntre(val.inicio, val.fin) : 0;
+    const pct = total > 0 ? Math.min(100, Math.max(0, Math.round(100 * Util.diasEntre(val.inicio, Util.hoyISO()) / total))) : null;
+    return `<div class="cli-venc gv-${estado}">
+      <div class="cli-venc-cab">${v.icono} ${Util.esc(v.label)}<span class="separador"></span>${this.chip(estado, texto)}
+        <button class="btn btn-sm" data-g="editar" data-id="${Util.esc(g.id)}" data-que="${v.id}">✎ Editar</button></div>
+      ${pct !== null ? `<div class="cli-venc-barra"><span style="width:${pct}%"></span></div>` : ''}
+      <div class="cli-venc-fechas"><span>Inicio · ${val.inicio ? Util.fmtFecha(val.inicio) : '—'}</span><span>Vence · ${val.fin ? Util.fmtFecha(val.fin) : '—'}</span></div>
+    </div>`;
+  },
+
+  // ── Eventos ───────────────────────────────────────────────────────
+  _alClic(e) {
+    const b = e.target.closest('[data-g]');
+    if (!b || b.tagName === 'FORM' || b.tagName === 'INPUT') return;
+    const g = this.cliente(b.dataset.id);
+    switch (b.dataset.g) {
+      case 'reintentar': this.cargada = false; this.error = null; this.pintar(); this.cargar(); break;
+      case 'limpiar': Object.assign(this.filtro, { texto: '', lechera: '', venc: '', letra: '' }); this.pintar(); break;
+      case 'letra': this.filtro.letra = b.dataset.l; this.pintar(); break;
+      case 'nuevo': if (this.editando) this.cancelarEdicion(); this.nuevo(); break;
+      case 'abrir':
+        if (this.editando) this.cancelarEdicion();
+        this.abiertoId = this.abiertoId === b.dataset.id ? null : b.dataset.id;
+        this.pintar();
+        break;
+      case 'editar': if (this.editando) this.cancelarEdicion(); this.editando = { id: b.dataset.id, que: b.dataset.que }; this.pintar(); break;
+      case 'cancelar': this.cancelarEdicion(); break;
+      case 'eliminar': this.eliminar(b.dataset.id); break;
+      case 'versiones': this.verVersiones(b.dataset.id); break;
+      case 'copiar': if (g) this.copiar(b.dataset.campo === 'nit' ? g.nit : g.datos[b.dataset.campo] || ''); break;
+    }
+  },
+
+  _alEscribir(e) {
+    if (e.target.classList.contains('cli-buscar')) { this.filtro.texto = e.target.value; this.pintar(); }
+  },
+
+  _alCambiar(e) {
+    const t = e.target;
+    if (t.dataset.gf) { this.filtro[t.dataset.gf] = t.value; this.pintar(); return; }
+    if (t.dataset.g === 'importar' && t.files[0]) { Clientes.importarArchivo(t.files[0]); t.value = ''; }
+  },
+
+  _alEnviar(e) {
+    e.preventDefault();
+    const form = e.target;
+    const g = this.cliente(form.dataset.id);
+    if (!g) return;
+    const fd = new FormData(form);
+    const copia = structuredClone({ ...g, _nuevo: undefined });
+    delete copia._nuevo;
+    if (form.dataset.g === 'form-datos') {
+      copia.nombre = String(fd.get('nombre') || '').trim();
+      copia.nit = String(fd.get('nit') || '').trim();
+      if (!copia.nombre) { UI.toast('Escribe el nombre.', { tipo: 'error' }); return; }
+      for (const c of CLIENTE_CAMPOS) copia.datos[c.id] = String(fd.get('d_' + c.id) || '').trim();
+      if (g._nuevo) this.guardar(copia, 'Cliente creado');
+      else this.confirmarYGuardar(g, copia, 'Datos guardados');
+    } else if (form.dataset.g === 'form-venc') {
+      const inicio = fd.get('inicio') || null, fin = fd.get('fin') || null;
+      if (inicio && fin && fin < inicio) { UI.toast('La fecha de vencimiento no puede ser anterior a la de inicio.', { tipo: 'error' }); return; }
+      copia.vencimientos[form.dataset.venc] = { inicio, fin };
+      this.confirmarYGuardar(g, copia, 'Vencimiento guardado');
+    }
+  },
+
+  // ── Importar Excel ────────────────────────────────────────────────
+  // Convierte las filas de una hoja en clientes. Pura: no toca la página.
+  filasAClientes(filas) {
+    const norm = h => Util.normalizar(h).replace(/\s+/g, ' ');
+    let filaCab = -1, cab = [];
+    for (let i = 0; i < Math.min(8, filas.length); i++) {
+      const c = (filas[i] || []).map(norm);
+      if (c.includes('PRIMER NOMBRE') || c.some(h => /^(NOMBRE|RAZON SOCIAL)/.test(h))) { filaCab = i; cab = c; break; }
+    }
+    if (filaCab < 0) return [];
+    const col = candidatos => {
+      for (const c of candidatos) { const i = cab.indexOf(c); if (i >= 0) return i; }
+      for (const c of candidatos) { const i = cab.findIndex(h => h.startsWith(c)); if (i >= 0) return i; }
+      return -1;
+    };
+    // Cédula y NIT pueden venir en columnas separadas: la de cédula manda; si no hay, se usa la de NIT.
+    const iCed = col(['CEDULA', 'CEDULA / NIT']);
+    const iNit = iCed >= 0 ? iCed : col(['NIT']);
+    const iNitEmpresa = cab.indexOf('NIT') !== iNit ? cab.indexOf('NIT') : -1;
+    const iPrimer = col(['PRIMER NOMBRE', 'NOMBRE', 'RAZON SOCIAL']);
+    // Nombre: PRIMER NOMBRE + SEGUNDO NOMBRE + PRIMER APELLIDO + SEGUNDO APELLIDO
+    // (el segundo apellido puede venir en una columna sin encabezado junto al primero).
+    const iAp1 = col(['PRIMER APELLIDO']);
+    let iAp2 = col(['SEGUNDO APELLIDO']);
+    if (iAp2 < 0 && iAp1 >= 0 && !cab[iAp1 + 1]) iAp2 = iAp1 + 1;
+    const partesNombre = [iPrimer, col(['SEGUNDO NOMBRE']), iAp1, iAp2].filter(i => i >= 0);
+    // Empresas: NIT de 9 dígitos que empieza por 8 o 9, o razón social reconocible.
+    const esNitEmpresa = v => /^[89]\d{8}$/.test(v);
+    const RAZON_SOCIAL = /\b(S\.?\s?A\.?\s?S|LTDA|INVERSIONES|SOCIEDAD)\b/i;
+    const campos = CLIENTE_CAMPOS.map(c => ({ c, i: col(c.excel || []) })).filter(x => x.i >= 0);
+    const vencs = CLIENTE_VENCIMIENTOS.map(v => ({ v, i: col(v.excel || []) })).filter(x => x.i >= 0);
+    const texto = v => (v == null ? '' : String(v).replace(/\.0+$/, '').trim());
+
+    const out = [];
+    for (const f of filas.slice(filaCab + 1)) {
+      if (!f) continue;
+      const cedula = iNit >= 0 ? texto(f[iNit]).replace(/\s+/g, '') : '';
+      const nitCol = iNitEmpresa >= 0 ? texto(f[iNitEmpresa]).replace(/\s+/g, '') : '';
+      const nitEmpresa = esNitEmpresa(cedula) ? cedula : esNitEmpresa(nitCol) ? nitCol : '';
+      const primer = iPrimer >= 0 ? texto(f[iPrimer]).replace(/\s+/g, ' ') : '';
+      let nombre, nit, ced;
+      if (primer && !/^\d+$/.test(primer) && (nitEmpresa || RAZON_SOCIAL.test(primer))) {
+        // Empresa: la razón social y la cédula del representante legal (su nombre se ignora,
+        // igual que lo que venga después de "SAS" en la misma celda, p. ej. "HATO SAMPUES SAS DOMINGO").
+        nombre = primer.replace(/^(.*?\bS\.?\s?A\.?\s?S\b\.?).*$/i, '$1');
+        nit = nitEmpresa || cedula;
+        ced = [cedula, nitCol, ...partesNombre.map(i => texto(f[i]))].find(x => /^\d{5,}$/.test(x) && x !== nit) || '';
+      } else {
+        // Persona: los números sueltos en las columnas de nombre (cédulas de otra persona) no son parte del nombre.
+        nombre = partesNombre.map(i => texto(f[i])).filter(p => p && !/^\d+$/.test(p)).join(' ').replace(/\s+/g, ' ');
+        // Persona natural: su NIT es el mismo número de la cédula
+        nit = cedula;
+        ced = cedula;
+      }
+      if (!nombre) {
+        // Fila con solo una cédula debajo de una empresa: es la del representante legal.
+        const ant = out[out.length - 1];
+        if (cedula && /^\d{5,}$/.test(cedula) && ant && /^[89]\d{8}$/.test(ant.nit) && !ant.datos.cedula) ant.datos.cedula = cedula;
+        continue;
+      }
+      const datos = ced ? { cedula: ced } : {};
+      for (const { c, i } of campos) {
+        const v = f[i];
+        if (v == null || String(v).trim() === '') continue;
+        const val = texto(c.extraer ? c.extraer(v) : v);
+        if (val) datos[c.id] = val;
+      }
+      const vencimientos = {};
+      for (const { v, i } of vencs) {
+        const fin = Util.parsearFecha(f[i]);
+        if (fin) vencimientos[v.id] = { inicio: null, fin };
+      }
+      // Id estable: reimportar el mismo archivo no duplica clientes.
+      const id = 'c-' + (nit ? 'nit-' + nit : 'nom-' + Util.normalizar(nombre).replace(/[^A-Z0-9]+/g, '-'));
+      out.push({ id, nombre, nit, datos, vencimientos });
+    }
+    return [...new Map(out.map(g => [g.id, g])).values()];
+  },
+
+  async importarArchivo(archivo) {
+    UI.abrirModal(`<header class="modal-cab"><h3>Importar clientes: ${Util.esc(archivo.name)}</h3></header>
+      <p id="gimp-estado" class="muted">Leyendo archivo…</p>
+      <div class="modal-pie"><span class="separador"></span><button class="btn" data-accion="cerrar-modal">Cerrar</button></div>`, { ancho: 520 });
+    const estado = t => { const el = document.getElementById('gimp-estado'); if (el) el.textContent = t; };
+    try {
+      await Importador.cargarXLSX();
+      const wb = XLSX.read(await archivo.arrayBuffer(), { type: 'array', cellDates: true });
+      let lista = [];
+      for (const nombre of wb.SheetNames) {
+        lista = lista.concat(this.filasAClientes(XLSX.utils.sheet_to_json(wb.Sheets[nombre], { header: 1, defval: null, raw: true })));
+      }
+      if (!lista.length) { estado('No se encontraron clientes. La hoja debe tener una columna PRIMER NOMBRE o NOMBRE.'); return; }
+      const existentes = new Set(this.lista.map(g => g.id));
+      const nuevos = lista.filter(g => !existentes.has(g.id));
+      estado(`Guardando ${nuevos.length} clientes nuevos…`);
+      await Datos.importarClientes(nuevos);
+      await this.cargar();
+      estado(`Listo: ${lista.length} clientes en el archivo, ${nuevos.length} nuevos. Los que ya existían no se modificaron.`);
+    } catch (e) {
+      console.error(e);
+      estado('❌ ' + e.message);
+    }
+  },
+};
+
+Vistas.clientes = {
+  titulo: 'Clientes',
+  icono: '🏢',
+  orden: 6.5,
+  visible: () => true,
+  persistente: true,
+  nodo: () => Clientes.raiz,
+  render: () => '',
+  montar: main => Clientes.montar(main),
 };
 
 </script>
@@ -2986,7 +4340,7 @@ const Importador = (() => {
     UI.toast(`${tareas.length} tareas exportadas`, { tipo: 'ok' });
   }
 
-  return { filasATareas, mapearEstado, mapearPrioridad, huella, importarArchivo, exportar };
+  return { filasATareas, mapearEstado, mapearPrioridad, huella, importarArchivo, exportar, cargarXLSX };
 })();
 
 if (typeof module !== 'undefined') module.exports = { Importador };
@@ -3173,11 +4527,11 @@ const App = {
     errorCarga: null,
     vista: 'inicio',
     tema: 'claro',
-    filtros: { alcance: 'mias', texto: '', colaborador: '', estado: '', prioridad: '', categoria: '' },
+    filtros: { alcance: 'mias', texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '', diaSegun: 'completada' },
     tablero: { agrupar: 'estado' },
     lista: { orden: 'fecha_vencimiento', dir: 1, limite: CONFIG.LIMITE_LISTA },
     cal: { modo: 'mes', ref: Util.hoyISO() },
-    rend: { periodo: 'mes' },
+    rend: { periodo: 'todo' },
   },
 
   // ── Consultas sobre el estado ──────────────────────────────────────
@@ -3201,16 +4555,20 @@ const App = {
   },
 
   // Tareas que el usuario ve en tablero, lista y calendario.
-  tareasVisibles({ sinFiltros = false } = {}) {
+  // Las completadas se archivan: solo aparecen con el filtro de estado "Completada"
+  // o con el filtro de día (para auditar, ese día se ven todas, también las completadas).
+  tareasVisibles({ sinFiltros = false, estado = this.estado.filtros.estado } = {}) {
     const f = this.estado.filtros;
     let lista = this.estado.tareas;
     if (f.alcance === 'mias' || !Permisos.verEquipo()) lista = lista.filter(t => this.esMia(t));
     if (sinFiltros) return lista;
     const hoy = Util.hoyISO();
     const q = Util.normalizar(f.texto);
+    const fechaDia = FILTRO_DIA_FECHA[f.diaSegun] || FILTRO_DIA_FECHA.completada;
     return lista.filter(t =>
       (!f.colaborador || t.asignado_a === f.colaborador) &&
-      (!f.estado || (f.estado === 'vencida' ? Metricas.estadoEfectivo(t, hoy) === 'vencida' : t.estado === f.estado)) &&
+      (estado ? (estado === 'vencida' ? Metricas.estadoEfectivo(t, hoy) === 'vencida' : t.estado === estado) : f.dia || t.estado !== 'completada') &&
+      (!f.dia || fechaDia(t) === f.dia) &&
       (!f.prioridad || t.prioridad === f.prioridad) &&
       (!f.categoria || t.categoria === f.categoria) &&
       (!q || Util.normalizar(`${t.titulo} ${t.empresa || ''} ${t.descripcion || ''}`).includes(q)));
@@ -3296,7 +4654,7 @@ const App = {
     const t = this.tarea(id);
     if (!t) return;
     const hecha = t.estado === 'completada';
-    return this.actualizar(id, { estado: hecha ? 'en_progreso' : 'completada' }, { mensaje: hecha ? 'Tarea reabierta' : '✓ Tarea completada' }).catch(() => {});
+    return this.actualizar(id, { estado: hecha ? 'en_progreso' : 'completada' }, { mensaje: hecha ? 'Tarea reabierta' : '✓ Tarea completada · la encuentras en el filtro Completada' }).catch(() => {});
   },
 
   // Arrastrar y soltar: campo = estado | asignado_a | prioridad | fecha_vencimiento
@@ -3381,6 +4739,8 @@ const App = {
     document.body.dataset.vista = this.estado.vista;
     if (this.estado.errorCarga) {
       main.innerHTML = Vistas.inicio.errorCarga(this.estado.errorCarga);
+    } else if (v.persistente && v.nodo?.() && main.firstElementChild === v.nodo()) {
+      // La vista se actualiza sola: repintarla borraría lo que se está escribiendo.
     } else {
       main.innerHTML = v.render();
       v.montar?.(main);
@@ -3468,11 +4828,11 @@ const App = {
       if (version !== this._version || this.estado.perfil !== perfil) return;
       let cambio = JSON.stringify(tareas) !== JSON.stringify(this.estado.tareas);
       if (cambio) {
-        // Asignaciones que no llegaron por tiempo real también avisan.
+        // Asignaciones y cambios de estado que no llegaron por tiempo real también avisan.
         const previas = new Map(this.estado.tareas.map(t => [t.id, t]));
         for (const t of tareas) {
           const previa = previas.get(t.id);
-          if (!previa || previa.asignado_a !== t.asignado_a) Avisos.alCambiarRemoto(previa ? 'UPDATE' : 'INSERT', t, previa);
+          if (!previa || previa.asignado_a !== t.asignado_a || previa.estado !== t.estado) Avisos.alCambiarRemoto(previa ? 'UPDATE' : 'INSERT', t, previa);
         }
         this.estado.tareas = tareas;
         Avisos.revisar();
@@ -3509,12 +4869,14 @@ const App = {
     Avisos.detener();
     clearInterval(this._temporizadorRefresco);
     clearInterval(this._temporizadorCrono);
+    Notas.reiniciar();
+    Clientes.reiniciar();
     await Datos.logout();
     this.estado.perfil = null;
     this.estado.tareas = [];
     // El siguiente usuario empieza limpio: sin la vista ni los filtros del anterior.
     this.estado.vista = 'inicio';
-    Object.assign(this.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '' });
+    Object.assign(this.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '' });
     this.estado.lista.limite = CONFIG.LIMITE_LISTA;
     history.replaceState(null, '', location.pathname + location.search);
     document.getElementById('app').hidden = true;
@@ -3575,7 +4937,8 @@ const Acciones = {
   'abrir-tarea': el => TareaModal.abrir(el.dataset.id),
   'completar': el => App.completar(el.dataset.id),
   'alcance': el => { App.estado.filtros.alcance = el.dataset.valor; if (el.dataset.valor === 'mias') App.estado.filtros.colaborador = ''; App.render(); },
-  'limpiar-filtros': () => { Object.assign(App.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '' }); App.render(); },
+  'ver-completadas': () => { App.estado.filtros.estado = 'completada'; App.render(); },
+  'limpiar-filtros': () => { Object.assign(App.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '' }); App.render(); },
   'ver-colaborador': el => {
     Object.assign(App.estado.filtros, { alcance: 'equipo', colaborador: el.dataset.id || '', estado: el.dataset.estado || '' });
     App.ir('lista');
