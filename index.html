@@ -4291,7 +4291,8 @@ const Chat = {
     this._abrir(this.actualId, { enfocar: false });
   },
 
-  visible() { return App.estado.vista === 'chat' && !document.hidden; },
+  // Solo cuenta como "viendo" si la ventana está al frente: si está detrás de otra aplicación, avisa.
+  visible() { return App.estado.vista === 'chat' && !document.hidden && document.hasFocus(); },
 
   async cargarConversaciones() {
     this.convs = await Datos.chatConversaciones();
@@ -4631,6 +4632,7 @@ const Chat = {
     if (!this._oyenteVisible) {
       this._oyenteVisible = () => { if (this.visible()) this._marcarLeido(this.actualId); };
       document.addEventListener('visibilitychange', this._oyenteVisible);
+      addEventListener('focus', this._oyenteVisible);
     }
   },
 
