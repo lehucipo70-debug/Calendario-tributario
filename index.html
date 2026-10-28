@@ -1642,8 +1642,8 @@ class SupabaseStore {
     if (!data?.length) throw new ErrorDatos('No tienes permiso para borrar este mensaje.');
   }
 
-  async chatMarcarLeido(convId) {
-    const ahora = new Date().toISOString();
+  async chatMarcarLeido(convId, hasta) {
+    const ahora = hasta || new Date().toISOString();
     const { data, error } = await this.sb.from(CONFIG.TABLAS.chatMiem).update({ leido_hasta: ahora }).eq('conversacion_id', convId).eq('usuario_id', this.usuario?.id).select('conversacion_id');
     if (error) throw this._error(error, 'marcar como leído');
     if (!data?.length) {
@@ -1930,8 +1930,8 @@ class LocalStore {
     this._guardar();
   }
 
-  async chatMarcarLeido(convId) {
-    const ch = this._chat(), yo = this.perfil?.id, ahora = new Date().toISOString();
+  async chatMarcarLeido(convId, hasta) {
+    const ch = this._chat(), yo = this.perfil?.id, ahora = hasta || new Date().toISOString();
     const m = ch.miembros.find(x => x.conversacion_id === convId && x.usuario_id === yo);
     if (m) m.leido_hasta = ahora; else ch.miembros.push({ conversacion_id: convId, usuario_id: yo, leido_hasta: ahora });
     this._guardar();
@@ -4344,10 +4344,46 @@ const Chat = {
       return;
     }
     if (tipo === 'mensaje') return this._alMensaje(evento, nuevo, anterior);
-    // Conversación o integrantes: se recarga la lista (cambia poco)
-    try { await this.cargarConversaciones(); } catch { /* se reintenta en el próximo cambio */ }
-    if (!this.conv(this.actualId)) this.actualId = CHAT_GENERAL_ID;
-    this.pintar();
+    if (tipo === 'conversacion') {
+      const c = this.conv(nuevo?.id || anterior?.id);
+      if (evento === 'UPDATE' && c) {
+        // Cada mensaje nuevo toca updated_at: basta con actualizar la fila, sin recargar todo
+        Object.assign(c, { nombre: nuevo.nombre, color: nuevo.color, updated_at: nuevo.updated_at });
+        this.pintarLista(); this.pintarCabecera();
+        return;
+      }
+      if (evento === 'DELETE' && c) {
+        this.convs = this.convs.filter(x => x !== c);
+        this.mensajes.delete(c.id); this.noLeidos.delete(c.id); this._insignia();
+        if (this.actualId === c.id) this._abrir(CHAT_GENERAL_ID, { enfocar: false }); else this.pintarLista();
+        return;
+      }
+    } else if (tipo === 'miembro') {
+      const fila = evento === 'DELETE' ? anterior : nuevo;
+      const c = this.conv(fila?.conversacion_id);
+      if (evento === 'UPDATE') {   // alguien marcó como leído: no cambia nada en pantalla
+        if (c && fila.usuario_id === this.yo()) c.leido_hasta = fila.leido_hasta;
+        return;
+      }
+      if (c && fila?.usuario_id && fila.usuario_id !== this.yo()) {
+        // Entró o salió otra persona de una conversación que ya veo
+        c.miembros = evento === 'DELETE' ? c.miembros.filter(u => u !== fila.usuario_id) : [...new Set([...c.miembros, fila.usuario_id])];
+        this.pintarCabecera();
+        return;
+      }
+    }
+    // Conversación nueva o cambio en mis accesos: se recarga la lista una sola vez
+    this._recargarPronto();
+  },
+
+  _recargarPronto() {
+    clearTimeout(this._recarga);
+    this._recarga = setTimeout(async () => {
+      try { await this.cargarConversaciones(); } catch { return; }
+      if (!this.conv(this.actualId)) { this._abrir(CHAT_GENERAL_ID, { enfocar: false }); return; }
+      if (this.visible()) this._marcarLeido(this.actualId);
+      this.pintarLista(); this.pintarCabecera();
+    }, 400);
   },
 
   async _alMensaje(evento, m, anterior) {
@@ -4414,16 +4450,29 @@ const Chat = {
       catch (e) { UI.toast(e.message, { tipo: 'error' }); this.mensajes.set(id, []); }
       if (this.actualId !== id) return;
     }
+    const ultimo = this.mensajes.get(id).at(-1);
+    if (ultimo && !(this.ultimos.get(id)?.created_at > ultimo.created_at)) this.ultimos.set(id, ultimo);
     this.pintarMensajes({ alFinal: true });
     if (this.visible()) this._marcarLeido(id);
     if (enfocar && matchMedia('(min-width: 761px)').matches) this.raiz?.querySelector('.chat-texto')?.focus();
   },
 
-  async _marcarLeido(id) {
-    if (!this.noLeidos.get(id) && this.conv(id)?.leido_hasta) return;
-    this.noLeidos.set(id, 0);
-    this._insignia(); this.pintarLista();
-    try { const c = this.conv(id); const t = await Datos.chatMarcarLeido(id); if (c) c.leido_hasta = t; } catch (e) { console.warn('[Chat] leído', e); }
+  _marcarLeido(id) {
+    const c = this.conv(id);
+    if (!c) return;
+    if (this.noLeidos.get(id)) { this.noLeidos.set(id, 0); this._insignia(); this.pintarLista(); }
+    const ultimo = this.ultimos.get(id)?.created_at;
+    if (c.leido_hasta && (!ultimo || ultimo <= c.leido_hasta)) return;   // ya está al día
+    // Se agrupan las escrituras: varios mensajes seguidos = una sola actualización
+    this._leidoPendiente ??= new Map();
+    clearTimeout(this._leidoPendiente.get(id));
+    this._leidoPendiente.set(id, setTimeout(async () => {
+      this._leidoPendiente.delete(id);
+      // Nunca antes del último mensaje, aunque el reloj del equipo esté atrasado
+      const ahora = new Date().toISOString();
+      const hasta = ultimo && ultimo > ahora ? ultimo : ahora;
+      try { c.leido_hasta = await Datos.chatMarcarLeido(id, hasta); } catch (e) { console.warn('[Chat] leído', e); }
+    }, c.leido_hasta ? 1500 : 0));
   },
 
   async _abrirDirecto(uid) {
