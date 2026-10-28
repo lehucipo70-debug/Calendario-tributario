@@ -1856,7 +1856,7 @@ class LocalStore {
     const limpio = limpiarParaGuardar(cambios);
     // Igual que el trigger de la base de datos: completada_at se gestiona solo.
     if (limpio.estado && limpio.estado !== t.estado) {
-      limpio.completada_at = limpio.estado === 'completada' ? new Date().toISOString() : null;
+      if (!('completada_at' in limpio)) limpio.completada_at = limpio.estado === 'completada' ? new Date().toISOString() : null;
       if (!('iniciada_at' in limpio)) {
         const ini = iniciadaAlCambiar(t.estado, limpio.estado, t.iniciada_at);
         if (ini !== undefined) limpio.iniciada_at = ini;
@@ -2420,7 +2420,7 @@ const UI = {
     return `<span class="fecha ${cls}" title="${Util.fmtFecha(t.fecha_vencimiento)}">📅 ${Util.fmtRelativa(t.fecha_vencimiento)}</span>`;
   },
 
-  // Tiempo de ejecución. Las insignias con data-crono las actualiza el reloj de App cada 30 s.
+  // Tiempo de ejecución. Las insignias con data-crono las actualiza el reloj de App cada 15 s y al volver a la pestaña.
   cronometro(t, { vacio = '' } = {}) {
     const ms = Metricas.tiempoEjecucion(t);
     if (ms === null) return vacio;
@@ -5644,9 +5644,11 @@ const App = {
     if (c.estado && c.estado !== 'completada' && t.estado === 'completada' && (c.progreso ?? t.progreso) === 100) c.progreso = 80;
     // completada_at se envía siempre: las gráficas dependen de ella y no todas las bases
     // de datos tienen el trigger que la fija (si existe, el trigger tiene la última palabra).
-    if (c.estado && c.estado !== t.estado) c.completada_at = c.estado === 'completada' ? new Date().toISOString() : null;
+    // Si el cambio ya trae las fechas (por ejemplo, al Deshacer), se respetan: así deshacer
+    // un paso a Pendiente no reinicia el cronómetro ni deshacer una reapertura lo alarga.
+    if (c.estado && c.estado !== t.estado && !('completada_at' in c)) c.completada_at = c.estado === 'completada' ? new Date().toISOString() : null;
     // Cronómetro: empieza al salir de Pendiente y se detiene al completar (ver iniciadaAlCambiar).
-    if (c.estado) {
+    if (c.estado && !('iniciada_at' in c)) {
       const ini = iniciadaAlCambiar(t.estado, c.estado, t.iniciada_at);
       if (ini !== undefined) c.iniciada_at = ini;
     }
@@ -5671,7 +5673,7 @@ const App = {
       this.render();
       if (mensaje) {
         const revertir = {};
-        for (const k of Object.keys(enviar)) revertir[k] = antes[k];
+        for (const k of Object.keys(enviar)) revertir[k] = antes[k] ?? null;
         UI.toast(mensaje, { tipo: 'ok', deshacer: deshacible ? () => this.actualizar(id, revertir, { mensaje: 'Cambio revertido', deshacible: false }) : null });
       }
       return guardada;
@@ -5856,7 +5858,13 @@ const App = {
     clearInterval(this._temporizadorRefresco);
     this._temporizadorRefresco = setInterval(() => this.refrescar(), CONFIG.SEGUNDOS_REFRESCO * 1000);
     clearInterval(this._temporizadorCrono);
-    this._temporizadorCrono = setInterval(() => this._actualizarCronometros(), 30000);
+    this._temporizadorCrono = setInterval(() => this._actualizarCronometros(), 15000);
+    // Con la pestaña en segundo plano el navegador frena los temporizadores: al volver se ponen al día.
+    if (!this._cronoAlVolver) {
+      this._cronoAlVolver = () => { if (!document.hidden && this.estado.perfil) this._actualizarCronometros(); };
+      document.addEventListener('visibilitychange', this._cronoAlVolver);
+      addEventListener('focus', this._cronoAlVolver);
+    }
     const desdeHash = location.hash.replace('#/', '');
     this.ir(Vistas[desdeHash] ? desdeHash : 'inicio');
     Avisos.iniciar();
