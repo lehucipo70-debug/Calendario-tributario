@@ -98,6 +98,34 @@
   --vidrio-hover: rgba(255,255,255,.09); --vidrio-brillo-barra: 0 0 10px rgba(255,77,109,.5);
   --nc-violeta: #a78bfa; --nc-amarillo: #fbbf24; --nc-azul: #60a5fa; --nc-verde: #4ade80; --nc-rosa: #f472b6; --nc-gris: #a1a1aa;
 }
+/* Tema claro "Arena suave": tonos arena y verde salvia, sin blanco puro ni brillos,
+   para cansar poco la vista. El rojo queda solo para lo vencido o urgente. */
+:root[data-theme="light"] {
+  --bg: #efe9df; --bg2: #f6f1e8; --bg3: #e9e1d4; --borde: #ddd2c1;
+  --text: #3a3128; --text2: #6b5e4f; --text3: #7a6d5c;
+  --acento: #5d7b6f; --acento-2: #8a6a1f; --acento-solido: #4f6b60; --acento-suave: #dfe8e2; --acento-texto: #3f5e52;
+  --primario-bg: #4f6b60; --primario-texto: #fbf8f2;
+  --indigo-suave: #e4e2ec; --indigo-texto: #4a4878;
+  --verde: #46714b; --verde-suave: #dfe8da;
+  --ambar: #85651c; --ambar-suave: #efe3c9;
+  --rojo: #a5402f; --rojo-suave: #f1ddd6;
+  --azul: #3d6580; --azul-suave: #dce5ea;
+  --p-urgente: #a5402f; --p-alta: #a8582a; --p-media: #565494; --p-baja: #7a6d5c;
+  --hero-1: #4a665b; --hero-2: #56746a; --hero-3: #627f72;
+  --sombra: 0 1px 2px rgba(70,55,35,.06), 0 4px 14px rgba(70,55,35,.05);
+  --sombra-2: 0 12px 30px rgba(70,55,35,.10); --sombra-3: 0 24px 60px rgba(70,55,35,.20);
+  --vidrio-borde: rgba(221,210,193,.95);
+  --vidrio-sombra: 0 0 0 1px rgba(70,55,35,.05), 0 20px 50px -24px rgba(70,55,35,.25);
+  --vidrio-fondo: rgba(246,241,232,.6); --vidrio-filo: #f6f1e8; --vidrio-reflejo: rgba(250,246,238,.35);
+  --vidrio-luz-a: rgba(93,123,111,.22); --vidrio-luz-b: rgba(214,190,150,.32); --vidrio-luz-c: rgba(196,150,120,.18);
+  --vidrio-texto-cab: #6b5e4f; --vidrio-fila: rgba(246,241,232,.82); --vidrio-fila-borde: rgba(221,210,193,.9);
+  --vidrio-hover: #f9f5ee;
+  --nc-violeta: #765c9e; --nc-amarillo: #a8761c; --nc-azul: #3d6580; --nc-verde: #4f7a54; --nc-rosa: #a3567a; --nc-gris: #7a6d5c;
+}
+:root[data-theme="light"] #fondo-canvas { display: none; }
+:root[data-theme="light"] .chat-av-general, :root[data-theme="light"] .chat-msj.propio .chat-burbuja { background: linear-gradient(135deg, var(--hero-1), var(--hero-3)); }
+:root[data-theme="light"] .chat-item.on { background: var(--acento-suave); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--acento) 45%, transparent); }
+:root[data-theme="light"] .login { background: radial-gradient(1000px 460px at 50% 115%, rgba(93,123,111,.22), transparent 65%), radial-gradient(900px 520px at 100% 0%, rgba(214,190,150,.3), transparent 55%); }
 
 /* ── Base ─────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -589,7 +617,7 @@ body.nav-compacta .lateral-pie { display: block; margin-top: auto; padding: 0 6p
 /* Colores de nota: punto y, en tema claro, un tinte pastel en la tarjeta */
 .nc-violeta { --nc: var(--nc-violeta); } .nc-amarillo { --nc: var(--nc-amarillo); } .nc-azul { --nc: var(--nc-azul); }
 .nc-verde { --nc: var(--nc-verde); } .nc-rosa { --nc: var(--nc-rosa); } .nc-gris { --nc: var(--nc-gris); }
-:root[data-theme="light"] .nota-tarjeta { --nota-fondo: color-mix(in srgb, var(--nc) 16%, rgba(255,255,255,.7)); }
+:root[data-theme="light"] .nota-tarjeta { --nota-fondo: color-mix(in srgb, var(--nc) 14%, var(--bg2)); }
 .notas-editor { min-height: calc(100vh - var(--alto-barra) - 120px); display: flex; flex-direction: column; overflow: hidden; }
 .nota-cab { display: flex; align-items: center; gap: 8px; padding: 16px 18px 10px; }
 .nota-volver { display: none; font-size: 22px; }
