@@ -59,6 +59,18 @@ La sección **Notas** es un bloc de notas privado: cada persona ve solo las suya
 
 Para activarla, ejecuta una sola vez [`supabase/notas.sql`](supabase/notas.sql) en Supabase → **SQL Editor**. Mientras no exista la tabla, la sección muestra un aviso.
 
+## Chat del equipo
+
+La sección **Chat** tiene:
+
+- **Canal general (Equipo)**: todos leen y escriben.
+- **Grupos**: solo un administrador los crea, les cambia el nombre, el color o los integrantes, o los borra (botón **＋ Grupo** y **Gestionar**). Solo los integrantes leen el grupo.
+- **Mensajes directos**: privados de verdad. Solo las dos personas de la conversación los pueden leer; tampoco el administrador.
+
+Cada quien edita o borra solo sus mensajes. Con `@` se menciona a alguien y con el botón de lista se referencia una tarea (se abre al tocarla). Los mensajes llegan al momento, se ve quién está en línea y quién está escribiendo, la pestaña muestra los mensajes sin leer y, con la campana activa, llega un aviso de escritorio por cada mensaje nuevo.
+
+Para activarlo, ejecuta una sola vez [`supabase/chat.sql`](supabase/chat.sql) en Supabase → **SQL Editor**. Mientras no exista, la sección muestra un aviso.
+
 ## Clientes
 
 La sección **Clientes** es el directorio de clientes: una lista de nombres y NIT con buscador (nombre, cédula, NIT, código o empresa lechera), filtro por empresa lechera y por vencimientos, y letras A–Z. Al tocar un nombre se despliega la ficha con la cédula y el NIT en renglones separados (persona: su cédula y su NIT, que es el mismo número; empresa: el NIT y la cédula del representante legal, sin su nombre), la empresa lechera (código y nombre), el correo (y un segundo correo), las claves a la vista (correo, correo 2 y DIAN) y tres vencimientos editables con fecha de inicio y de vencimiento: certificado de firma, resolución de facturación y documento soporte. La fila avisa en rojo si algo venció y en amarillo si vence en los próximos 30 días.

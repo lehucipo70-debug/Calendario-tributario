@@ -224,11 +224,14 @@ textarea { width: 100%; resize: vertical; }
 .nav button { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border: none; background: transparent; border-radius: 999px; color: var(--text2); font-weight: 500; font-size: 13px; white-space: nowrap; transition: background .15s, color .15s; }
 .nav button:hover { background: var(--bg3); color: var(--text); }
 .nav button.activo { background: var(--primario-bg); color: var(--primario-texto); }
+body.nav-ajustada .nav button { padding: 7px 9px; gap: 6px; }
 .nav-icono { display: none; }
 .nav-badge { background: var(--acento-solido); color: #fff; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 0 7px; line-height: 18px; }
 .lateral-pie { display: none; }
 .capa-menu { display: none; }
 .menu-movil { display: none; }
+.menu-movil { position: relative; }
+.menu-movil.con-aviso::after { content: ''; position: absolute; top: 5px; right: 5px; width: 9px; height: 9px; border-radius: 50%; background: var(--acento-solido); box-shadow: 0 0 0 2px var(--bg); }
 .usuario { display: flex; align-items: center; gap: 8px; padding-left: 4px; }
 .usuario .avatar { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--acento); }
 .usuario-info { display: none; flex-direction: column; line-height: 1.25; font-size: 12px; }
@@ -257,6 +260,21 @@ body[data-vista="inicio"] .titulo-vista { position: absolute; width: 1px; height
   .nav-texto { flex: 1; text-align: left; }
   .lateral-pie { display: block; margin-top: auto; padding: 0 6px; }
 }
+/* Menú compacto también en pantallas anchas cuando las pestañas no caben (App._ajustarNav) */
+body.nav-compacta .menu-movil { display: inline-flex; }
+body.nav-compacta .barra-sup { backdrop-filter: none; background: var(--bg); }
+body.nav-compacta .lateral {
+  position: fixed; inset: 0 auto 0 0; width: 272px; z-index: 40; flex-direction: column; align-items: stretch; gap: 14px;
+  padding: 22px 14px; background: var(--bg2); border-right: 1px solid var(--borde); overflow-y: auto;
+  transform: translateX(-100%); transition: transform .2s ease;
+}
+body.nav-compacta.menu-abierto .lateral { transform: none; box-shadow: var(--sombra-3); }
+body.nav-compacta.menu-abierto .capa-menu { display: block; position: fixed; inset: 0; z-index: 35; background: rgba(0,0,0,.5); }
+body.nav-compacta .nav { flex-direction: column; align-items: stretch; padding: 0; border: none; background: none; border-radius: 0; }
+body.nav-compacta .nav button { padding: 11px 14px; font-size: 14px; border-radius: 14px; }
+body.nav-compacta .nav-icono { display: inline; width: 22px; text-align: center; }
+body.nav-compacta .nav-texto { flex: 1; text-align: left; }
+body.nav-compacta .lateral-pie { display: block; margin-top: auto; padding: 0 6px; }
 
 /* ── Paneles, KPIs y rejillas ─────────────────────────────────────── */
 .panel { background: var(--bg2); border: 1px solid var(--borde); border-radius: var(--r); padding: 20px; box-shadow: var(--sombra); min-width: 0; }
@@ -666,6 +684,111 @@ body[data-vista="inicio"] .titulo-vista { position: absolute; width: 1px; height
   .cli-cab { padding: 12px 14px; gap: 10px; }
 }
 
+/* ── Chat del equipo ──────────────────────────────────────────────── */
+.chat { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 16px; height: calc(100vh - var(--alto-barra) - 130px); min-height: 480px; }
+.chat::before { content: ''; position: absolute; inset: -20px 0; z-index: -1; pointer-events: none; filter: blur(60px);
+  background: radial-gradient(520px 420px at 8% 30%, var(--vidrio-luz-a), transparent 70%), radial-gradient(560px 460px at 92% 40%, var(--vidrio-luz-b), transparent 70%), radial-gradient(480px 360px at 50% 100%, var(--vidrio-luz-c), transparent 70%);
+  animation: deriva 24s ease-in-out infinite alternate; }
+.chat-lista { padding: 14px; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.chat-secciones { overflow-y: auto; display: flex; flex-direction: column; gap: 2px; margin: 0 -4px; padding: 0 4px 4px; }
+.chat-seccion { display: flex; align-items: center; justify-content: space-between; padding: 10px 8px 4px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text2); }
+.chat-seccion .btn { text-transform: none; letter-spacing: 0; }
+.chat-ayuda { padding: 2px 8px 6px; }
+.chat-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 10px; border: 0; border-radius: 14px; background: none; color: var(--text); text-align: left; }
+.chat-item:hover { background: var(--vidrio-fila); }
+.chat-item.on { background: color-mix(in srgb, var(--nc-violeta) 16%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nc-violeta) 45%, transparent); }
+.chat-item-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.chat-item-fila { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.chat-item-fila strong { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-item-fila small { font-size: 11px; color: var(--text3); flex-shrink: 0; }
+.chat-item-res { font-size: 12.5px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-escribe-mini { color: var(--verde); }
+.chat-av { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; font-weight: 800; flex-shrink: 0; }
+.chat-av-general { background: linear-gradient(135deg, #7c3aed, #0e7490); color: #fff; font-size: 18px; }
+.chat-av-grupo { background: color-mix(in srgb, var(--cc) 24%, transparent); color: color-mix(in srgb, var(--cc) 65%, var(--text)); font-size: 16px; }
+.cc-ambar { --cc: var(--nc-amarillo); } .cc-violeta { --cc: var(--nc-violeta); } .cc-azul { --cc: var(--nc-azul); }
+.cc-verde { --cc: var(--nc-verde); } .cc-rosa { --cc: var(--nc-rosa); } .cc-gris { --cc: var(--nc-gris); }
+.chat-av-persona { position: relative; flex-shrink: 0; display: inline-flex; }
+.chat-en-linea { position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px; border-radius: 50%; background: var(--verde); border: 2px solid var(--bg2); }
+.chat-conv { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.chat-cab { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--vidrio-fila-borde); }
+.chat-cab-txt { flex: 1; min-width: 0; }
+.chat-cab-txt h2 { font-size: 17px; }
+.chat-cab-txt small { color: var(--text2); font-size: 12px; }
+.chat-verde { color: var(--verde); }
+.chat-cab-gente { display: flex; }
+.chat-cab-gente .avatar + .avatar { margin-left: -8px; }
+.chat-volver { display: none; font-size: 22px; padding: 0; }
+.chat-mensajes { flex: 1; overflow-y: auto; padding: 16px 20px 8px; display: flex; flex-direction: column; gap: 10px; }
+.chat-dia { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text3); margin: 6px 0; text-transform: capitalize; }
+.chat-dia::before, .chat-dia::after { content: ''; flex: 1; height: 1px; background: var(--vidrio-fila-borde); }
+.chat-msj { display: flex; align-items: flex-end; gap: 10px; }
+.chat-msj.seguido { margin-top: -6px; }
+.chat-msj.propio { justify-content: flex-end; }
+.chat-msj.enviando { opacity: .6; }
+.chat-msj-av { width: 34px; flex-shrink: 0; }
+.chat-msj-cuerpo { position: relative; max-width: min(70%, 640px); display: flex; flex-direction: column; gap: 4px; }
+.chat-msj.propio .chat-msj-cuerpo { align-items: flex-end; }
+.chat-msj-cab { font-size: 12px; color: var(--text2); }
+.chat-msj-cab strong { color: var(--text); }
+.chat-burbuja { padding: 10px 14px; border-radius: 18px 18px 18px 6px; background: var(--vidrio-hover); border: 1px solid var(--vidrio-fila-borde); overflow-wrap: anywhere; line-height: 1.5; }
+.chat-msj.propio .chat-burbuja { border-radius: 18px 18px 6px 18px; background: linear-gradient(135deg, #7c3aed, #0e7490); border-color: transparent; color: #fff; }
+.chat-msj.propio .chat-burbuja a { color: #fff; }
+.chat-editado { font-size: 11px; opacity: .75; }
+.chat-mencion { padding: 1px 5px; border-radius: 6px; background: color-mix(in srgb, var(--nc-violeta) 22%, transparent); font-weight: 600; }
+.chat-mencion.a-mi { background: color-mix(in srgb, var(--ambar) 30%, transparent); }
+.chat-msj.propio .chat-mencion { background: rgba(255,255,255,.22); }
+.chat-tarea { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 8px; padding: 9px 12px; border-radius: 14px; border: 1px solid var(--vidrio-fila-borde); background: var(--vidrio-fila); color: var(--text); text-align: left; }
+.chat-msj.propio .chat-tarea { background: rgba(0,0,0,.22); border-color: rgba(255,255,255,.2); color: #fff; }
+.chat-tarea > span { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.chat-tarea small { font-size: 12px; opacity: .85; }
+.chat-tarea em { font-style: normal; font-size: 12px; font-weight: 600; }
+.chat-tarea.no { display: inline-flex; width: auto; opacity: .75; }
+.chat-acciones { position: absolute; top: -4px; right: calc(100% + 6px); display: flex; gap: 4px; opacity: 0; pointer-events: none; transition: opacity .15s; }
+.chat-msj:hover .chat-acciones, .chat-msj:focus-within .chat-acciones { opacity: 1; pointer-events: auto; }
+.chat-burbuja-edit { width: min(520px, 62vw); background: var(--vidrio-hover) !important; color: var(--text) !important; }
+.chat-editar { width: 100%; min-height: 60px; resize: none; }
+.chat-edit-pie { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.chat-edit-pie small { flex: 1; }
+.chat-escribiendo { min-height: 22px; padding: 0 22px; font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+.chat-puntos { display: inline-flex; gap: 3px; }
+.chat-puntos i { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); animation: chat-puntos 1.2s infinite; }
+.chat-puntos i:nth-child(2) { animation-delay: .2s; } .chat-puntos i:nth-child(3) { animation-delay: .4s; }
+@keyframes chat-puntos { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+.chat-redactar { position: relative; display: flex; align-items: flex-end; gap: 6px; margin: 4px 14px 14px; padding: 6px 6px 6px 8px; border-radius: 18px; background: var(--vidrio-fila); border: 1px solid var(--vidrio-fila-borde); }
+.chat-redactar .btn-icono { border-color: transparent; background: transparent; font-weight: 700; font-size: 17px; padding: 0; }
+.chat-texto { flex: 1; border: 0; background: transparent; box-shadow: none !important; resize: none; padding: 9px 4px; max-height: 160px; line-height: 1.45; }
+.chat-texto:focus-visible { outline: none; }
+.chat-enviar { width: 42px; height: 42px; padding: 0; border-radius: 14px; flex-shrink: 0; }
+.chat-sugerencias { position: absolute; left: 8px; right: 8px; bottom: calc(100% + 8px); z-index: 5; padding: 6px; border-radius: 16px; background: var(--bg2); border: 1px solid var(--borde); box-shadow: var(--sombra-3); display: flex; flex-direction: column; gap: 2px; max-height: 300px; overflow-y: auto; }
+.chat-sug { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 10px; background: none; color: var(--text); text-align: left; }
+.chat-sug span { display: flex; flex-direction: column; min-width: 0; }
+.chat-sug small { color: var(--text2); font-size: 12px; }
+.chat-sug.on, .chat-sug:hover { background: var(--bg3); }
+.chat-vacio { margin: auto; }
+.chat-vacio svg { color: var(--text3); margin-bottom: 6px; }
+.chat-campo { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text2); margin-top: 14px; border: 0; padding: 0; min-width: 0; }
+.chat-colores { display: flex; gap: 8px; }
+.chat-color { position: relative; width: 30px; height: 30px; border-radius: 50%; background: var(--cc); border: 2px solid transparent; cursor: pointer; }
+.chat-color input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.chat-color:has(input:checked) { border-color: var(--text); box-shadow: 0 0 0 2px var(--bg2) inset; }
+.chat-color:has(input:focus-visible) { outline: 2px solid var(--acento); outline-offset: 2px; }
+.chat-personas legend { margin-bottom: 6px; }
+.chat-persona { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--borde); font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer; }
+.chat-persona:has(input:checked) { border-color: var(--nc-violeta); background: color-mix(in srgb, var(--nc-violeta) 12%, transparent); }
+.chat-persona input { width: 18px; height: 18px; accent-color: var(--nc-violeta); }
+@media (hover: none) { .chat-acciones { position: static; opacity: 1; pointer-events: auto; } }
+@media (max-width: 760px) {
+  .chat { grid-template-columns: minmax(0, 1fr); height: calc(100dvh - var(--alto-barra) - 100px); min-height: 420px; }
+  .chat.con-conv .chat-lista, .chat:not(.con-conv) .chat-conv { display: none; }
+  .chat-volver { display: inline-flex; }
+  .chat-cab { padding: 10px 12px; }
+  .chat-cab-gente { display: none; }
+  .chat-mensajes { padding: 12px; }
+  .chat-msj-cuerpo { max-width: 84%; }
+  .chat-redactar { margin: 4px 8px 8px; }
+}
+
 /* ── Modal ────────────────────────────────────────────────────────── */
 .capa-modal { position: fixed; inset: 0; z-index: 100; background: rgba(9,9,11,.6); backdrop-filter: blur(6px); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px 16px; overflow-y: auto; }
 .modal { width: 100%; background: var(--bg2); border: 1px solid var(--borde); border-radius: var(--r-lg); box-shadow: var(--sombra-3); padding: 22px 24px; animation: aparecer .16s ease; }
@@ -824,6 +947,9 @@ const CONFIG = {
     perfiles: 'perfiles',
     notas: 'notas',
     clientes: 'clientes',
+    chatConv: 'chat_conversaciones',
+    chatMiem: 'chat_miembros',
+    chatMsj: 'chat_mensajes',
   },
 
   // ── Microsoft Teams (opcional) ────────────────────────────────────
@@ -1473,6 +1599,120 @@ class SupabaseStore {
     if (error) throw this._error(error, 'borrar la nota');
   }
 
+  // ── Chat del equipo (RLS: general para todos; grupos y directos solo para sus integrantes) ──
+  async chatConversaciones() {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.chatConv).select('*, chat_miembros(usuario_id, leido_hasta)').order('updated_at', { ascending: false });
+    if (error) throw this._error(error, 'leer el chat');
+    return (data || []).map(c => {
+      const miembros = c.chat_miembros || [];
+      const { chat_miembros, ...resto } = c;
+      return { ...resto, miembros: miembros.map(m => m.usuario_id), leido_hasta: miembros.find(m => m.usuario_id === this.usuario?.id)?.leido_hasta || null };
+    });
+  }
+
+  async chatMensajes(convId, limite = 200) {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.chatMsj).select('*').eq('conversacion_id', convId).order('created_at', { ascending: false }).limit(limite);
+    if (error) throw this._error(error, 'leer los mensajes');
+    return (data || []).reverse();
+  }
+
+  async chatNoLeidos(convId, desde) {
+    let q = this.sb.from(CONFIG.TABLAS.chatMsj).select('id', { count: 'exact', head: true }).eq('conversacion_id', convId).neq('autor_id', this.usuario?.id);
+    if (desde) q = q.gt('created_at', desde);
+    const { count, error } = await q;
+    if (error) throw this._error(error, 'contar mensajes');
+    return count || 0;
+  }
+
+  async chatEnviar(convId, texto) {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.chatMsj).insert({ conversacion_id: convId, texto }).select().single();
+    if (error) throw this._error(error, 'enviar el mensaje');
+    return data;
+  }
+
+  async chatEditar(id, texto) {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.chatMsj).update({ texto, editado_at: new Date().toISOString() }).eq('id', id).select().single();
+    if (error) throw this._error(error, 'editar el mensaje');
+    return data;
+  }
+
+  async chatBorrarMensaje(id) {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.chatMsj).delete().eq('id', id).select('id');
+    if (error) throw this._error(error, 'borrar el mensaje');
+    if (!data?.length) throw new ErrorDatos('No tienes permiso para borrar este mensaje.');
+  }
+
+  async chatMarcarLeido(convId) {
+    const ahora = new Date().toISOString();
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.chatMiem).update({ leido_hasta: ahora }).eq('conversacion_id', convId).eq('usuario_id', this.usuario?.id).select('conversacion_id');
+    if (error) throw this._error(error, 'marcar como leído');
+    if (!data?.length) {
+      // Primera vez en el canal general: la persona se suma como integrante
+      const r = await this.sb.from(CONFIG.TABLAS.chatMiem).insert({ conversacion_id: convId, usuario_id: this.usuario?.id, leido_hasta: ahora });
+      if (r.error && r.error.code !== '23505') throw this._error(r.error, 'marcar como leído');
+    }
+    return ahora;
+  }
+
+  async chatCrearConversacion({ tipo, nombre = '', color = 'violeta', miembros = [] }) {
+    const { data: c, error } = await this.sb.from(CONFIG.TABLAS.chatConv).insert({ tipo, nombre, color, creado_por: this.usuario?.id }).select().single();
+    if (error) throw this._error(error, tipo === 'grupo' ? 'crear el grupo' : 'abrir la conversación');
+    const ids = [...new Set([this.usuario?.id, ...miembros])];
+    const r = await this.sb.from(CONFIG.TABLAS.chatMiem).insert(ids.map(u => ({ conversacion_id: c.id, usuario_id: u })));
+    if (r.error) {
+      await this.sb.from(CONFIG.TABLAS.chatConv).delete().eq('id', c.id);
+      throw this._error(r.error, 'agregar los integrantes');
+    }
+    return { ...c, miembros: ids, leido_hasta: null };
+  }
+
+  async chatEditarGrupo(id, { nombre, color, miembros }, antes = []) {
+    const { error } = await this.sb.from(CONFIG.TABLAS.chatConv).update({ nombre, color }).eq('id', id);
+    if (error) throw this._error(error, 'editar el grupo');
+    const nuevos = miembros.filter(u => !antes.includes(u));
+    const quitar = antes.filter(u => !miembros.includes(u));
+    if (nuevos.length) {
+      const r = await this.sb.from(CONFIG.TABLAS.chatMiem).insert(nuevos.map(u => ({ conversacion_id: id, usuario_id: u })));
+      if (r.error) throw this._error(r.error, 'agregar integrantes');
+    }
+    if (quitar.length) {
+      const r = await this.sb.from(CONFIG.TABLAS.chatMiem).delete().eq('conversacion_id', id).in('usuario_id', quitar);
+      if (r.error) throw this._error(r.error, 'quitar integrantes');
+    }
+  }
+
+  async chatBorrarConversacion(id) {
+    const { error } = await this.sb.from(CONFIG.TABLAS.chatConv).delete().eq('id', id);
+    if (error) throw this._error(error, 'borrar el grupo');
+  }
+
+  // cb(tipo: 'mensaje' | 'conversacion' | 'miembro', evento, nuevo, anterior)
+  chatSuscribir(cb) {
+    this.chatDetener();
+    const t = CONFIG.TABLAS;
+    this.canalChat = this.sb.channel('chat-rt')
+      .on('postgres_changes', { event: '*', schema: 'public', table: t.chatMsj }, p => cb('mensaje', p.eventType, p.new, p.old))
+      .on('postgres_changes', { event: '*', schema: 'public', table: t.chatConv }, p => cb('conversacion', p.eventType, p.new, p.old))
+      .on('postgres_changes', { event: '*', schema: 'public', table: t.chatMiem }, p => cb('miembro', p.eventType, p.new, p.old))
+      .subscribe();
+  }
+
+  // Quién está en línea y quién está escribiendo (no se guarda en la base de datos)
+  chatPresencia({ alEstado, alEscribir }) {
+    const uid = this.usuario?.id;
+    const ch = this.sb.channel('chat-presencia', { config: { presence: { key: uid } } });
+    ch.on('presence', { event: 'sync' }, () => alEstado(Object.keys(ch.presenceState())))
+      .on('broadcast', { event: 'escribiendo' }, ({ payload }) => alEscribir(payload))
+      .subscribe(async estado => { if (estado === 'SUBSCRIBED') await ch.track({ desde: new Date().toISOString() }); });
+    this.canalPresencia = ch;
+    return { escribiendo: conv => ch.send({ type: 'broadcast', event: 'escribiendo', payload: { conv, uid } }) };
+  }
+
+  chatDetener() {
+    if (this.canalChat) { this.sb.removeChannel(this.canalChat); this.canalChat = null; }
+    if (this.canalPresencia) { this.sb.removeChannel(this.canalPresencia); this.canalPresencia = null; }
+  }
+
   // ── Clientes (todos los usuarios ven y editan; solo administradores borran) ──
   async clientes() {
     const todos = [];
@@ -1625,6 +1865,118 @@ class LocalStore {
   }
 
   async borrarNota(id) { this.db.notas = (this.db.notas || []).filter(n => n.id !== id); this._guardar(); }
+
+  // ── Chat (modo demo): mismas reglas de privacidad que en Supabase ──
+  _chat() {
+    if (!this.db.chat) {
+      const ahora = Date.now(), hace = min => new Date(ahora - min * 60000).toISOString();
+      const general = { id: CHAT_GENERAL_ID, tipo: 'general', nombre: 'Equipo', color: 'violeta', creado_por: null, created_at: hace(600), updated_at: hace(20) };
+      this.db.chat = {
+        conversaciones: [general],
+        miembros: [],
+        mensajes: [
+          { id: Util.uid(), conversacion_id: general.id, autor_id: 'u-ana', texto: 'Buenos días equipo. Hoy cierro la conciliación de Comercial Andina.', created_at: hace(95), editado_at: null },
+          { id: Util.uid(), conversacion_id: general.id, autor_id: 'u-carlos', texto: '@Ana yo te paso los extractos de octubre en un rato.', created_at: hace(80), editado_at: null },
+          { id: Util.uid(), conversacion_id: general.id, autor_id: 'u-yohana', texto: 'Listo, ya quedó el informe de exógena ✅', created_at: hace(20), editado_at: null },
+        ],
+      };
+      this._guardar();
+    }
+    return this.db.chat;
+  }
+
+  _chatVisible(c) { return c.tipo === 'general' || this._chat().miembros.some(m => m.conversacion_id === c.id && m.usuario_id === this.perfil?.id); }
+
+  async chatConversaciones() {
+    const ch = this._chat(), yo = this.perfil?.id;
+    return ch.conversaciones.filter(c => this._chatVisible(c)).map(c => {
+      const miembros = ch.miembros.filter(m => m.conversacion_id === c.id);
+      return { ...c, miembros: miembros.map(m => m.usuario_id), leido_hasta: miembros.find(m => m.usuario_id === yo)?.leido_hasta || null };
+    }).sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+  }
+
+  async chatMensajes(convId, limite = 200) {
+    const c = this._chat().conversaciones.find(x => x.id === convId);
+    if (!c || !this._chatVisible(c)) return [];
+    return this._chat().mensajes.filter(m => m.conversacion_id === convId).sort((a, b) => a.created_at.localeCompare(b.created_at)).slice(-limite).map(m => ({ ...m }));
+  }
+
+  async chatNoLeidos(convId, desde) {
+    return (await this.chatMensajes(convId)).filter(m => m.autor_id !== this.perfil?.id && (!desde || m.created_at > desde)).length;
+  }
+
+  async chatEnviar(convId, texto) {
+    const ch = this._chat();
+    const m = { id: Util.uid(), conversacion_id: convId, autor_id: this.perfil?.id, texto, created_at: new Date().toISOString(), editado_at: null };
+    ch.mensajes.push(m);
+    const c = ch.conversaciones.find(x => x.id === convId);
+    if (c) c.updated_at = m.created_at;
+    this._guardar();
+    return { ...m };
+  }
+
+  async chatEditar(id, texto) {
+    const m = this._chat().mensajes.find(x => x.id === id && x.autor_id === this.perfil?.id);
+    if (!m) throw new ErrorDatos('No tienes permiso para editar este mensaje.');
+    Object.assign(m, { texto, editado_at: new Date().toISOString() });
+    this._guardar();
+    return { ...m };
+  }
+
+  async chatBorrarMensaje(id) {
+    const ch = this._chat();
+    if (!ch.mensajes.some(x => x.id === id && x.autor_id === this.perfil?.id)) throw new ErrorDatos('No tienes permiso para borrar este mensaje.');
+    ch.mensajes = ch.mensajes.filter(x => x.id !== id);
+    this._guardar();
+  }
+
+  async chatMarcarLeido(convId) {
+    const ch = this._chat(), yo = this.perfil?.id, ahora = new Date().toISOString();
+    const m = ch.miembros.find(x => x.conversacion_id === convId && x.usuario_id === yo);
+    if (m) m.leido_hasta = ahora; else ch.miembros.push({ conversacion_id: convId, usuario_id: yo, leido_hasta: ahora });
+    this._guardar();
+    return ahora;
+  }
+
+  async chatCrearConversacion({ tipo, nombre = '', color = 'violeta', miembros = [] }) {
+    if (tipo === 'grupo' && !CONFIG.ROLES_ADMIN.includes(this.perfil?.rol)) throw new ErrorDatos('Solo un administrador puede crear grupos.');
+    const ch = this._chat(), ahora = new Date().toISOString();
+    const c = { id: Util.uid(), tipo, nombre, color, creado_por: this.perfil?.id, created_at: ahora, updated_at: ahora };
+    const ids = [...new Set([this.perfil?.id, ...miembros])];
+    ch.conversaciones.push(c);
+    ids.forEach(u => ch.miembros.push({ conversacion_id: c.id, usuario_id: u, leido_hasta: ahora }));
+    this._guardar();
+    return { ...c, miembros: ids, leido_hasta: ahora };
+  }
+
+  async chatEditarGrupo(id, { nombre, color, miembros }) {
+    const ch = this._chat(), c = ch.conversaciones.find(x => x.id === id);
+    if (!c) return;
+    Object.assign(c, { nombre, color });
+    const ahora = new Date().toISOString();
+    ch.miembros = ch.miembros.filter(m => m.conversacion_id !== id || miembros.includes(m.usuario_id));
+    miembros.forEach(u => { if (!ch.miembros.some(m => m.conversacion_id === id && m.usuario_id === u)) ch.miembros.push({ conversacion_id: id, usuario_id: u, leido_hasta: ahora }); });
+    this._guardar();
+  }
+
+  async chatBorrarConversacion(id) {
+    const ch = this._chat();
+    ch.conversaciones = ch.conversaciones.filter(c => c.id !== id);
+    ch.miembros = ch.miembros.filter(m => m.conversacion_id !== id);
+    ch.mensajes = ch.mensajes.filter(m => m.conversacion_id !== id);
+    this._guardar();
+  }
+
+  // Entre pestañas del mismo navegador llega como "recargar"
+  chatSuscribir(cb) {
+    this.chatDetener();
+    this._oyenteChat = e => { if (e.key === this.CLAVE) { try { this.db = JSON.parse(e.newValue); cb('recargar'); } catch { /* ignorar */ } } };
+    addEventListener('storage', this._oyenteChat);
+  }
+
+  chatPresencia({ alEstado }) { alEstado([this.perfil?.id]); return { escribiendo() {} }; }
+
+  chatDetener() { if (this._oyenteChat) removeEventListener('storage', this._oyenteChat); this._oyenteChat = null; }
 
   async clientes() {
     if (!this.db.clientes) { this.db.clientes = DatosDemo.clientes(); this._guardar(); }
@@ -1883,14 +2235,15 @@ const Avisos = {
     b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/>${on ? '' : '<path d="M3 3l18 18"/>'}</svg>`;
   },
 
-  mostrar(titulo, cuerpo, { tag, tareaId } = {}) {
+  mostrar(titulo, cuerpo, { tag, tareaId, alClic } = {}) {
     if (!this.activos()) return;
     try {
       // renotify: sin esto, un aviso con la misma etiqueta reemplaza al anterior sin sonar ni mostrarse.
       const n = new Notification(titulo, { body: cuerpo, tag, renotify: !!tag, lang: 'es' });
       n.onclick = () => {
         window.focus();
-        if (tareaId && App.tarea(tareaId)) TareaModal.abrir(tareaId);
+        if (alClic) alClic();
+        else if (tareaId && App.tarea(tareaId)) TareaModal.abrir(tareaId);
         n.close();
       };
     } catch (e) { console.warn('[Avisos] No se pudo mostrar:', e); }
@@ -3875,6 +4228,622 @@ Vistas.clientes = {
 
 </script>
 <script>
+/* ── js/vistas/chat.js ── */
+// ═══════════════════════════════════════════════════════════════════
+// VISTA: CHAT — canal general del equipo, grupos (los crea un
+// administrador) y mensajes directos privados entre dos personas.
+// Mensajes en tiempo real; contador de no leídos en el menú y aviso de
+// escritorio. La privacidad la garantizan las políticas RLS de
+// supabase/chat.sql: cada quien solo recibe lo que puede leer.
+// La vista es persistente (como Notas) para no perder lo que se escribe.
+// ═══════════════════════════════════════════════════════════════════
+
+const CHAT_GENERAL_ID = '00000000-0000-0000-0000-000000000001';
+const CHAT_COLORES = [
+  { id: 'ambar', label: 'Ámbar' }, { id: 'violeta', label: 'Violeta' }, { id: 'azul', label: 'Azul' },
+  { id: 'verde', label: 'Verde' }, { id: 'rosa', label: 'Rosa' }, { id: 'gris', label: 'Gris' },
+];
+
+const Chat = {
+  raiz: null,
+  convs: [],
+  mensajes: new Map(),      // conversación → [mensajes]
+  noLeidos: new Map(),      // conversación → cantidad
+  ultimos: new Map(),       // conversación → último mensaje (para la lista)
+  enLinea: new Set(),
+  escribiendo: new Map(),   // conversación → Map(usuario → temporizador)
+  actualId: CHAT_GENERAL_ID,
+  editandoId: null,
+  busqueda: '',
+  iniciado: false,
+  error: null,
+  presencia: null,
+  _ultimoAvisoEscribir: 0,
+
+  // ── Ciclo de vida ─────────────────────────────────────────────────
+  async iniciar() {
+    if (this.iniciado) return;
+    this.iniciado = true;
+    try {
+      await this.cargarConversaciones();
+      Datos.chatSuscribir((tipo, evento, nuevo, anterior) => this._alCambiar(tipo, evento, nuevo, anterior));
+      this.presencia = Datos.chatPresencia({
+        alEstado: ids => { this.enLinea = new Set(ids); this.pintarLista(); this.pintarCabecera(); },
+        alEscribir: p => this._alguienEscribe(p),
+      });
+    } catch (e) {
+      console.warn('[Chat]', e);
+      this.error = e;
+    }
+    this.pintar();
+  },
+
+  reiniciar() {
+    Datos.chatDetener?.();
+    this.raiz?.remove();
+    Object.assign(this, { raiz: null, convs: [], mensajes: new Map(), noLeidos: new Map(), ultimos: new Map(), enLinea: new Set(), escribiendo: new Map(), actualId: CHAT_GENERAL_ID, editandoId: null, busqueda: '', iniciado: false, error: null, presencia: null });
+  },
+
+  montar(main) {
+    if (!this.raiz) this._crearRaiz();
+    main.appendChild(this.raiz);
+    if (!this.iniciado) this.iniciar(); else this.pintar();
+    this._abrir(this.actualId, { enfocar: false });
+  },
+
+  visible() { return App.estado.vista === 'chat' && !document.hidden; },
+
+  async cargarConversaciones() {
+    this.convs = await Datos.chatConversaciones();
+    // El canal general existe siempre aunque la persona aún no sea "integrante"
+    if (!this.convs.some(c => c.id === CHAT_GENERAL_ID)) this.convs.unshift({ id: CHAT_GENERAL_ID, tipo: 'general', nombre: 'Equipo', miembros: [], leido_hasta: null, updated_at: new Date(0).toISOString() });
+    await Promise.all(this.convs.map(async c => {
+      try {
+        const [n, ultimo] = await Promise.all([Datos.chatNoLeidos(c.id, c.leido_hasta), Datos.chatMensajes(c.id, 1)]);
+        this.noLeidos.set(c.id, n);
+        if (ultimo[0]) this.ultimos.set(c.id, ultimo[0]);
+      } catch { /* sin contador */ }
+    }));
+    this.error = null;
+    this._insignia();
+  },
+
+  // ── Datos derivados ───────────────────────────────────────────────
+  conv(id) { return this.convs.find(c => c.id === id); },
+  yo() { return Permisos.uid; },
+  persona(id) { return App.colaborador(id) || { id, nombre: 'Alguien' }; },
+  nombreCorto(id) { return id === this.yo() ? 'Tú' : this.persona(id).nombre.split(' ')[0]; },
+  otro(c) { return c.miembros.find(u => u !== this.yo()); },
+
+  titulo(c) {
+    if (!c) return '';
+    if (c.tipo === 'general') return 'Equipo';
+    if (c.tipo === 'grupo') return c.nombre || 'Grupo';
+    return this.persona(this.otro(c)).nombre;
+  },
+
+  directoCon(uid) { return this.convs.find(c => c.tipo === 'directo' && c.miembros.includes(uid) && c.miembros.includes(this.yo())); },
+
+  totalNoLeidos() { let n = 0; for (const v of this.noLeidos.values()) n += v; return n; },
+
+  integrantes(c) {
+    if (!c) return [];
+    if (c.tipo === 'general') return App.estado.colaboradores.map(x => x.id);
+    return c.miembros;
+  },
+
+  _insignia() { if (App.estado.perfil) App._pintarNav(); },
+
+  // ── Cambios en tiempo real ────────────────────────────────────────
+  async _alCambiar(tipo, evento, nuevo, anterior) {
+    if (tipo === 'recargar') {      // modo demo: otra pestaña cambió los datos
+      await this.cargarConversaciones();
+      for (const id of [...this.mensajes.keys()]) this.mensajes.set(id, await Datos.chatMensajes(id));
+      if (this.visible()) this._marcarLeido(this.actualId);
+      this.pintar();
+      return;
+    }
+    if (tipo === 'mensaje') return this._alMensaje(evento, nuevo, anterior);
+    // Conversación o integrantes: se recarga la lista (cambia poco)
+    try { await this.cargarConversaciones(); } catch { /* se reintenta en el próximo cambio */ }
+    if (!this.conv(this.actualId)) this.actualId = CHAT_GENERAL_ID;
+    this.pintar();
+  },
+
+  async _alMensaje(evento, m, anterior) {
+    if (evento === 'DELETE') {
+      for (const [id, lista] of this.mensajes) this.mensajes.set(id, lista.filter(x => x.id !== anterior?.id));
+      this.pintarMensajes();
+      return;
+    }
+    if (!m?.conversacion_id) return;
+    if (!this.conv(m.conversacion_id)) { try { await this.cargarConversaciones(); } catch { return; } }
+    const c = this.conv(m.conversacion_id);
+    if (!c) return;
+    const lista = this.mensajes.get(c.id);
+    if (evento === 'UPDATE') {
+      if (lista) { const i = lista.findIndex(x => x.id === m.id); if (i >= 0) lista[i] = m; }
+      this.pintarMensajes();
+      return;
+    }
+    // INSERT
+    if (lista && !lista.some(x => x.id === m.id)) lista.push(m);
+    this.ultimos.set(c.id, m);
+    c.updated_at = m.created_at;
+    this._dejarDeEscribir(c.id, m.autor_id);
+    if (m.autor_id !== this.yo()) {
+      if (c.id === this.actualId && this.visible()) {
+        this._marcarLeido(c.id);
+      } else {
+        this.noLeidos.set(c.id, (this.noLeidos.get(c.id) || 0) + 1);
+        this._insignia();
+        const donde = c.tipo === 'directo' ? '' : ` en # ${this.titulo(c)}`;
+        Avisos.mostrar(`💬 ${this.persona(m.autor_id).nombre}${donde}`, this.textoPlano(m.texto).slice(0, 180), {
+          tag: 'chat-' + c.id, alClic: () => { App.ir('chat'); this._abrir(c.id); },
+        });
+      }
+    }
+    this.pintarLista();
+    if (c.id === this.actualId) this.pintarMensajes({ alFinal: m.autor_id === this.yo() });
+  },
+
+  _alguienEscribe({ conv, uid }) {
+    if (!uid || uid === this.yo() || !this.conv(conv)) return;
+    if (!this.escribiendo.has(conv)) this.escribiendo.set(conv, new Map());
+    const mapa = this.escribiendo.get(conv);
+    clearTimeout(mapa.get(uid));
+    mapa.set(uid, setTimeout(() => this._dejarDeEscribir(conv, uid), 4000));
+    this.pintarEscribiendo(); this.pintarLista();
+  },
+
+  _dejarDeEscribir(conv, uid) {
+    const mapa = this.escribiendo.get(conv);
+    if (!mapa?.has(uid)) return;
+    clearTimeout(mapa.get(uid)); mapa.delete(uid);
+    this.pintarEscribiendo(); this.pintarLista();
+  },
+
+  // ── Acciones ──────────────────────────────────────────────────────
+  async _abrir(id, { enfocar = true } = {}) {
+    if (!this.conv(id)) id = CHAT_GENERAL_ID;
+    const cambio = id !== this.actualId;
+    this.actualId = id; this.editandoId = null;
+    if (cambio || !this.mensajes.has(id)) this.pintar();
+    if (!this.mensajes.has(id)) {
+      try { this.mensajes.set(id, await Datos.chatMensajes(id)); }
+      catch (e) { UI.toast(e.message, { tipo: 'error' }); this.mensajes.set(id, []); }
+      if (this.actualId !== id) return;
+    }
+    this.pintarMensajes({ alFinal: true });
+    if (this.visible()) this._marcarLeido(id);
+    if (enfocar && matchMedia('(min-width: 761px)').matches) this.raiz?.querySelector('.chat-texto')?.focus();
+  },
+
+  async _marcarLeido(id) {
+    if (!this.noLeidos.get(id) && this.conv(id)?.leido_hasta) return;
+    this.noLeidos.set(id, 0);
+    this._insignia(); this.pintarLista();
+    try { const c = this.conv(id); const t = await Datos.chatMarcarLeido(id); if (c) c.leido_hasta = t; } catch (e) { console.warn('[Chat] leído', e); }
+  },
+
+  async _abrirDirecto(uid) {
+    let c = this.directoCon(uid);
+    if (!c) {
+      try { c = await Datos.chatCrearConversacion({ tipo: 'directo', miembros: [uid] }); this.convs.push(c); }
+      catch (e) { UI.toast(e.message, { tipo: 'error' }); return; }
+    }
+    this.raiz.classList.add('con-conv');
+    this._abrir(c.id);
+  },
+
+  async enviar() {
+    const caja = this.raiz.querySelector('.chat-texto');
+    const texto = caja.value.trim();
+    if (!texto) return;
+    if (texto.length > 4000) { UI.toast('El mensaje es muy largo (máximo 4000 caracteres).', { tipo: 'error' }); return; }
+    const convId = this.actualId;
+    caja.value = ''; this._autoAltura(caja); this._ocultarSugerencias();
+    const temporal = { id: 'tmp-' + Util.uid(), conversacion_id: convId, autor_id: this.yo(), texto, created_at: new Date().toISOString(), editado_at: null, enviando: true };
+    const lista = this.mensajes.get(convId) || [];
+    lista.push(temporal); this.mensajes.set(convId, lista);
+    this.pintarMensajes({ alFinal: true });
+    try {
+      const m = await Datos.chatEnviar(convId, texto);
+      const i = lista.indexOf(temporal);
+      if (lista.some(x => x.id === m.id)) lista.splice(i, 1); else lista[i] = m;   // el tiempo real pudo llegar antes
+      const c = this.conv(convId); if (c) c.updated_at = m.created_at;
+      this.ultimos.set(convId, m);
+      this.pintarMensajes({ alFinal: true }); this.pintarLista();
+    } catch (e) {
+      lista.splice(lista.indexOf(temporal), 1);
+      if (!caja.value) { caja.value = texto; this._autoAltura(caja); }
+      this.pintarMensajes();
+      UI.toast(e.message, { tipo: 'error' });
+    }
+  },
+
+  async guardarEdicion(id) {
+    const caja = this.raiz.querySelector(`.chat-editar[data-id="${CSS.escape(id)}"]`);
+    const texto = caja?.value.trim();
+    if (!texto) return;
+    try {
+      const m = await Datos.chatEditar(id, texto);
+      const lista = this.mensajes.get(m.conversacion_id) || [];
+      const i = lista.findIndex(x => x.id === id); if (i >= 0) lista[i] = m;
+      this.editandoId = null; this.pintarMensajes();
+    } catch (e) { UI.toast(e.message, { tipo: 'error' }); }
+  },
+
+  async borrar(id) {
+    if (!confirm('¿Borrar este mensaje? Nadie podrá volver a verlo.')) return;
+    try {
+      await Datos.chatBorrarMensaje(id);
+      for (const [k, lista] of this.mensajes) this.mensajes.set(k, lista.filter(x => x.id !== id));
+      this.pintarMensajes();
+    } catch (e) { UI.toast(e.message, { tipo: 'error' }); }
+  },
+
+  // ── Grupos (solo administradores) ────────────────────────────────
+  abrirGrupo(c = null) {
+    if (!Permisos.esAdmin()) return;
+    const sel = new Set(c ? c.miembros.filter(u => u !== this.yo()) : []);
+    const color = c?.color || 'ambar';
+    const otros = App.estado.colaboradores.filter(x => x.id !== this.yo());
+    UI.abrirModal(`<form class="chat-grupo-form" novalidate>
+        <header class="modal-cab"><h3>${c ? 'Editar grupo' : 'Nuevo grupo'}</h3><button type="button" class="btn-icono btn-sm" data-accion="cerrar-modal" aria-label="Cerrar">✕</button></header>
+        <p class="muted mini">Solo los integrantes pueden leer los mensajes del grupo.</p>
+        <label class="chat-campo">Nombre del grupo<input name="nombre" maxlength="60" required value="${Util.esc(c?.nombre || '')}" placeholder="Ej. Tributario"></label>
+        <div class="chat-campo">Color<div class="chat-colores" role="radiogroup" aria-label="Color del grupo">
+          ${CHAT_COLORES.map(x => `<label class="chat-color cc-${x.id}" title="${x.label}"><input type="radio" name="color" value="${x.id}" ${x.id === color ? 'checked' : ''} aria-label="${x.label}"></label>`).join('')}
+        </div></div>
+        <fieldset class="chat-campo chat-personas"><legend>Integrantes</legend>
+          ${otros.map(p => `<label class="chat-persona"><input type="checkbox" name="miembro" value="${Util.esc(p.id)}" ${sel.has(p.id) ? 'checked' : ''}>${UI.avatar(p, 30)}<span>${Util.esc(p.nombre)}</span></label>`).join('') || '<p class="muted mini">No hay más personas en el equipo.</p>'}
+        </fieldset>
+        <div class="modal-pie">
+          ${c ? '<button type="button" class="btn btn-peligro" data-chat-borrar>Borrar grupo</button>' : ''}
+          <span class="separador"></span>
+          <button type="button" class="btn" data-accion="cerrar-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primario">${c ? 'Guardar' : 'Crear grupo'}</button>
+        </div>
+      </form>`, { ancho: 480 });
+    const form = document.querySelector('.chat-grupo-form');
+    form.querySelector('[name="nombre"]').focus();
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const nombre = form.nombre.value.trim();
+      if (!nombre) { form.nombre.focus(); UI.toast('Escribe el nombre del grupo.', { tipo: 'error' }); return; }
+      const miembros = [...form.querySelectorAll('[name="miembro"]:checked')].map(x => x.value);
+      const datos = { nombre, color: form.querySelector('[name="color"]:checked')?.value || 'ambar' };
+      try {
+        if (c) {
+          await Datos.chatEditarGrupo(c.id, { ...datos, miembros: [this.yo(), ...miembros] }, c.miembros);
+          UI.toast('Grupo actualizado', { tipo: 'ok' });
+        } else {
+          const nuevo = await Datos.chatCrearConversacion({ tipo: 'grupo', ...datos, miembros });
+          this.convs.push(nuevo); this.actualId = nuevo.id;
+          UI.toast('Grupo creado', { tipo: 'ok' });
+        }
+        UI.cerrarModal();
+        await this.cargarConversaciones();
+        this._abrir(this.actualId);
+      } catch (err) { UI.toast(err.message, { tipo: 'error' }); }
+    });
+    form.querySelector('[data-chat-borrar]')?.addEventListener('click', async () => {
+      if (!confirm(`¿Borrar el grupo "${c.nombre}" y todos sus mensajes?`)) return;
+      try {
+        await Datos.chatBorrarConversacion(c.id);
+        this.convs = this.convs.filter(x => x.id !== c.id); this.mensajes.delete(c.id); this.noLeidos.delete(c.id);
+        UI.cerrarModal(); this._abrir(CHAT_GENERAL_ID);
+      } catch (err) { UI.toast(err.message, { tipo: 'error' }); }
+    });
+  },
+
+  // ── Formato de los mensajes ───────────────────────────────────────
+  textoPlano(texto) { return String(texto).replace(/\[\[tarea:([\w-]+)\]\]/g, (_, id) => '📋 ' + (App.tarea(id)?.titulo || 'tarea')); },
+
+  formatear(texto) {
+    const primeros = new Map(App.estado.colaboradores.map(p => [Util.normalizar(p.nombre.split(' ')[0]), p]));
+    let html = Util.esc(texto);
+    html = html.replace(/\[\[tarea:([\w-]+)\]\]/g, (_, id) => {
+      const t = App.tarea(id);
+      if (!t) return '<span class="chat-tarea no">📋 Tarea no disponible</span>';
+      const est = ESTADOS.find(e => e.id === t.estado)?.label || '';
+      return `<button class="chat-tarea" data-c="tarea" data-id="${Util.esc(t.id)}" type="button">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h10M9 12h10M9 19h10M4 5l1 1 2-2M4 12l1 1 2-2M4 19l1 1 2-2"/></svg>
+        <span><strong>${Util.esc(t.titulo)}</strong><small>${[t.empresa, t.fecha_vencimiento ? 'vence ' + Util.fmtFecha(t.fecha_vencimiento) : '', est].filter(Boolean).map(Util.esc).join(' · ')}</small></span><em>Abrir →</em></button>`;
+    });
+    html = html.replace(/(^|[\s(])(https?:\/\/[^\s<]+)/g, (_, a, url) => `${a}<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+    html = html.replace(/(^|[\s(])@([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)/g, (todo, a, nombre) => {
+      const p = primeros.get(Util.normalizar(nombre));
+      return p ? `${a}<span class="chat-mencion ${p.id === this.yo() ? 'a-mi' : ''}">@${Util.esc(nombre)}</span>` : todo;
+    });
+    return html.replace(/\n/g, '<br>');
+  },
+
+  hora(ts) { return new Date(ts).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' }); },
+
+  dia(ts) {
+    const d = Util.fechaDeTimestamp(ts), hoy = Util.hoyISO();
+    if (d === hoy) return 'Hoy';
+    if (d === Util.sumarDias(hoy, -1)) return 'Ayer';
+    return new Date(ts).toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+  },
+
+  // ── Interfaz ──────────────────────────────────────────────────────
+  _svg(d, t = 18) { return `<svg viewBox="0 0 24 24" width="${t}" height="${t}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`; },
+
+  _crearRaiz() {
+    const r = document.createElement('div');
+    r.className = 'chat';
+    r.addEventListener('click', e => this._alClic(e));
+    r.addEventListener('input', e => this._alEscribir(e));
+    r.addEventListener('keydown', e => this._alTecla(e));
+    this.raiz = r;
+    if (!this._oyenteVisible) {
+      this._oyenteVisible = () => { if (this.visible()) this._marcarLeido(this.actualId); };
+      document.addEventListener('visibilitychange', this._oyenteVisible);
+    }
+  },
+
+  pintar() {
+    if (!this.raiz) return;
+    const enfocado = document.activeElement;
+    const borrador = this.raiz.querySelector('.chat-texto')?.value || '';
+    const conBorrador = enfocado?.classList?.contains('chat-texto');
+    this.raiz.innerHTML = `
+      <aside class="panel-vidrio chat-lista" aria-label="Conversaciones"></aside>
+      <section class="panel-vidrio chat-conv" aria-label="Conversación">
+        ${this.error ? this._errorHtml() : `
+        <header class="chat-cab"></header>
+        <div class="chat-mensajes" aria-live="polite"></div>
+        <div class="chat-escribiendo" aria-live="polite"></div>
+        <form class="chat-redactar" novalidate>
+          <div class="chat-sugerencias" hidden></div>
+          <button type="button" class="btn-icono" data-c="mencionar" aria-label="Mencionar a alguien" title="Mencionar (@)">@</button>
+          <button type="button" class="btn-icono" data-c="tareas" aria-label="Referenciar una tarea" title="Referenciar una tarea">${this._svg('M9 5h10M9 12h10M9 19h10M4 5l1 1 2-2M4 12l1 1 2-2M4 19l1 1 2-2')}</button>
+          <textarea class="chat-texto" rows="1" maxlength="4000" aria-label="Mensaje" placeholder="Escribe un mensaje…" title="Enter envía · Shift + Enter nueva línea"></textarea>
+          <button type="submit" class="btn btn-primario chat-enviar" aria-label="Enviar">${this._svg('M4 12 20 4l-6 16-3-7z')}</button>
+        </form>`}
+      </section>`;
+    this.raiz.querySelector('.chat-redactar')?.addEventListener('submit', e => { e.preventDefault(); this.enviar(); });
+    this.pintarLista(); this.pintarCabecera(); this.pintarMensajes({ alFinal: true }); this.pintarEscribiendo();
+    const caja = this.raiz.querySelector('.chat-texto');
+    if (caja && borrador) { caja.value = borrador; this._autoAltura(caja); }
+    if (caja && conBorrador) caja.focus();
+  },
+
+  _errorHtml() {
+    const falta = this.error?.faltaEsquema;
+    return `<div class="vacio chat-vacio"><h3>${falta ? 'Falta activar el chat en Supabase' : 'No se pudo cargar el chat'}</h3>
+      <p>${falta ? 'El administrador debe ejecutar una sola vez el archivo <code>supabase/chat.sql</code> en el SQL Editor de Supabase.' : Util.esc(this.error?.message || '')}</p>
+      <button class="btn" data-c="reintentar">Reintentar</button></div>`;
+  },
+
+  _avatarConv(c) {
+    if (c.tipo === 'general') return '<span class="chat-av chat-av-general">#</span>';
+    if (c.tipo === 'grupo') return `<span class="chat-av chat-av-grupo cc-${Util.esc(c.color || 'ambar')}">${Util.esc((c.nombre || 'G')[0].toUpperCase())}</span>`;
+    const p = this.persona(this.otro(c));
+    return `<span class="chat-av-persona">${UI.avatar(p, 40)}${this.enLinea.has(p.id) ? '<span class="chat-en-linea" title="En línea"></span>' : ''}</span>`;
+  },
+
+  _filaConv(c, extra = {}) {
+    const lista = this.mensajes.get(c?.id) || [];
+    const ultimo = lista.filter(x => !x.enviando).pop() || this.ultimos.get(c?.id);
+    const n = c ? this.noLeidos.get(c.id) || 0 : 0;
+    const escribe = c && this.escribiendo.get(c.id)?.size;
+    const resumen = escribe ? '<em class="chat-escribe-mini">escribiendo…</em>'
+      : ultimo ? Util.esc((ultimo.autor_id === this.yo() ? 'Tú: ' : c.tipo === 'directo' ? '' : this.nombreCorto(ultimo.autor_id) + ': ') + this.textoPlano(ultimo.texto))
+      : Util.esc(extra.vacio || '');
+    const hora = c && c.updated_at > '1971' ? (Util.fechaDeTimestamp(c.updated_at) === Util.hoyISO() ? this.hora(c.updated_at) : this.dia(c.updated_at).replace(/^(\w+),.*/, '$1')) : '';
+    return `<button class="chat-item ${c && c.id === this.actualId ? 'on' : ''}" ${c ? `data-c="abrir" data-id="${Util.esc(c.id)}"` : `data-c="directo" data-uid="${Util.esc(extra.uid)}"`}>
+      ${extra.avatar || this._avatarConv(c)}
+      <span class="chat-item-txt"><span class="chat-item-fila"><strong>${Util.esc(extra.nombre || this.titulo(c))}</strong><small>${hora}</small></span>
+        <span class="chat-item-fila"><span class="chat-item-res">${resumen}</span>${n ? `<span class="nav-badge">${n > 99 ? '99+' : n}</span>` : ''}</span></span>
+    </button>`;
+  },
+
+  pintarLista() {
+    const el = this.raiz?.querySelector('.chat-lista');
+    if (!el) return;
+    const q = Util.normalizar(this.busqueda);
+    const ok = txt => !q || Util.normalizar(txt).includes(q);
+    const general = this.conv(CHAT_GENERAL_ID);
+    const grupos = this.convs.filter(c => c.tipo === 'grupo' && ok(c.nombre)).sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+    const personas = App.estado.colaboradores.filter(p => p.id !== this.yo() && ok(p.nombre))
+      .map(p => ({ p, c: this.directoCon(p.id) }))
+      .sort((a, b) => (b.c?.updated_at || '').localeCompare(a.c?.updated_at || '') || a.p.nombre.localeCompare(b.p.nombre, 'es'));
+    const enfocado = document.activeElement?.classList?.contains('chat-buscar');
+    el.innerHTML = `
+      <label class="notas-busqueda">${this._svg('M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4', 15)}<input type="search" class="chat-buscar" placeholder="Buscar conversación" aria-label="Buscar conversación" value="${Util.esc(this.busqueda)}"></label>
+      <div class="chat-secciones">
+        ${general && ok('Equipo general') ? `<div class="chat-seccion">Canal general</div>${this._filaConv(general)}` : ''}
+        ${grupos.length || Permisos.esAdmin() ? `<div class="chat-seccion"><span>Grupos</span>${Permisos.esAdmin() ? '<button class="btn btn-sm" data-c="nuevo-grupo" title="Crear grupo">＋ Grupo</button>' : ''}</div>` : ''}
+        ${grupos.map(c => this._filaConv(c)).join('') || (Permisos.esAdmin() && !q ? '<p class="muted mini chat-ayuda">Crea grupos para hablar con varias personas a la vez.</p>' : '')}
+        <div class="chat-seccion">Mensajes directos</div>
+        ${personas.map(({ p, c }) => c ? this._filaConv(c) : this._filaConv(null, { uid: p.id, nombre: p.nombre, vacio: 'Escríbele un mensaje', avatar: `<span class="chat-av-persona">${UI.avatar(p, 40)}${this.enLinea.has(p.id) ? '<span class="chat-en-linea" title="En línea"></span>' : ''}</span>` })).join('') || '<p class="muted mini chat-ayuda">No hay más personas en el equipo.</p>'}
+      </div>`;
+    if (enfocado) { const b = el.querySelector('.chat-buscar'); b.focus(); b.setSelectionRange(b.value.length, b.value.length); }
+  },
+
+  pintarCabecera() {
+    const el = this.raiz?.querySelector('.chat-cab');
+    const c = this.conv(this.actualId);
+    if (!el || !c) return;
+    const ids = this.integrantes(c);
+    const enLinea = ids.filter(u => this.enLinea.has(u)).length;
+    const sub = c.tipo === 'directo' ? (this.enLinea.has(this.otro(c)) ? '<span class="chat-verde">En línea</span>' : 'Conversación privada')
+      : `${c.tipo === 'general' ? 'Canal general' : 'Grupo'} · ${ids.length} integrante${ids.length === 1 ? '' : 's'}${enLinea ? ` · <span class="chat-verde">${enLinea} en línea</span>` : ''}`;
+    el.innerHTML = `
+      <button class="btn-icono chat-volver" data-c="volver" aria-label="Volver a las conversaciones">‹</button>
+      ${this._avatarConv(c)}
+      <div class="chat-cab-txt"><h2>${Util.esc(this.titulo(c))}</h2><small>${sub}</small></div>
+      <span class="chat-cab-gente">${ids.slice(0, 5).map(u => UI.avatar(this.persona(u), 28)).join('')}</span>
+      ${c.tipo === 'grupo' && Permisos.esAdmin() ? '<button class="btn btn-sm" data-c="editar-grupo">Gestionar</button>' : ''}`;
+  },
+
+  pintarMensajes({ alFinal = false } = {}) {
+    const el = this.raiz?.querySelector('.chat-mensajes');
+    if (!el) return;
+    const cerca = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    const lista = this.mensajes.get(this.actualId);
+    if (!lista) { el.innerHTML = '<p class="muted pad centrado">Cargando mensajes…</p>'; return; }
+    if (!lista.length) {
+      const c = this.conv(this.actualId);
+      el.innerHTML = `<div class="vacio chat-vacio">${this._svg('M4 5h16v11H8l-4 4z', 40)}<h3>${c?.tipo === 'directo' ? 'Aún no hay mensajes' : 'Empieza la conversación'}</h3><p>${c?.tipo === 'directo' ? 'Lo que escriban aquí solo lo ven ustedes dos.' : 'Escribe el primer mensaje.'}</p></div>`;
+      return;
+    }
+    let html = '', diaPrevio = '', previo = null;
+    for (const m of lista) {
+      const dia = Util.fechaDeTimestamp(m.created_at);
+      if (dia !== diaPrevio) { html += `<div class="chat-dia"><span>${this.dia(m.created_at)}</span></div>`; diaPrevio = dia; previo = null; }
+      const propio = m.autor_id === this.yo();
+      const seguido = previo && previo.autor_id === m.autor_id && (new Date(m.created_at) - new Date(previo.created_at)) < 5 * 60000;
+      const editando = this.editandoId === m.id;
+      html += `<div class="chat-msj ${propio ? 'propio' : ''} ${seguido ? 'seguido' : ''} ${m.enviando ? 'enviando' : ''}" data-id="${Util.esc(m.id)}">
+        ${propio ? '' : `<span class="chat-msj-av">${seguido ? '' : UI.avatar(this.persona(m.autor_id), 34)}</span>`}
+        <div class="chat-msj-cuerpo">
+          ${seguido ? '' : `<div class="chat-msj-cab"><strong>${Util.esc(propio ? 'Tú' : this.persona(m.autor_id).nombre)}</strong> · ${this.hora(m.created_at)}${m.editado_at ? ' · <em>editado</em>' : ''}</div>`}
+          ${editando ? `<div class="chat-burbuja chat-burbuja-edit"><textarea class="chat-editar" data-id="${Util.esc(m.id)}" maxlength="4000" aria-label="Editar mensaje">${Util.esc(m.texto)}</textarea>
+              <div class="chat-edit-pie"><small class="muted">Enter guarda · Esc cancela</small><button class="btn btn-sm" data-c="cancelar-edicion">Cancelar</button><button class="btn btn-sm btn-primario" data-c="guardar-edicion" data-id="${Util.esc(m.id)}">Guardar</button></div></div>`
+            : `<div class="chat-burbuja">${this.formatear(m.texto)}${seguido && m.editado_at ? ' <em class="chat-editado">(editado)</em>' : ''}</div>`}
+          ${propio && !editando && !m.enviando ? `<span class="chat-acciones"><button class="btn btn-sm" data-c="editar" data-id="${Util.esc(m.id)}">Editar</button><button class="btn btn-sm btn-peligro" data-c="borrar" data-id="${Util.esc(m.id)}">Borrar</button></span>` : ''}
+        </div>
+      </div>`;
+      previo = m;
+    }
+    el.innerHTML = html;
+    if (alFinal || cerca) el.scrollTop = el.scrollHeight;
+    if (this.editandoId) { const t = el.querySelector('.chat-editar'); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); this._autoAltura(t); } }
+  },
+
+  pintarEscribiendo() {
+    const el = this.raiz?.querySelector('.chat-escribiendo');
+    if (!el) return;
+    const quienes = [...(this.escribiendo.get(this.actualId)?.keys() || [])].map(u => this.nombreCorto(u));
+    el.innerHTML = quienes.length ? `<span class="chat-puntos"><i></i><i></i><i></i></span>${Util.esc(quienes.join(', '))} ${quienes.length > 1 ? 'están' : 'está'} escribiendo…` : '';
+  },
+
+  // ── Sugerencias: @menciones y tareas ──────────────────────────────
+  _sugerir(items, alElegir) {
+    const el = this.raiz.querySelector('.chat-sugerencias');
+    if (!items.length) { this._ocultarSugerencias(); return; }
+    this._elegir = alElegir; this._items = items;
+    el.innerHTML = items.map((x, i) => `<button type="button" class="chat-sug ${i === 0 ? 'on' : ''}" data-c="sugerencia" data-i="${i}">${x.html}</button>`).join('');
+    el.hidden = false;
+  },
+
+  _ocultarSugerencias() { const el = this.raiz?.querySelector('.chat-sugerencias'); if (el) { el.hidden = true; el.innerHTML = ''; } this._items = null; },
+
+  _insertar(caja, inicio, fin, texto) {
+    caja.setRangeText(texto, inicio, fin, 'end');
+    caja.focus(); this._autoAltura(caja); this._ocultarSugerencias();
+  },
+
+  _revisarMencion(caja) {
+    const antes = caja.value.slice(0, caja.selectionStart);
+    const m = antes.match(/(^|\s)@([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]*)$/);
+    if (!m) { if (this._items?.[0]?.tipo === 'persona') this._ocultarSugerencias(); return; }
+    const q = Util.normalizar(m[2]);
+    const gente = this.integrantes(this.conv(this.actualId)).filter(u => u !== this.yo()).map(u => this.persona(u))
+      .filter(p => Util.normalizar(p.nombre).startsWith(q) || Util.normalizar(p.nombre).includes(' ' + q)).slice(0, 6);
+    const inicio = caja.selectionStart - m[2].length - 1;
+    this._sugerir(gente.map(p => ({ tipo: 'persona', html: `${UI.avatar(p, 24)}<span>${Util.esc(p.nombre)}</span>`, p })),
+      it => this._insertar(caja, inicio, caja.selectionStart, '@' + it.p.nombre.split(' ')[0] + ' '));
+  },
+
+  _mostrarTareas(caja, filtro = '') {
+    const q = Util.normalizar(filtro);
+    const tareas = App.estado.tareas.filter(t => t.estado !== 'completada' && (!q || Util.normalizar(t.titulo + ' ' + (t.empresa || '')).includes(q)))
+      .sort((a, b) => (a.fecha_vencimiento || '9').localeCompare(b.fecha_vencimiento || '9')).slice(0, 7);
+    const pos = caja.selectionStart;
+    this._sugerir(tareas.map(t => ({ tipo: 'tarea', html: `${this._svg('M9 5h10M9 12h10M9 19h10M4 5l1 1 2-2M4 12l1 1 2-2M4 19l1 1 2-2', 16)}<span><strong>${Util.esc(t.titulo)}</strong><small>${Util.esc([t.empresa, t.fecha_vencimiento ? Util.fmtFecha(t.fecha_vencimiento) : ''].filter(Boolean).join(' · '))}</small></span>`, t })),
+      it => this._insertar(caja, pos, pos, (pos && !/\s$/.test(caja.value.slice(0, pos)) ? ' ' : '') + `[[tarea:${it.t.id}]] `));
+    if (!tareas.length) UI.toast('No hay tareas abiertas para referenciar.');
+  },
+
+  _autoAltura(t) { t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 160) + 'px'; },
+
+  // ── Eventos ───────────────────────────────────────────────────────
+  _alClic(e) {
+    const b = e.target.closest('[data-c]');
+    if (!b) { if (!e.target.closest('.chat-redactar')) this._ocultarSugerencias(); return; }
+    e.preventDefault();
+    const caja = this.raiz.querySelector('.chat-texto');
+    switch (b.dataset.c) {
+      case 'abrir': this.raiz.classList.add('con-conv'); this._abrir(b.dataset.id); break;
+      case 'directo': this._abrirDirecto(b.dataset.uid); break;
+      case 'volver': this.raiz.classList.remove('con-conv'); break;
+      case 'nuevo-grupo': this.abrirGrupo(); break;
+      case 'editar-grupo': this.abrirGrupo(this.conv(this.actualId)); break;
+      case 'reintentar': this.iniciado = false; this.error = null; this.iniciar(); break;
+      case 'tarea': if (App.tarea(b.dataset.id)) TareaModal.abrir(b.dataset.id); break;
+      case 'editar': this.editandoId = b.dataset.id; this.pintarMensajes(); break;
+      case 'cancelar-edicion': this.editandoId = null; this.pintarMensajes(); break;
+      case 'guardar-edicion': this.guardarEdicion(b.dataset.id); break;
+      case 'borrar': this.borrar(b.dataset.id); break;
+      case 'mencionar': {
+        const pos = caja.selectionStart;
+        this._insertar(caja, pos, pos, (pos && !/\s$/.test(caja.value.slice(0, pos)) ? ' ' : '') + '@');
+        this._revisarMencion(caja);
+        break;
+      }
+      case 'tareas': this._mostrarTareas(caja); break;
+      case 'sugerencia': { const it = this._items?.[+b.dataset.i]; if (it) this._elegir(it); break; }
+    }
+  },
+
+  _alEscribir(e) {
+    const t = e.target;
+    if (t.classList.contains('chat-buscar')) { this.busqueda = t.value; this.pintarLista(); return; }
+    if (t.classList.contains('chat-editar')) { this._autoAltura(t); return; }
+    if (!t.classList.contains('chat-texto')) return;
+    this._autoAltura(t);
+    this._revisarMencion(t);
+    if (Date.now() - this._ultimoAvisoEscribir > 2500 && t.value.trim()) {
+      this._ultimoAvisoEscribir = Date.now();
+      try { this.presencia?.escribiendo(this.actualId); } catch { /* sin presencia */ }
+    }
+  },
+
+  _alTecla(e) {
+    const t = e.target;
+    if (t.classList.contains('chat-editar')) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.guardarEdicion(t.dataset.id); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); this.editandoId = null; this.pintarMensajes(); }
+      return;
+    }
+    if (!t.classList.contains('chat-texto')) return;
+    const sug = this.raiz.querySelector('.chat-sugerencias');
+    if (this._items && !sug.hidden) {
+      const botones = [...sug.querySelectorAll('.chat-sug')];
+      const i = botones.findIndex(x => x.classList.contains('on'));
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const j = (i + (e.key === 'ArrowDown' ? 1 : -1) + botones.length) % botones.length;
+        botones.forEach((x, k) => x.classList.toggle('on', k === j));
+        return;
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); this._elegir(this._items[Math.max(0, i)]); return; }
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); this._ocultarSugerencias(); return; }
+    }
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); this.enviar(); }
+  },
+};
+
+Vistas.chat = {
+  titulo: 'Chat',
+  icono: '💬',
+  orden: 7.5,
+  visible: () => true,
+  persistente: true,
+  nodo: () => Chat.raiz,
+  insignia: () => Chat.totalNoLeidos(),
+  render: () => '',
+  montar: main => Chat.montar(main),
+};
+
+</script>
+<script>
 /* ── js/tarea-modal.js ── */
 // ═══════════════════════════════════════════════════════════════════
 // VENTANA DE TAREA — crear, editar, lista de verificación y seguimiento
@@ -4764,8 +5733,31 @@ const App = {
     const html = items.map(([id, v]) => `<button class="${id === this.estado.vista ? 'activo' : ''}" data-accion="ir" data-vista="${id}" ${id === this.estado.vista ? 'aria-current="page"' : ''}>
         <span class="nav-icono">${v.icono}</span><span class="nav-texto">${v.titulo}</span>
         ${id === 'inicio' && misVencidas ? `<span class="nav-badge" title="Tus tareas vencidas">${misVencidas}</span>` : ''}
+        ${v.insignia?.() ? `<span class="nav-badge" title="Sin leer">${v.insignia() > 99 ? '99+' : v.insignia()}</span>` : ''}
       </button>`).join('');
     document.getElementById('nav').innerHTML = html;
+    // Punto en el botón del menú cuando hay mensajes sin leer y las pestañas están ocultas
+    document.querySelector('.menu-movil')?.classList.toggle('con-aviso', items.some(([, v]) => v.insignia?.()));
+    this._ajustarNav();
+  },
+
+  // Si las pestañas no caben junto a los botones de la barra, se usa el menú lateral.
+  _ajustarNav() {
+    const cuerpo = document.body;
+    cuerpo.classList.remove('nav-compacta', 'nav-ajustada');
+    if (innerWidth <= 1240) return;
+    const nav = document.getElementById('nav'), nueva = document.querySelector('.btn-nueva');
+    if (!nav?.firstElementChild || !nueva) return;
+    const cabe = () => nav.lastElementChild.getBoundingClientRect().right <= nueva.getBoundingClientRect().left - 8;
+    if (cabe()) return;
+    cuerpo.classList.add('nav-ajustada'); // primero, pestañas más juntas
+    if (cabe()) return;
+    cuerpo.classList.remove('nav-ajustada');
+    const lateral = nav.closest('.lateral');
+    lateral.style.transition = 'none'; // sin animación de deslizamiento al cambiar de modo
+    cuerpo.classList.add('nav-compacta');
+    void lateral.offsetWidth;
+    lateral.style.transition = '';
   },
 
   // ── Sesión ─────────────────────────────────────────────────────────
@@ -4781,6 +5773,7 @@ const App = {
     this._pintarUsuario(); // de nuevo: el color del avatar depende de la lista de colaboradores
     this._conexiones = 0;
     Datos.suscribir((evento, nueva, anterior, conectado) => this._alCambiar(evento, nueva, anterior, conectado));
+    Chat.iniciar();
     clearInterval(this._temporizadorRefresco);
     this._temporizadorRefresco = setInterval(() => this.refrescar(), CONFIG.SEGUNDOS_REFRESCO * 1000);
     clearInterval(this._temporizadorCrono);
@@ -4871,6 +5864,7 @@ const App = {
     clearInterval(this._temporizadorCrono);
     Notas.reiniciar();
     Clientes.reiniciar();
+    Chat.reiniciar();
     await Datos.logout();
     this.estado.perfil = null;
     this.estado.tareas = [];
@@ -5019,6 +6013,10 @@ document.addEventListener('drop', e => {
   const id = e.dataTransfer.getData('text/plain');
   if (id) App.mover(id, zona.dataset.soltar, zona.dataset.valor);
 });
+
+let _navMedida = 0;
+addEventListener('resize', () => { cancelAnimationFrame(_navMedida); _navMedida = requestAnimationFrame(() => App._ajustarNav()); });
+document.fonts?.ready.then(() => App._ajustarNav());
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { UI.cerrarModal(); document.body.classList.remove('menu-abierto'); return; }
