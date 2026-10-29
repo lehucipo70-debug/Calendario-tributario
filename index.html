@@ -413,7 +413,8 @@ body.nav-compacta .lateral-pie { display: block; margin-top: auto; padding: 0 6p
 /* ── Barra de filtros ─────────────────────────────────────────────── */
 .barra-filtros { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .barra-filtros input[type="search"] { flex: 1; min-width: 200px; max-width: 360px; }
-.filtro-dia { display: inline-flex; gap: 4px; align-items: center; }
+.filtro-dia { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.filtro-fecha { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--text2); }
 .barra-vista { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 
 /* ── Tablero ──────────────────────────────────────────────────────── */
@@ -1430,9 +1431,24 @@ class ErrorDatos extends Error {
   }
 }
 
-// Filtro por día de la barra de filtros: qué fecha de la tarea se compara con el día elegido.
+// Filtro por fechas de la barra de filtros: qué fecha de la tarea se compara con el rango elegido.
 // Las fechas con hora se pasan al día local (Colombia), no al de UTC.
-const FILTRO_DIA_SEGUN = [['completada', 'Completada ese día'], ['creada', 'Creada ese día'], ['modificada', 'Modificada ese día'], ['vence', 'Vence ese día']];
+const FILTRO_DIA_SEGUN = [['completada', 'Completadas'], ['creada', 'Creadas'], ['modificada', 'Modificadas'], ['vence', 'Que vencen']];
+// Atajos del rango: [id, etiqueta, (hoy) => [desde, hasta]]
+const FILTRO_RANGOS = [
+  ['hoy', 'Hoy', h => [h, h]],
+  ['ayer', 'Ayer', h => [Util.sumarDias(h, -1), Util.sumarDias(h, -1)]],
+  ['semana', 'Esta semana', h => [Util.inicioSemana(h), Util.sumarDias(Util.inicioSemana(h), 6)]],
+  ['semana_anterior', 'Semana pasada', h => [Util.sumarDias(Util.inicioSemana(h), -7), Util.sumarDias(Util.inicioSemana(h), -1)]],
+  ['mes', 'Este mes', h => { const r = Metricas.rangoPeriodo('mes', h); return [r.desde, r.hasta]; }],
+  ['mes_anterior', 'Mes pasado', h => { const r = Metricas.rangoPeriodo('mes_anterior', h); return [r.desde, r.hasta]; }],
+];
+// Rango efectivo: con solo "Desde" es ese día; con solo "Hasta", todo hasta ese día.
+function rangoFiltroDia(f) {
+  let desde = f.dia || null, hasta = f.diaHasta || f.dia || null;
+  if (desde && hasta && desde > hasta) [desde, hasta] = [hasta, desde];
+  return desde || hasta ? { desde, hasta } : null;
+}
 const FILTRO_DIA_FECHA = {
   completada: t => Util.fechaDeTimestamp(t.completada_at),
   creada: t => Util.fechaDeTimestamp(t.created_at),
@@ -2471,7 +2487,8 @@ const UI = {
         ${opciones.map(([v, l]) => `<option value="${Util.esc(v)}" ${f[campo] === v ? 'selected' : ''}>${Util.esc(l)}</option>`).join('')}
       </select>`;
     const colabs = App.estado.colaboradores.map(c => [c.id, c.nombre]);
-    const activos = ['texto', 'colaborador', 'estado', 'prioridad', 'categoria', 'dia'].some(k => f[k]);
+    const activos = ['texto', 'colaborador', 'estado', 'prioridad', 'categoria', 'dia', 'diaHasta'].some(k => f[k]);
+    const rangoActual = FILTRO_RANGOS.find(([, , fn]) => { const [d, h] = fn(Util.hoyISO()); return f.dia === d && (f.diaHasta || f.dia) === h; })?.[0] || '';
     return `<div class="barra-filtros">
       ${Permisos.verEquipo() ? `<div class="segmentado" role="group" aria-label="Alcance">
         <button class="${f.alcance === 'mias' ? 'on' : ''}" data-accion="alcance" data-valor="mias">Mis tareas</button>
@@ -2482,11 +2499,16 @@ const UI = {
       ${sel('estado', 'Estado', [...ESTADOS.map(e => [e.id, e.label]), ['vencida', 'Vencida']])}
       ${sel('prioridad', 'Prioridad', PRIORIDADES.map(p => [p.id, p.label]))}
       ${sel('categoria', 'Categoría', App.categorias().map(c => [c, c]))}
-      <span class="filtro-dia">
-        <input type="date" data-filtro="dia" value="${Util.esc(f.dia)}" aria-label="Día" title="Filtrar por día">
-        <select data-filtro="diaSegun" aria-label="Fecha que se filtra" title="Qué fecha de la tarea se compara con el día">
+      <span class="filtro-dia" role="group" aria-label="Filtrar por fechas">
+        <select data-filtro="diaSegun" aria-label="Fecha que se filtra" title="Qué fecha de la tarea se compara con el rango">
           ${FILTRO_DIA_SEGUN.map(([v, l]) => `<option value="${v}" ${f.diaSegun === v ? 'selected' : ''}>${l}</option>`).join('')}
         </select>
+        <select data-filtro="rango" aria-label="Rango rápido" title="Rango rápido">
+          <option value="">Fechas…</option>
+          ${FILTRO_RANGOS.map(([v, l]) => `<option value="${v}" ${rangoActual === v ? 'selected' : ''}>${l}</option>`).join('')}
+        </select>
+        <label class="filtro-fecha"><span>Desde</span><input type="date" data-filtro="dia" value="${Util.esc(f.dia)}" aria-label="Desde" title="Desde (si no pones Hasta, solo ese día)"></label>
+        <label class="filtro-fecha"><span>Hasta</span><input type="date" data-filtro="diaHasta" value="${Util.esc(f.diaHasta)}" ${f.dia ? `min="${Util.esc(f.dia)}"` : ''} aria-label="Hasta" title="Hasta (incluido)"></label>
       </span>
       ${activos ? '<button class="btn btn-sm" data-accion="limpiar-filtros">✕ Limpiar</button>' : ''}
     </div>`;
@@ -5575,7 +5597,7 @@ const App = {
     errorCarga: null,
     vista: 'inicio',
     tema: 'claro',
-    filtros: { alcance: 'mias', texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '', diaSegun: 'completada' },
+    filtros: { alcance: 'mias', texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '', diaHasta: '', diaSegun: 'completada' },
     tablero: { agrupar: 'estado' },
     lista: { orden: 'fecha_vencimiento', dir: 1, limite: CONFIG.LIMITE_LISTA },
     cal: { modo: 'mes', ref: Util.hoyISO() },
@@ -5604,7 +5626,7 @@ const App = {
 
   // Tareas que el usuario ve en tablero, lista y calendario.
   // Las completadas se archivan: solo aparecen con el filtro de estado "Completada"
-  // o con el filtro de día (para auditar, ese día se ven todas, también las completadas).
+  // o con el filtro de fechas (para auditar, en ese rango se ven todas, también las completadas).
   tareasVisibles({ sinFiltros = false, estado = this.estado.filtros.estado } = {}) {
     const f = this.estado.filtros;
     let lista = this.estado.tareas;
@@ -5613,10 +5635,12 @@ const App = {
     const hoy = Util.hoyISO();
     const q = Util.normalizar(f.texto);
     const fechaDia = FILTRO_DIA_FECHA[f.diaSegun] || FILTRO_DIA_FECHA.completada;
+    const rango = rangoFiltroDia(f);
+    const enRango = t => { const d = fechaDia(t); return !!d && (!rango.desde || d >= rango.desde) && (!rango.hasta || d <= rango.hasta); };
     return lista.filter(t =>
       (!f.colaborador || t.asignado_a === f.colaborador) &&
-      (estado ? (estado === 'vencida' ? Metricas.estadoEfectivo(t, hoy) === 'vencida' : t.estado === estado) : f.dia || t.estado !== 'completada') &&
-      (!f.dia || fechaDia(t) === f.dia) &&
+      (estado ? (estado === 'vencida' ? Metricas.estadoEfectivo(t, hoy) === 'vencida' : t.estado === estado) : rango || t.estado !== 'completada') &&
+      (!rango || enRango(t)) &&
       (!f.prioridad || t.prioridad === f.prioridad) &&
       (!f.categoria || t.categoria === f.categoria) &&
       (!q || Util.normalizar(`${t.titulo} ${t.empresa || ''} ${t.descripcion || ''}`).includes(q)));
@@ -5957,7 +5981,7 @@ const App = {
     this.estado.tareas = [];
     // El siguiente usuario empieza limpio: sin la vista ni los filtros del anterior.
     this.estado.vista = 'inicio';
-    Object.assign(this.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '' });
+    Object.assign(this.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '', diaHasta: '' });
     this.estado.lista.limite = CONFIG.LIMITE_LISTA;
     history.replaceState(null, '', location.pathname + location.search);
     document.getElementById('app').hidden = true;
@@ -6019,7 +6043,7 @@ const Acciones = {
   'completar': el => App.completar(el.dataset.id),
   'alcance': el => { App.estado.filtros.alcance = el.dataset.valor; if (el.dataset.valor === 'mias') App.estado.filtros.colaborador = ''; App.render(); },
   'ver-completadas': () => { App.estado.filtros.estado = 'completada'; App.render(); },
-  'limpiar-filtros': () => { Object.assign(App.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '' }); App.render(); },
+  'limpiar-filtros': () => { Object.assign(App.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '', diaHasta: '' }); App.render(); },
   'ver-colaborador': el => {
     Object.assign(App.estado.filtros, { alcance: 'equipo', colaborador: el.dataset.id || '', estado: el.dataset.estado || '' });
     App.ir('lista');
@@ -6052,6 +6076,12 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', e => {
   const campo = e.target.dataset?.filtro;
+  if (campo === 'rango') {
+    const r = FILTRO_RANGOS.find(([v]) => v === e.target.value);
+    const [desde, hasta] = r ? r[2](Util.hoyISO()) : ['', ''];
+    Object.assign(App.estado.filtros, { dia: desde, diaHasta: hasta === desde ? '' : hasta });
+    App.render(); return;
+  }
   if (campo && campo !== 'texto') { App.estado.filtros[campo] = e.target.value; App.render(); return; }
   const fn = Vistas[App.estado.vista]?.alCambiar;
   if (e.target.dataset?.cambio && fn) fn(e.target);

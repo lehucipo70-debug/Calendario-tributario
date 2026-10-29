@@ -31,9 +31,14 @@ En **Administración → Seleccionar archivo Excel**. La primera fila debe tener
 
 Las tareas completadas se archivan: dejan de aparecer en el tablero, la lista y el calendario. Para verlas, elige **Estado → Completada** en la barra de filtros (o el botón **Ver completadas** de la columna Completada del tablero). Desde ahí se pueden reabrir. Inicio y Rendimiento siguen contándolas.
 
-## Filtrar por día (auditoría)
+## Filtrar por fechas (auditoría)
 
-En la barra de filtros del tablero, la lista y el calendario está el filtro **Día**: elige una fecha y, al lado, qué fecha de la tarea se compara: **Completada ese día** (por defecto), **Creada ese día**, **Modificada ese día** o **Vence ese día**. Con el día puesto se ven todas las tareas de ese día, también las completadas. Combinado con **Equipo → Colaborador** muestra lo que hizo cada persona ese día. **Modificada** usa la última modificación de la tarea: si se volvió a cambiar después, aparece en el día del último cambio.
+En la barra de filtros del tablero, la lista y el calendario está el filtro de fechas:
+
+1. Elige qué fecha de la tarea se compara: **Completadas** (por defecto), **Creadas**, **Modificadas** o **Que vencen**.
+2. Elige el rango con un atajo (**Hoy**, **Ayer**, **Esta semana**, **Semana pasada**, **Este mes**, **Mes pasado**) o con **Desde** y **Hasta**. Ambas fechas están incluidas; con solo **Desde** se filtra ese día, y con solo **Hasta**, todo hasta ese día.
+
+Con un rango puesto se ven todas las tareas de esas fechas, también las completadas. Combinado con **Equipo → Colaborador** muestra lo que hizo cada persona en ese periodo. **Modificadas** usa la última modificación de la tarea: si se volvió a cambiar después, cuenta en la fecha del último cambio.
 
 ## Avisos de escritorio
 
