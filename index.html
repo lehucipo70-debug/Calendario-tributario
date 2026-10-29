@@ -103,7 +103,8 @@
    Textos casi negros (contraste 7:1 o más) para leer sin esfuerzo sobre la arena. */
 :root[data-theme="light"] {
   --bg: #efe9df; --bg2: #f6f1e8; --bg3: #e9e1d4; --borde: #ddd2c1;
-  --text: #120e0a; --text2: #221b14; --text3: #2e261e;
+  --text: #1d3c78; --text2: #11524b; --text3: #5a3716;
+  --titulo: #1d3c78;
   --acento: #5d7b6f; --acento-2: #8a6a1f; --acento-solido: #4f6b60; --acento-suave: #dfe8e2; --acento-texto: #3f5e52;
   --primario-bg: #4f6b60; --primario-texto: #fbf8f2;
   --indigo-suave: #e4e2ec; --indigo-texto: #4a4878;
@@ -119,7 +120,7 @@
   --vidrio-sombra: 0 0 0 1px rgba(70,55,35,.05), 0 20px 50px -24px rgba(70,55,35,.25);
   --vidrio-fondo: rgba(246,241,232,.6); --vidrio-filo: #f6f1e8; --vidrio-reflejo: rgba(250,246,238,.35);
   --vidrio-luz-a: rgba(93,123,111,.22); --vidrio-luz-b: rgba(214,190,150,.32); --vidrio-luz-c: rgba(196,150,120,.18);
-  --vidrio-texto-cab: #221b14; --vidrio-fila: rgba(246,241,232,.82); --vidrio-fila-borde: rgba(221,210,193,.9);
+  --vidrio-texto-cab: #1d3c78; --vidrio-fila: rgba(246,241,232,.82); --vidrio-fila-borde: rgba(221,210,193,.9);
   --vidrio-hover: #f9f5ee;
   --nc-violeta: #765c9e; --nc-amarillo: #a8761c; --nc-azul: #3d6580; --nc-verde: #4f7a54; --nc-rosa: #a3567a; --nc-gris: #4f4538;
 }
@@ -128,6 +129,9 @@
 :root[data-theme="light"] body { font-weight: 500; -webkit-font-smoothing: auto; }
 :root[data-theme="light"] :is(input, textarea)::placeholder { color: var(--text3); opacity: 1; }
 :root[data-theme="light"] .captura-rapida input::placeholder { color: rgba(255,255,255,.85); }
+/* Texto principal y títulos en azul marino; el secundario en verde petróleo y el terciario en café */
+:root[data-theme="light"] :is(h1, h2, h3, h4, .titulo-vista, .tarjeta-titulo, .enlace-tarea, .marca) { color: var(--titulo); }
+:root[data-theme="light"] .hero h2 { color: #fff; }
 :root[data-theme="light"] .chat-av-general, :root[data-theme="light"] .chat-msj.propio .chat-burbuja { background: linear-gradient(135deg, var(--hero-1), var(--hero-3)); }
 :root[data-theme="light"] .chat-item.on { background: var(--acento-suave); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--acento) 45%, transparent); }
 :root[data-theme="light"] .login { background: radial-gradient(1000px 460px at 50% 115%, rgba(93,123,111,.22), transparent 65%), radial-gradient(900px 520px at 100% 0%, rgba(214,190,150,.3), transparent 55%); }
