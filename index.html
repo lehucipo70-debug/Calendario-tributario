@@ -113,7 +113,7 @@
   --rojo: #93362a; --rojo-suave: #f1ddd6;
   --azul: #34576f; --azul-suave: #dce5ea;
   --p-urgente: #93362a; --p-alta: #8a4520; --p-media: #4c4a88; --p-baja: #4f4538;
-  --hero-1: #4a665b; --hero-2: #56746a; --hero-3: #627f72;
+  --hero-1: #3f6b5c; --hero-2: #2d5f78; --hero-3: #8a4a2e; /* salvia → azul petróleo → terracota: la franja de inicio cambia de color */
   --sombra: 0 1px 2px rgba(70,55,35,.06), 0 4px 14px rgba(70,55,35,.05);
   --sombra-2: 0 12px 30px rgba(70,55,35,.10); --sombra-3: 0 24px 60px rgba(70,55,35,.20);
   --vidrio-borde: rgba(221,210,193,.95);
@@ -132,7 +132,7 @@
 /* Texto principal y títulos en azul marino; el secundario en verde petróleo y el terciario en café */
 :root[data-theme="light"] :is(h1, h2, h3, h4, .titulo-vista, .tarjeta-titulo, .enlace-tarea, .marca) { color: var(--titulo); }
 :root[data-theme="light"] .hero h2 { color: #fff; }
-:root[data-theme="light"] .chat-av-general, :root[data-theme="light"] .chat-msj.propio .chat-burbuja { background: linear-gradient(135deg, var(--hero-1), var(--hero-3)); }
+:root[data-theme="light"] .chat-av-general, :root[data-theme="light"] .chat-msj.propio .chat-burbuja { background: linear-gradient(135deg, var(--hero-1), var(--hero-2)); }
 :root[data-theme="light"] .chat-item.on { background: var(--acento-suave); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--acento) 45%, transparent); }
 :root[data-theme="light"] .login { background: radial-gradient(1000px 460px at 50% 115%, rgba(93,123,111,.22), transparent 65%), radial-gradient(900px 520px at 100% 0%, rgba(214,190,150,.3), transparent 55%); }
 
