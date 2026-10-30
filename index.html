@@ -589,6 +589,14 @@ body.nav-compacta .lateral-pie { display: block; margin-top: auto; padding: 0 6p
 .fila-botones { display: flex; gap: 8px; flex-wrap: wrap; }
 .panel > p, .panel > ul { margin-bottom: 10px; }
 .imp-log { font-size: 12px; color: var(--text2); max-height: 200px; overflow-y: auto; line-height: 1.7; }
+.imp-resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
+.imp-resumen div { padding: 12px; border-radius: 14px; background: var(--bg3); text-align: center; }
+.imp-resumen strong { display: block; font-size: 24px; font-family: Inter, sans-serif; }
+.imp-resumen span { font-size: 12px; color: var(--text2); }
+.imp-cambios { list-style: none; max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.imp-cambios li { padding: 8px 10px; border-radius: 10px; background: var(--bg3); font-size: 13px; }
+.imp-avisos { margin-bottom: 10px; padding: 8px 12px; border-radius: 10px; background: var(--ambar-suave); color: var(--ambar); font-size: 12px; max-height: 160px; overflow-y: auto; }
+.imp-avisos summary { cursor: pointer; font-weight: 600; }
 
 /* ── Notas (bloc personal) ────────────────────────────────────────── */
 .panel-vidrio { background: var(--vidrio-fondo); border: 1px solid var(--vidrio-fila-borde); border-radius: calc(var(--r) + 4px);
@@ -3267,8 +3275,9 @@ Vistas.admin = {
       <div class="rejilla-2">
         <section class="panel">
           <header class="panel-cab"><h3>📥 Importar tareas desde Excel</h3></header>
-          <p class="muted">Acepta dos formatos:</p>
+          <p class="muted">Acepta tres formatos:</p>
           <ul class="lista-ayuda">
+            <li><strong>Actualizar tareas:</strong> descarga la Lista con <em>Exportar a Excel</em> (trae la columna <code>Código</code>), cambia fechas, estados o responsables y súbelo aquí. Cada fila con código actualiza esa misma tarea; las filas sin código se crean como nuevas. Antes de guardar se muestra un resumen.</li>
             <li><strong>Planner:</strong> columnas <code>TAREA</code> o <code>TITULO</code>, <code>COLABORADOR</code>, <code>FECHA</code>, y opcionales <code>EMPRESA</code>, <code>CATEGORIA</code>, <code>PRIORIDAD</code>, <code>ESTADO</code>, <code>DESCRIPCION</code>.</li>
             <li><strong>Calendario tributario anterior:</strong> <code>EMPRESA</code>, <code>CONTADOR</code>, <code>TIPO DE IMPUESTO</code>, <code>PERÍODO</code>, <code>FECHA VENCIMIENTO</code>. Cada obligación se convierte en una tarea de categoría Tributario.</li>
           </ul>
@@ -5394,6 +5403,162 @@ const Importador = (() => {
     if (lineas) document.getElementById('imp-log').innerHTML = lineas.map(l => `<div>${U.esc(l)}</div>`).join('');
   }
 
+  // ── Actualizar desde Excel ──────────────────────────────────────────
+  // Si la hoja trae la columna "Código" (exportada por la página), cada fila con código
+  // actualiza esa misma tarea (solo lo que cambió) y las filas sin código se crean.
+  function hojaConCodigo(hojas) {
+    for (const hoja of hojas) {
+      const filas = hoja.filas || [];
+      for (let i = 0; i < Math.min(8, filas.length); i++) {
+        const c = (filas[i] || []).map(U.normalizar);
+        const iCod = c.findIndex(h => h.startsWith('CODIGO'));
+        if (iCod >= 0 && c.some(h => COLS.titulo.includes(h))) return { hoja, filaCab: i, cab: c, iCod };
+      }
+    }
+    return null;
+  }
+
+  // Exportación antigua de la página (sin código): subirla duplicaría todas las tareas.
+  function esExportacionSinCodigo(hojas) {
+    return hojas.some(h => (h.filas || []).slice(0, 8).some(f => { const c = (f || []).map(U.normalizar); return c.includes('COMPLETADA EL') && c.includes('INICIADA EL'); }));
+  }
+
+  function planActualizacion(det, tareasActuales, colaboradores) {
+    const { hoja, filaCab, cab, iCod } = det;
+    const col = {
+      titulo: buscarCol(cab, COLS.titulo), colaborador: buscarCol(cab, COLS.colaborador),
+      fecha: buscarCol(cab, COLS.fecha, ['INICIO', 'ENTREGA', 'PRESENTACION', 'COMPLETADA']),
+      fecha_inicio: buscarCol(cab, COLS.fecha_inicio, ['INICIADA']), empresa: buscarCol(cab, COLS.empresa),
+      categoria: buscarCol(cab, COLS.categoria), prioridad: buscarCol(cab, COLS.prioridad),
+      estado: buscarCol(cab, COLS.estado), descripcion: buscarCol(cab, COLS.descripcion),
+    };
+    const porId = new Map(tareasActuales.map(t => [String(t.id), t]));
+    const refs = new Set(tareasActuales.map(t => t.origen_ref).filter(Boolean));
+    const porNombre = new Map();
+    for (const c of colaboradores) {
+      porNombre.set(U.normalizar(c.nombre), c);
+      const primero = U.normalizar(c.nombre).split(' ')[0];
+      if (primero && !porNombre.has(primero)) porNombre.set(primero, c);
+    }
+    const buscarColab = n => { const k = U.normalizar(n); return k ? porNombre.get(k) || porNombre.get(k.split(' ')[0]) || null : null; };
+    const nombreEstado = id => ESTADOS.find(e => e.id === id)?.label || id;
+    const nombrePrio = id => PRIORIDADES.find(x => x.id === id)?.label || id;
+    const actualizar = [], nuevas = [], avisos = [];
+    let sinCambios = 0;
+    const vistos = new Set();
+    const filas = hoja.filas || [];
+    for (let r = filaCab + 1; r < filas.length; r++) {
+      const f = filas[r] || [];
+      const val = k => (col[k] >= 0 ? texto(f[col[k]]) : '');
+      const codigo = texto(f[iCod]);
+      const titulo = val('titulo');
+      if (!codigo && !titulo) continue;
+      const fila = r + 1;
+      if (!codigo) {
+        // Fila nueva (sin código): se crea como tarea nueva
+        const colab = val('colaborador'), c = buscarColab(colab);
+        if (colab && !c) avisos.push(`Fila ${fila}: "${colab}" no es un colaborador; la tarea nueva queda sin asignar.`);
+        const fecha = col.fecha >= 0 ? U.parsearFecha(f[col.fecha]) : null;
+        const estado = mapearEstado(val('estado'));
+        const ref = 'xls:' + huella([hoja.nombre, titulo, val('empresa'), fecha, colab].join('|'));
+        // Ya se creó al subir este archivo antes: no se repite
+        if (refs.has(ref)) { sinCambios++; continue; }
+        refs.add(ref);
+        nuevas.push({
+          titulo: titulo.slice(0, 300), asignado_a: c?.id || null, empresa: val('empresa') || null,
+          categoria: val('categoria') || 'Otro', prioridad: mapearPrioridad(val('prioridad')) || 'media', estado,
+          fecha_inicio: col.fecha_inicio >= 0 ? U.parsearFecha(f[col.fecha_inicio]) : null, fecha_vencimiento: fecha,
+          descripcion: val('descripcion') || null, progreso: estado === 'completada' ? 100 : 0, checklist: [], etiquetas: [],
+          completada_at: estado === 'completada' && fecha ? U.deISO(fecha).toISOString() : null,
+          origen_ref: ref,
+        });
+        continue;
+      }
+      const t = porId.get(codigo);
+      if (!t) { avisos.push(`Fila ${fila}: el código ${codigo} no existe (¿tarea eliminada?). Se omite.`); continue; }
+      if (vistos.has(codigo)) { avisos.push(`Fila ${fila}: el código ${codigo} está repetido. Se usa solo la primera fila.`); continue; }
+      vistos.add(codigo);
+      const cambios = {}, textos = [];
+      // Vacío, null y undefined cuentan igual: solo se marca lo que de verdad cambió
+      const igual = (a, b) => (a === '' || a == null ? null : a) === (b === '' || b == null ? null : b);
+      const poner = (campo, nuevo, viejo, txt) => { if (!igual(nuevo, viejo)) { cambios[campo] = nuevo; textos.push(txt); } };
+      if (titulo) poner('titulo', titulo.slice(0, 300), t.titulo, `nombre → "${titulo}"`);
+      if (col.colaborador >= 0 && val('colaborador')) {
+        const c = buscarColab(val('colaborador'));
+        if (c) poner('asignado_a', c.id, t.asignado_a, `colaborador → ${c.nombre}`);
+        else avisos.push(`Fila ${fila}: "${val('colaborador')}" no es un colaborador; no se cambia el responsable.`);
+      }
+      if (col.empresa >= 0) poner('empresa', val('empresa') || null, t.empresa, `empresa → ${val('empresa') || '(vacía)'}`);
+      if (col.categoria >= 0 && val('categoria')) poner('categoria', val('categoria'), t.categoria, `categoría → ${val('categoria')}`);
+      if (col.prioridad >= 0) { const pr = mapearPrioridad(val('prioridad')); if (pr) poner('prioridad', pr, t.prioridad, `prioridad → ${nombrePrio(pr)}`); }
+      // "Vencida" lo calcula la página: no es un estado que se guarde
+      if (col.estado >= 0 && val('estado') && U.normalizar(val('estado')) !== 'VENCIDA') {
+        const es = mapearEstado(val('estado')); poner('estado', es, t.estado, `estado → ${nombreEstado(es)}`);
+      }
+      if (col.fecha_inicio >= 0) { const d = U.parsearFecha(f[col.fecha_inicio]); poner('fecha_inicio', d, t.fecha_inicio, `inicio → ${d ? U.fmtFecha(d) : '(sin fecha)'}`); }
+      if (col.fecha >= 0) { const d = U.parsearFecha(f[col.fecha]); poner('fecha_vencimiento', d, t.fecha_vencimiento, `fecha límite ${t.fecha_vencimiento ? U.fmtFecha(t.fecha_vencimiento) : '(sin fecha)'} → ${d ? U.fmtFecha(d) : '(sin fecha)'}`); }
+      if (col.descripcion >= 0) poner('descripcion', val('descripcion') || null, t.descripcion, 'descripción');
+      if (textos.length) actualizar.push({ t, cambios, textos }); else sinCambios++;
+    }
+    const otras = det.otrasHojas || [];
+    return { actualizar, nuevas, sinCambios, avisos, otras };
+  }
+
+  async function aplicarActualizacion(plan) {
+    let hechas = 0, fallas = 0;
+    const total = plan.actualizar.length;
+    for (const { t, cambios, textos } of plan.actualizar) {
+      try {
+        if (!Permisos.editarTarea(t)) throw new Error('sin permiso');
+        const { enviar } = App._derivar(t, cambios);
+        const guardada = await Datos.actualizarTarea(t.id, enviar);
+        App._reemplazar(guardada);
+        App._registrar(t.id, 'edicion', 'Actualizó desde Excel: ' + textos.join(' · '));
+      } catch (e) { fallas++; console.warn('[actualizar desde Excel]', t.id, e.message); }
+      hechas++;
+      progreso(10 + Math.round(70 * hechas / Math.max(1, total)), `Actualizando… ${hechas}/${total}`);
+    }
+    let creadas = 0;
+    if (plan.nuevas.length) {
+      progreso(85, `Creando ${plan.nuevas.length} tareas nuevas…`);
+      creadas = await Datos.importarTareas(plan.nuevas, () => {});
+    }
+    return { actualizadas: total - fallas, fallas, creadas };
+  }
+
+  function mostrarPlan(plan, archivo) {
+    const lista = plan.actualizar.slice(0, 40).map(({ t, textos }) =>
+      `<li><strong>${U.esc(t.titulo)}</strong>${t.empresa ? ' · ' + U.esc(t.empresa) : ''}<br><span class="muted mini">${U.esc(textos.join(' · '))}</span></li>`).join('');
+    UI.abrirModal(`<header class="modal-cab"><h3>Actualizar desde Excel</h3><button type="button" class="btn-icono btn-sm" data-accion="cerrar-modal" aria-label="Cerrar">✕</button></header>
+      <p class="muted mini">${U.esc(archivo.name)} · revisa los cambios antes de guardar.</p>
+      <div class="imp-resumen">
+        <div><strong>${plan.actualizar.length}</strong><span>se actualizan</span></div>
+        <div><strong>${plan.nuevas.length}</strong><span>tareas nuevas</span></div>
+        <div><strong>${plan.sinCambios}</strong><span>sin cambios</span></div>
+      </div>
+      ${plan.otras.length ? `<p class="mini muted">Solo se lee la hoja con la columna Código; se ignoran: ${U.esc(plan.otras.join(', '))}.</p>` : ''}
+      ${plan.avisos.length ? `<details class="imp-avisos" open><summary>${plan.avisos.length} aviso${plan.avisos.length > 1 ? 's' : ''}</summary>${plan.avisos.slice(0, 30).map(a => `<div>${U.esc(a)}</div>`).join('')}</details>` : ''}
+      ${lista ? `<ul class="imp-cambios">${lista}</ul>${plan.actualizar.length > 40 ? `<p class="muted mini">…y ${plan.actualizar.length - 40} más.</p>` : ''}` : ''}
+      <p id="imp-estado" class="muted mini"></p>
+      <div class="barra-progreso grande" hidden><span id="imp-barra" style="width:0%"></span></div>
+      <div id="imp-log" class="imp-log" hidden></div>
+      <div class="modal-pie"><span class="separador"></span>
+        <button class="btn" data-accion="cerrar-modal">Cancelar</button>
+        <button class="btn btn-primario" id="imp-aplicar" ${plan.actualizar.length || plan.nuevas.length ? '' : 'disabled'}>Guardar cambios</button>
+      </div>`, { ancho: 620 });
+    document.getElementById('imp-aplicar').addEventListener('click', async e => {
+      e.target.disabled = true;
+      document.querySelector('.modal .barra-progreso')?.removeAttribute('hidden');
+      try {
+        const r = await aplicarActualizacion(plan);
+        await App.cargar();
+        App.render();
+        progreso(100, `Listo: ${r.actualizadas} actualizadas, ${r.creadas} nuevas${r.fallas ? `, ${r.fallas} no se pudieron guardar` : ''}.`);
+        e.target.textContent = 'Hecho';
+      } catch (err) { console.error(err); progreso(100, '❌ ' + err.message); }
+    });
+  }
+
   async function importarArchivo(archivo) {
     if (archivo.size > 20 * 1024 * 1024) { UI.toast('El archivo supera 20 MB.', { tipo: 'error' }); return; }
     UI.abrirModal(`<header class="modal-cab"><h3>Importar: ${U.esc(archivo.name)}</h3></header>
@@ -5406,6 +5571,16 @@ const Importador = (() => {
       progreso(20, 'Procesando hojas…');
       const wb = XLSX.read(await archivo.arrayBuffer(), { type: 'array', cellDates: true });
       const hojas = wb.SheetNames.map(nombre => ({ nombre, filas: XLSX.utils.sheet_to_json(wb.Sheets[nombre], { header: 1, defval: null, raw: true }) }));
+      const det = hojaConCodigo(hojas);
+      if (det) {
+        det.otrasHojas = hojas.filter(h => h !== det.hoja).map(h => h.nombre);
+        mostrarPlan(planActualizacion(det, App.estado.tareas, App.estado.colaboradores), archivo);
+        return;
+      }
+      if (esExportacionSinCodigo(hojas)) {
+        progreso(100, '⚠ Este archivo es una exportación anterior de la página, sin la columna Código: subirlo crearía todas las tareas otra vez (repetidas). Descarga de nuevo con "Exportar a Excel" (ya trae el código), haz tus cambios en ese archivo y súbelo.');
+        return;
+      }
       const { tareas, log } = filasATareas(hojas, App.estado.colaboradores);
       if (!tareas.length) { progreso(100, 'No se encontraron tareas en el archivo.', log); return; }
       progreso(40, `Guardando ${tareas.length} tareas…`, log);
@@ -5420,12 +5595,13 @@ const Importador = (() => {
   }
 
   async function exportar(tareas) {
-    const cab = ['Tarea', 'Colaborador', 'Empresa', 'Categoría', 'Prioridad', 'Estado', 'Fecha inicio', 'Fecha límite', 'Completada el', 'A tiempo', 'Iniciada el', 'Tiempo de ejecución (h)', 'Progreso %', 'Descripción'];
+    // La primera columna es el código interno: al volver a subir el archivo, la tarea se actualiza en vez de duplicarse.
+    const cab = ['Código (no modificar)', 'Tarea', 'Colaborador', 'Empresa', 'Categoría', 'Prioridad', 'Estado', 'Fecha inicio', 'Fecha límite', 'Completada el', 'A tiempo', 'Iniciada el', 'Tiempo de ejecución (h)', 'Progreso %', 'Descripción'];
     const hoy = U.hoyISO();
     const filas = tareas.map(t => {
       const ef = Metricas.estadoEfectivo(t, hoy);
       const at = Metricas.aTiempo(t);
-      return [t.titulo, App.colaboradorDe(t)?.nombre || '', t.empresa || '', t.categoria || '',
+      return [t.id, t.titulo, App.colaboradorDe(t)?.nombre || '', t.empresa || '', t.categoria || '',
         PRIORIDADES.find(p => p.id === t.prioridad)?.label || '', ef === 'vencida' ? 'Vencida' : ESTADOS.find(e => e.id === t.estado)?.label || '',
         t.fecha_inicio || '', t.fecha_vencimiento || '', U.fechaDeTimestamp(t.completada_at) || '', at === null ? '' : at ? 'Sí' : 'No',
         t.iniciada_at && t.estado !== 'pendiente' ? U.fmtFechaHora(t.iniciada_at) : '', (ms => ms === null ? '' : Math.round(ms / 360000) / 10)(Metricas.tiempoEjecucion(t)),
@@ -5435,7 +5611,7 @@ const Importador = (() => {
     try {
       await cargarXLSX();
       const ws = XLSX.utils.aoa_to_sheet([cab, ...filas]);
-      ws['!cols'] = cab.map((h, i) => ({ wch: i === 0 || i === cab.length - 1 ? 40 : 16 }));
+      ws['!cols'] = cab.map((h, i) => ({ wch: i === 1 || i === cab.length - 1 ? 40 : i === 0 ? 14 : 16 }));
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Tareas');
       XLSX.writeFile(wb, nombre + '.xlsx');
@@ -5451,7 +5627,7 @@ const Importador = (() => {
     UI.toast(`${tareas.length} tareas exportadas`, { tipo: 'ok' });
   }
 
-  return { filasATareas, mapearEstado, mapearPrioridad, huella, importarArchivo, exportar, cargarXLSX };
+  return { filasATareas, mapearEstado, mapearPrioridad, huella, importarArchivo, exportar, cargarXLSX, hojaConCodigo, planActualizacion, esExportacionSinCodigo };
 })();
 
 if (typeof module !== 'undefined') module.exports = { Importador };
