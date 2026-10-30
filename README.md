@@ -110,4 +110,13 @@ Cada tarea mide su **tiempo de ejecución**: empieza a contar cuando sale de *Pe
 - Si se reabre una completada, sigue contando desde el inicio original.
 - Si pasa de *Pendiente* a *Completada* directo, no hay tiempo medido.
 
+### Pausa (almuerzo, salidas)
+
+Junto al cronómetro, en el Tablero, la Lista y la ventana de la tarea, está el botón de **pausa**. En pausa el cronómetro se ve en ámbar y no avanza; con el botón de **reanudar** sigue desde donde iba. El tiempo en pausa no cuenta en el tiempo de ejecución ni en Rendimiento.
+
+- Si se completa una tarea en pausa, la pausa se cierra sola.
+- Si la tarea vuelve a *Pendiente*, se borran el cronómetro y las pausas.
+- Pausar y reanudar queda en el seguimiento de la tarea.
+- **Activarla en Supabase (una vez):** ejecuta `supabase/pausa.sql` en el **SQL Editor** (después de `cronometro.sql`). En **Administración → Estado del sistema** se ve si está activa.
+
 **Activarlo en Supabase (una vez):** ejecuta `supabase/cronometro.sql` en el **SQL Editor**. Crea la columna `iniciada_at`, el trigger que la mantiene y calcula el inicio de las tareas que ya estaban en curso (con el seguimiento o, si no hay registro, su fecha de creación). Mientras no se ejecute, la página funciona igual pero sin cronómetro; en **Administración → Estado del sistema** se ve si está activo.
