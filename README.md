@@ -27,6 +27,18 @@ En **Administración → Seleccionar archivo Excel**. La primera fila debe tener
 - **RESPONSABLE** se asocia con el nombre del perfil (basta el primer nombre). Crea el perfil **antes** de importar; si no existe, la tarea queda sin asignar.
 - Importar el mismo archivo otra vez no duplica tareas.
 
+## Actualizar tareas desde Excel
+
+1. En la **Lista**, usa **Exportar a Excel**. La primera columna, **Código (no modificar)**, identifica cada tarea.
+2. En el archivo cambia lo que necesites: fechas, estado, prioridad, colaborador, empresa, categoría o descripción. Puedes ordenar y filtrar las filas; no borres ni cambies el código. Para crear tareas nuevas, agrega filas con el código vacío.
+3. En **Administración → Seleccionar archivo Excel**, sube el archivo. La página muestra un resumen (cuántas se actualizan, cuántas son nuevas, cuántas siguen igual y los avisos) y solo guarda al confirmar.
+
+- Cada fila con código actualiza **esa misma tarea**; no se duplica. Subir el mismo archivo otra vez no cambia nada.
+- "Vencida" en la columna Estado no se guarda (la página la calcula); el estado real se mantiene.
+- Solo se lee la hoja que tiene la columna Código; las demás hojas se ignoran.
+- Cada cambio queda en el seguimiento de la tarea ("Actualizó desde Excel: fecha límite 3 nov → 5 nov").
+- Un archivo exportado antes de este cambio (sin la columna Código) se rechaza, para no crear todas las tareas otra vez.
+
 ## Tareas completadas
 
 Las tareas completadas se archivan: dejan de aparecer en el tablero, la lista y el calendario. Para verlas, elige **Estado → Completada** en la barra de filtros (o el botón **Ver completadas** de la columna Completada del tablero). Desde ahí se pueden reabrir. Inicio y Rendimiento siguen contándolas.
