@@ -409,6 +409,11 @@ body.nav-compacta .lateral-pie { display: block; margin-top: auto; padding: 0 6p
 .fecha.pronto { color: var(--ambar); font-weight: 600; }
 .crono { color: var(--text2); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .crono.activo { color: var(--azul); font-weight: 600; }
+.crono.pausado { color: var(--ambar); font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
+.crono-caja { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.btn-crono { width: 24px; height: 24px; padding: 0; border-radius: 50%; border: 1px solid var(--borde); background: var(--bg2); color: var(--text2); line-height: 1; display: inline-grid; place-items: center; flex-shrink: 0; }
+.btn-crono:hover { border-color: var(--ambar); color: var(--ambar); }
+.btn-crono.reanudar { background: var(--ambar-suave); border-color: var(--ambar); color: var(--ambar); }
 .mini-barra { height: 4px; border-radius: 4px; background: var(--bg3); margin-top: 8px; overflow: hidden; }
 .mini-barra span { display: block; height: 100%; background: linear-gradient(90deg, var(--acento-2), var(--acento)); border-radius: 4px; }
 .check {
@@ -1241,12 +1246,16 @@ const Metricas = (() => {
   }
 
   // Tiempo de ejecución en ms: desde que la tarea salió de "Pendiente" (iniciada_at)
-  // hasta que se completó, o hasta ahora si sigue en curso. null si no se ha iniciado.
+  // hasta que se completó, o hasta ahora si sigue en curso, sin contar las pausas
+  // (pausa_seg acumulado y la pausa abierta desde pausada_at). null si no se ha iniciado.
   function tiempoEjecucion(t, ahora = Date.now()) {
     if (!t.iniciada_at || t.estado === 'pendiente') return null;
     const ini = Date.parse(t.iniciada_at);
     const fin = estaCompletada(t) ? Date.parse(t.completada_at) : ahora;
-    return isNaN(ini) || isNaN(fin) ? null : Math.max(0, fin - ini);
+    if (isNaN(ini) || isNaN(fin)) return null;
+    const desdePausa = t.pausada_at ? Date.parse(t.pausada_at) : NaN;
+    const pausaAbierta = isNaN(desdePausa) ? 0 : Math.max(0, fin - desdePausa);
+    return Math.max(0, fin - ini - (Number(t.pausa_seg) || 0) * 1000 - pausaAbierta);
   }
 
   function rangoPeriodo(periodo, hoy) {
@@ -1468,7 +1477,7 @@ const FILTRO_DIA_FECHA = {
 };
 
 const CAMPOS_TAREA = ['titulo', 'descripcion', 'asignado_a', 'asignado_nombre', 'empresa', 'categoria', 'prioridad', 'estado',
-  'fecha_inicio', 'fecha_vencimiento', 'progreso', 'checklist', 'etiquetas', 'completada_at', 'iniciada_at', 'origen_ref'];
+  'fecha_inicio', 'fecha_vencimiento', 'progreso', 'checklist', 'etiquetas', 'completada_at', 'iniciada_at', 'pausada_at', 'pausa_seg', 'origen_ref'];
 
 // Momento en que una tarea empieza a contar tiempo de ejecución, según el cambio de estado
 // (lo mismo hace el trigger de supabase/cronometro.sql). undefined = no cambia.
@@ -1490,6 +1499,7 @@ function normalizarTarea(t) {
     estado: t.estado || 'pendiente',
     prioridad: t.prioridad || 'media',
     progreso: Number(t.progreso) || 0,
+    pausa_seg: Number(t.pausa_seg) || 0,
     checklist: Array.isArray(t.checklist) ? t.checklist : [],
     etiquetas: Array.isArray(t.etiquetas) ? t.etiquetas : [],
   };
@@ -1582,6 +1592,8 @@ class SupabaseStore {
       todas.push(...data);
       if (data.length < PAGINA) break;
     }
+    // Pausa del cronómetro: disponible si ya se ejecutó supabase/pausa.sql
+    if (todas.length) this.conPausa = 'pausada_at' in todas[0];
     return todas.map(normalizarTarea);
   }
 
@@ -1590,6 +1602,7 @@ class SupabaseStore {
   _limpiar(obj) {
     const out = limpiarParaGuardar(obj);
     if (this.sinCronometro) delete out.iniciada_at;
+    if (this.conPausa === false) { delete out.pausada_at; delete out.pausa_seg; }
     return out;
   }
 
@@ -1598,6 +1611,11 @@ class SupabaseStore {
     if (r.error?.code === 'PGRST204' && /iniciada_at/.test(r.error.message) && !this.sinCronometro) {
       console.warn('[cronómetro] Falta la columna iniciada_at: ejecuta supabase/cronometro.sql');
       this.sinCronometro = true;
+      return fn();
+    }
+    if (r.error?.code === 'PGRST204' && /pausada_at|pausa_seg/.test(r.error.message) && this.conPausa !== false) {
+      console.warn('[cronómetro] Faltan las columnas de pausa: ejecuta supabase/pausa.sql');
+      this.conPausa = false;
       return fn();
     }
     return r;
@@ -1862,6 +1880,7 @@ class LocalStore {
   async recuperar() { /* en demo no hay correos */ }
 
   async colaboradores() { return this.db.colaboradores.map(c => ({ ...c })); }
+  conPausa = true;
   async tareas() { return this.db.tareas.map(t => normalizarTarea(structuredClone(t))); }
 
   async crearTarea(t) {
@@ -2448,13 +2467,23 @@ const UI = {
   },
 
   // Tiempo de ejecución. Las insignias con data-crono las actualiza el reloj de App cada 15 s y al volver a la pestaña.
-  cronometro(t, { vacio = '' } = {}) {
+  // Con boton: true se agrega el botón ⏸ / ▶ para pausar o reanudar (si la persona puede editar la tarea).
+  cronometro(t, { vacio = '', boton = false } = {}) {
     const ms = Metricas.tiempoEjecucion(t);
     if (ms === null) return vacio;
+    const pausas = t.pausa_seg ? ` (sin contar ${Util.fmtDuracion(t.pausa_seg * 1000)} en pausa)` : '';
     if (t.estado === 'completada') {
-      return `<span class="crono" title="Tiempo de ejecución: del ${Util.esc(Util.fmtFechaHora(t.iniciada_at))} al ${Util.esc(Util.fmtFechaHora(t.completada_at))}">⏱ ${Util.fmtDuracion(ms)}</span>`;
+      return `<span class="crono" title="Tiempo de ejecución: del ${Util.esc(Util.fmtFechaHora(t.iniciada_at))} al ${Util.esc(Util.fmtFechaHora(t.completada_at))}${pausas}">⏱ ${Util.fmtDuracion(ms)}</span>`;
     }
-    return `<span class="crono activo" data-crono="${Util.esc(t.iniciada_at)}" title="En curso desde el ${Util.esc(Util.fmtFechaHora(t.iniciada_at))}">⏱ ${Util.fmtDuracion(ms)}</span>`;
+    const enPausa = !!t.pausada_at;
+    const icoPausa = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+    const icoPlay = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10-6.5a1 1 0 0 0 0-1.72l-10-6.5A1 1 0 0 0 8 5.5z"/></svg>';
+    const btn = boton && Permisos.editarTarea(t) && Datos.conPausa !== false
+      ? `<button type="button" class="btn-crono ${enPausa ? 'reanudar' : ''}" data-accion="pausar" data-id="${t.id}" title="${enPausa ? 'Reanudar el cronómetro' : 'Pausar el cronómetro (almuerzo, salida…)'}" aria-label="${enPausa ? 'Reanudar el cronómetro' : 'Pausar el cronómetro'}">${enPausa ? icoPlay : icoPausa}</button>` : '';
+    const insignia = enPausa
+      ? `<span class="crono pausado" title="En pausa desde el ${Util.esc(Util.fmtFechaHora(t.pausada_at))}${pausas}">${icoPausa} ${Util.fmtDuracion(ms)}</span>`
+      : `<span class="crono activo" data-crono="${Util.esc(t.iniciada_at)}" data-pausa="${t.pausa_seg || 0}" title="En curso desde el ${Util.esc(Util.fmtFechaHora(t.iniciada_at))}${pausas}">⏱ ${Util.fmtDuracion(ms)}</span>`;
+    return btn ? `<span class="crono-caja">${insignia}${btn}</span>` : insignia;
   },
 
   progreso(t) {
@@ -2482,7 +2511,7 @@ const UI = {
       <div class="tarjeta-pie">
         ${UI.fecha(t)}
         <span class="pie-der">
-          ${UI.cronometro(t)}
+          ${UI.cronometro(t, { boton: true })}
           ${t.checklist.length ? `<span class="muted" title="Lista de verificación">☑ ${p.texto}</span>` : ''}
           ${UI.avatar(t)}
         </span>
@@ -2839,7 +2868,7 @@ Vistas.lista = {
             </select>${ef === 'vencida' ? ' <span class="chip est-vencida" title="Fecha límite superada">⚠</span>' : ''}`
           : UI.estado(t)}</td>
         <td>${UI.fecha(t)}</td>
-        <td>${UI.cronometro(t, { vacio: '<span class="muted">—</span>' })}</td>
+        <td>${UI.cronometro(t, { vacio: '<span class="muted">—</span>', boton: true })}</td>
         <td><div class="barra-progreso" title="${p.texto}"><span style="width:${p.pct}%"></span></div><span class="muted mini">${p.texto}</span></td>
       </tr>`;
     }).join('');
@@ -3262,6 +3291,7 @@ Vistas.admin = {
             <dt>Colaboradores</dt><dd>${App.estado.colaboradores.length}</dd>
             <dt>Tareas</dt><dd>${App.estado.tareas.length}</dd>
             <dt>Cronómetro</dt><dd>${demo || (!Datos.sinCronometro && (!App.estado.tareas.length || 'iniciada_at' in App.estado.tareas[0])) ? 'Activo' : 'Falta ejecutar <code>supabase/cronometro.sql</code> en el SQL Editor de Supabase'}</dd>
+            <dt>Pausa del cronómetro</dt><dd>${Datos.conPausa !== false ? 'Activa' : 'Falta ejecutar <code>supabase/pausa.sql</code> en el SQL Editor de Supabase'}</dd>
             <dt>Teams</dt><dd>${CONFIG.TEAMS_WEBHOOK_URL || Object.keys(CONFIG.TEAMS_WEBHOOKS_POR_COLABORADOR).length ? 'Configurado' : 'No configurado (js/config.js)'}</dd>
           </dl>
           <div class="fila-botones">
@@ -5001,7 +5031,7 @@ const TareaModal = {
         </header>
         ${id ? `<p class="muted mini meta-tarea">${UI.estado(t)} ${creador ? `· Creada por ${Util.esc(creador)}` : ''} ${t.created_at ? '· ' + Util.fmtFechaHora(t.created_at) : ''}
           ${t.completada_at ? '· Completada ' + Util.fmtFechaHora(t.completada_at) : ''}
-          ${Metricas.tiempoEjecucion(t) !== null ? `· ${t.estado === 'completada' ? 'Tiempo de ejecución' : 'En curso desde ' + Util.fmtFechaHora(t.iniciada_at) + ', lleva'} ${UI.cronometro(t)}` : ''}</p>` : ''}
+          ${Metricas.tiempoEjecucion(t) !== null ? `· ${t.estado === 'completada' ? 'Tiempo de ejecución' : (t.pausada_at ? 'En pausa · lleva' : 'En curso desde ' + Util.fmtFechaHora(t.iniciada_at) + ', lleva')} ${UI.cronometro(t, { boton: true })}` : ''}</p>` : ''}
         <div class="tarea-grid ${id ? '' : 'sin-seguimiento'}">
           <div class="tarea-principal">
             <div class="campos">
@@ -5688,6 +5718,16 @@ const App = {
       const ini = iniciadaAlCambiar(t.estado, c.estado, t.iniciada_at);
       if (ini !== undefined) c.iniciada_at = ini;
     }
+    // Pausa: volver a Pendiente la borra; completar una tarea en pausa cierra la pausa
+    // (el tiempo pausado no cuenta).
+    if (c.estado && c.estado !== t.estado && Datos.conPausa !== false && !('pausada_at' in c)) {
+      if (c.estado === 'pendiente') { if (t.pausada_at || t.pausa_seg) Object.assign(c, { pausada_at: null, pausa_seg: 0 }); }
+      else if (c.estado === 'completada' && t.pausada_at) {
+        const fin = Date.parse(c.completada_at || t.completada_at || new Date().toISOString());
+        c.pausa_seg = (t.pausa_seg || 0) + Math.max(0, Math.round((fin - Date.parse(t.pausada_at)) / 1000));
+        c.pausada_at = null;
+      }
+    }
     return { enviar: c, local: {} };
   },
 
@@ -5734,6 +5774,23 @@ const App = {
       UI.toast('Tarea eliminada');
       return true;
     } catch (e) { UI.toast(e.message, { tipo: 'error' }); return false; }
+  },
+
+  // Pausa o reanuda el cronómetro (almuerzo, salidas…). El tiempo en pausa no cuenta.
+  pausar(id) {
+    const t = this.tarea(id);
+    if (!t || !t.iniciada_at || !['en_progreso', 'en_revision'].includes(t.estado)) return;
+    if (Datos.conPausa === false) {
+      UI.toast('Para pausar el cronómetro, el administrador debe ejecutar supabase/pausa.sql en Supabase.', { tipo: 'error' });
+      return;
+    }
+    const enPausa = !!t.pausada_at;
+    const cambios = enPausa
+      ? { pausada_at: null, pausa_seg: (t.pausa_seg || 0) + Math.max(0, Math.round((Date.now() - Date.parse(t.pausada_at)) / 1000)) }
+      : { pausada_at: new Date().toISOString() };
+    return this.actualizar(id, cambios, { mensaje: enPausa ? 'Cronómetro reanudado' : 'Cronómetro en pausa: el tiempo no corre hasta que lo reanudes', deshacible: false })
+      .then(g => { if (g) this._registrar(id, 'edicion', enPausa ? 'Reanudó el cronómetro' : 'Pausó el cronómetro'); })
+      .catch(() => {});
   },
 
   completar(id) {
@@ -5977,7 +6034,7 @@ const App = {
   _actualizarCronometros() {
     const ahora = Date.now();
     document.querySelectorAll('[data-crono]').forEach(el => {
-      el.textContent = '⏱ ' + Util.fmtDuracion(ahora - Date.parse(el.dataset.crono));
+      el.textContent = '⏱ ' + Util.fmtDuracion(ahora - Date.parse(el.dataset.crono) - (Number(el.dataset.pausa) || 0) * 1000);
     });
   },
 
@@ -6053,6 +6110,7 @@ const Acciones = {
   'nueva-tarea': el => TareaModal.abrirNueva({ fecha_vencimiento: el.dataset.fecha, estado: el.dataset.estado, asignado_a: el.dataset.asignado, prioridad: el.dataset.prioridad }),
   'abrir-tarea': el => TareaModal.abrir(el.dataset.id),
   'completar': el => App.completar(el.dataset.id),
+  'pausar': el => App.pausar(el.dataset.id),
   'alcance': el => { App.estado.filtros.alcance = el.dataset.valor; if (el.dataset.valor === 'mias') App.estado.filtros.colaborador = ''; App.render(); },
   'ver-completadas': () => { App.estado.filtros.estado = 'completada'; App.render(); },
   'limpiar-filtros': () => { Object.assign(App.estado.filtros, { texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '', diaHasta: '' }); App.render(); },
