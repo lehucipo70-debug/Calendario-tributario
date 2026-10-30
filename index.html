@@ -1442,7 +1442,7 @@ class ErrorDatos extends Error {
 
 // Filtro por fechas de la barra de filtros: qué fecha de la tarea se compara con el rango elegido.
 // Las fechas con hora se pasan al día local (Colombia), no al de UTC.
-const FILTRO_DIA_SEGUN = [['completada', 'Completadas'], ['creada', 'Creadas'], ['modificada', 'Modificadas'], ['vence', 'Que vencen']];
+const FILTRO_DIA_SEGUN = [['todas', 'Todas las fechas'], ['completada', 'Completadas'], ['creada', 'Creadas'], ['modificada', 'Modificadas'], ['vence', 'Que vencen']];
 // Atajos del rango: [id, etiqueta, (hoy) => [desde, hasta]]
 const FILTRO_RANGOS = [
   ['hoy', 'Hoy', h => [h, h]],
@@ -1459,6 +1459,8 @@ function rangoFiltroDia(f) {
   return desde || hasta ? { desde, hasta } : null;
 }
 const FILTRO_DIA_FECHA = {
+  // Sin condición: la tarea entra si vence, se creó o se completó dentro del rango
+  todas: t => [t.fecha_vencimiento, Util.fechaDeTimestamp(t.created_at), Util.fechaDeTimestamp(t.completada_at)],
   completada: t => Util.fechaDeTimestamp(t.completada_at),
   creada: t => Util.fechaDeTimestamp(t.created_at),
   modificada: t => Util.fechaDeTimestamp(t.updated_at),
@@ -5606,7 +5608,7 @@ const App = {
     errorCarga: null,
     vista: 'inicio',
     tema: 'claro',
-    filtros: { alcance: 'mias', texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '', diaHasta: '', diaSegun: 'completada' },
+    filtros: { alcance: 'mias', texto: '', colaborador: '', estado: '', prioridad: '', categoria: '', dia: '', diaHasta: '', diaSegun: 'todas' },
     tablero: { agrupar: 'estado' },
     lista: { orden: 'fecha_vencimiento', dir: 1, limite: CONFIG.LIMITE_LISTA },
     cal: { modo: 'mes', ref: Util.hoyISO() },
@@ -5643,9 +5645,10 @@ const App = {
     if (sinFiltros) return lista;
     const hoy = Util.hoyISO();
     const q = Util.normalizar(f.texto);
-    const fechaDia = FILTRO_DIA_FECHA[f.diaSegun] || FILTRO_DIA_FECHA.completada;
+    const fechaDia = FILTRO_DIA_FECHA[f.diaSegun] || FILTRO_DIA_FECHA.todas;
     const rango = rangoFiltroDia(f);
-    const enRango = t => { const d = fechaDia(t); return !!d && (!rango.desde || d >= rango.desde) && (!rango.hasta || d <= rango.hasta); };
+    const dentro = d => !!d && (!rango.desde || d >= rango.desde) && (!rango.hasta || d <= rango.hasta);
+    const enRango = t => [].concat(fechaDia(t)).some(dentro);
     return lista.filter(t =>
       (!f.colaborador || t.asignado_a === f.colaborador) &&
       (estado ? (estado === 'vencida' ? Metricas.estadoEfectivo(t, hoy) === 'vencida' : t.estado === estado) : rango || t.estado !== 'completada') &&
@@ -6091,6 +6094,9 @@ document.addEventListener('change', e => {
     Object.assign(App.estado.filtros, { dia: desde, diaHasta: hasta === desde ? '' : hasta });
     App.render(); return;
   }
+  // Al escribir el año a mano el navegador avisa fechas a medias (0002, 0020, 0202…):
+  // se ignoran para no repintar y borrar lo que se está escribiendo.
+  if ((campo === 'dia' || campo === 'diaHasta') && e.target.value && e.target.value.slice(0, 4) < '1990') return;
   if (campo && campo !== 'texto') { App.estado.filtros[campo] = e.target.value; App.render(); return; }
   const fn = Vistas[App.estado.vista]?.alCambiar;
   if (e.target.dataset?.cambio && fn) fn(e.target);

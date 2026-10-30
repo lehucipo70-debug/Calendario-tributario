@@ -35,8 +35,8 @@ Las tareas completadas se archivan: dejan de aparecer en el tablero, la lista y 
 
 En la barra de filtros del tablero, la lista y el calendario está el filtro de fechas:
 
-1. Elige qué fecha de la tarea se compara: **Completadas** (por defecto), **Creadas**, **Modificadas** o **Que vencen**.
-2. Elige el rango con un atajo (**Hoy**, **Ayer**, **Esta semana**, **Semana pasada**, **Este mes**, **Mes pasado**) o con **Desde** y **Hasta**. Ambas fechas están incluidas; con solo **Desde** se filtra ese día, y con solo **Hasta**, todo hasta ese día.
+1. Elige qué fecha de la tarea se compara: **Todas las fechas** (por defecto: la tarea entra si vence, se creó o se completó en el rango), **Completadas**, **Creadas**, **Modificadas** o **Que vencen**.
+2. Elige el rango con un atajo (**Hoy**, **Ayer**, **Esta semana**, **Semana pasada**, **Este mes**, **Mes pasado**) o con **Desde** y **Hasta**. Ambas fechas están incluidas y se pueden escribir a mano o elegir en el calendario; con solo **Desde** se filtra ese día, y con solo **Hasta**, todo hasta ese día.
 
 Con un rango puesto se ven todas las tareas de esas fechas, también las completadas. Combinado con **Equipo → Colaborador** muestra lo que hizo cada persona en ese periodo. **Modificadas** usa la última modificación de la tarea: si se volvió a cambiar después, cuenta en la fecha del último cambio.
 
