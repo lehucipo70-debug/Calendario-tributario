@@ -5543,19 +5543,26 @@ const Importador = (() => {
       <div class="barra-progreso grande" hidden><span id="imp-barra" style="width:0%"></span></div>
       <div id="imp-log" class="imp-log" hidden></div>
       <div class="modal-pie"><span class="separador"></span>
-        <button class="btn" data-accion="cerrar-modal">Cancelar</button>
+        <button class="btn" data-accion="cerrar-modal" id="imp-cancelar">Cancelar</button>
         <button class="btn btn-primario" id="imp-aplicar" ${plan.actualizar.length || plan.nuevas.length ? '' : 'disabled'}>Guardar cambios</button>
       </div>`, { ancho: 620 });
     document.getElementById('imp-aplicar').addEventListener('click', async e => {
-      e.target.disabled = true;
+      const btn = e.currentTarget;
+      if (btn.dataset.listo) { UI.cerrarModal(); return; }
+      btn.disabled = true;
+      btn.textContent = 'Guardando…';
+      document.getElementById('imp-cancelar')?.setAttribute('hidden', '');
       document.querySelector('.modal .barra-progreso')?.removeAttribute('hidden');
       try {
         const r = await aplicarActualizacion(plan);
         await App.cargar();
         App.render();
-        progreso(100, `Listo: ${r.actualizadas} actualizadas, ${r.creadas} nuevas${r.fallas ? `, ${r.fallas} no se pudieron guardar` : ''}.`);
-        e.target.textContent = 'Hecho';
+        progreso(100, `✅ Listo: ${r.actualizadas} actualizadas, ${r.creadas} nuevas${r.fallas ? `, ${r.fallas} no se pudieron guardar` : ''}. Ya puedes cerrar esta ventana.`);
       } catch (err) { console.error(err); progreso(100, '❌ ' + err.message); }
+      // Al terminar, el mismo botón cierra la ventana
+      btn.dataset.listo = '1';
+      btn.textContent = 'Cerrar';
+      btn.disabled = false;
     });
   }
 
