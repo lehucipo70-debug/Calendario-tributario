@@ -27,11 +27,33 @@ En **Administración → Seleccionar archivo Excel**. La primera fila debe tener
 - **RESPONSABLE** se asocia con el nombre del perfil (basta el primer nombre). Crea el perfil **antes** de importar; si no existe, la tarea queda sin asignar.
 - Importar el mismo archivo otra vez no duplica tareas.
 
+## Revisión antes de cargar
+
+Al subir cualquier Excel de tareas (en **Administración → Seleccionar archivo Excel**) **no se guarda nada** hasta que lo revisas y aceptas. La ventana muestra:
+
+- **Tareas nuevas listas**: se crean al aceptar (se pueden ver en la lista desplegable).
+- **Por revisar**: cada una con su motivo y una casilla para crearla o no.
+  - *Ya existe una tarea igual* (misma tarea, empresa y fecha límite) o *repetida en el archivo*: vienen **desmarcadas**, para no duplicar.
+  - *El colaborador no existe* (queda sin asignar) o *sin fecha límite*: vienen marcadas.
+- **Ya cargadas o repetidas**: filas que ya se habían importado antes del mismo archivo; se omiten siempre.
+- En archivos con **Código**, también cuántas tareas existentes se actualizan y qué les cambia.
+
+El botón dice exactamente lo que va a hacer (por ejemplo "Aceptar: crear 110 y actualizar 12"). **Cancelar** no cambia nada.
+
+## Copias de seguridad
+
+Antes de cargar un Excel (y antes de restaurar) la página guarda una **copia de todas las tareas**. Se conservan las **5 más recientes**.
+
+- En **Administración → Copias de seguridad** se ven la fecha, quién la hizo, el motivo ("Antes de importar archivo.xlsx") y cuántas tareas creó esa importación. También se puede **crear una copia ahora**.
+- **↺ Restaurar** muestra primero qué va a pasar: cuántas tareas vuelven a como estaban, cuántas borradas se recuperan y cuáles se crearon después de la copia. De estas últimas eliges cuáles eliminar (vienen marcadas las que creó una importación de Excel y sin marcar las creadas a mano).
+- Restaurar también guarda antes una copia del estado actual, así que se puede deshacer.
+- **Activarlo en Supabase (una vez):** ejecuta [`supabase/respaldos.sql`](supabase/respaldos.sql) en el **SQL Editor**. Solo los administradores ven y usan las copias. Si aún no está activo, al importar la página avisa y pregunta si continuar sin copia.
+
 ## Actualizar tareas desde Excel
 
 1. En la **Lista**, usa **Exportar a Excel**. La primera columna, **Código (no modificar)**, identifica cada tarea.
 2. En el archivo cambia lo que necesites: fechas, estado, prioridad, colaborador, empresa, categoría o descripción. Puedes ordenar y filtrar las filas; no borres ni cambies el código. Para crear tareas nuevas, agrega filas con el código vacío.
-3. En **Administración → Seleccionar archivo Excel**, sube el archivo. La página muestra un resumen (cuántas se actualizan, cuántas son nuevas, cuántas siguen igual y los avisos) y solo guarda al confirmar.
+3. En **Administración → Seleccionar archivo Excel**, sube el archivo. La página muestra la revisión (cuántas se actualizan, cuántas son nuevas, cuáles revisar y los avisos) y solo guarda al aceptar, después de guardar una copia de seguridad.
 
 - Cada fila con código actualiza **esa misma tarea**; no se duplica. Subir el mismo archivo otra vez no cambia nada.
 - "Vencida" en la columna Estado no se guarda (la página la calcula); el estado real se mantiene.
@@ -101,7 +123,11 @@ La sección **Clientes** es el directorio de clientes: una lista de nombres y NI
 El tablero, la lista (columna **NIT**, ordenable), el calendario y la ventana de la tarea muestran el NIT de la empresa de cada tarea. El buscador también encuentra tareas por NIT, y **Exportar a Excel** trae la columna NIT.
 
 - El NIT sale del directorio de Clientes: la tarea se vincula con el cliente que tiene **el mismo nombre que la columna Empresa** (no importan tildes, mayúsculas ni el orden de las palabras). Si se corrige el NIT en la ficha del cliente, cambia en todas sus tareas.
+- El nombre se compara sin tildes, mayúsculas, puntos ni el orden de las palabras, y sin la sociedad: "HATO SAMPUES", "Hato Sampués SAS" y "HATO SAMPUES S.A.S." son el mismo cliente.
+- **Asociar a mano desde la tarea**: en la ventana de la tarea, el campo **NIT** (junto a Empresa) muestra el NIT de la empresa y se puede escribir o corregir. Al guardar, el NIT queda en el cliente y aplica a todas las tareas de esa empresa: si el cliente existe se le pone (si ya tenía otro, pregunta antes de cambiarlo); si no existe pero el NIT ya es de otro cliente, el nombre de la empresa queda en sus **Otros nombres**; si no hay ninguno, se crea el cliente. Si escribes un NIT conocido con la empresa vacía, se pone el nombre del cliente.
+- **Otros nombres** (en la ficha del cliente, **✎ Editar datos**): nombres con que aparece la empresa en las tareas, separados por `;`. Sirve cuando la tarea dice, por ejemplo, "Hato Sampués" y el cliente se llama "Agropecuaria Hato Sampués".
 - Si la empresa no está en el directorio, se usa el NIT escrito en la descripción de la tarea (`NIT 900123456 · …`), si lo hay.
+- Los cambios de NIT de otras personas se ven en la siguiente resincronización (o al recargar).
 - **Vincular los NIT desde Excel** (administradores): en **Clientes → Importar Excel** sube un archivo con las columnas `EMPRESA` y `NIT` (por ejemplo, la lista de tareas exportada con la columna NIT). Antes de guardar muestra un resumen:
   - las empresas que no están en el directorio se crean como clientes con su nombre y NIT;
   - los clientes que estaban sin NIT lo reciben;

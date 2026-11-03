@@ -600,6 +600,15 @@ body.nav-compacta .lateral-pie { display: block; margin-top: auto; padding: 0 6p
 .imp-cambios li { padding: 8px 10px; border-radius: 10px; background: var(--bg3); font-size: 13px; }
 .imp-avisos { margin-bottom: 10px; padding: 8px 12px; border-radius: 10px; background: var(--ambar-suave); color: var(--ambar); font-size: 12px; max-height: 160px; overflow-y: auto; }
 .imp-avisos summary { cursor: pointer; font-weight: 600; }
+.imp-resumen .imp-alerta { background: var(--ambar-suave); color: var(--ambar); }
+.imp-resumen .imp-alerta span { color: inherit; }
+.imp-titulo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; margin: 6px 0 8px; }
+.imp-revisar label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-weight: 400; }
+.imp-revisar input { margin-top: 3px; flex-shrink: 0; }
+.imp-motivo { font-size: 12px; color: var(--ambar); }
+.modal details > summary { cursor: pointer; margin: 6px 0; }
+.respaldos { list-style: none; display: flex; flex-direction: column; gap: 6px; margin: 10px 0; padding: 0; }
+.respaldos li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--bg3); font-size: 13px; }
 
 /* ── Notas (bloc personal) ────────────────────────────────────────── */
 .panel-vidrio { background: var(--vidrio-fondo); border: 1px solid var(--vidrio-fila-borde); border-radius: calc(var(--r) + 4px);
@@ -1001,6 +1010,7 @@ const CONFIG = {
     perfiles: 'perfiles',
     notas: 'notas',
     clientes: 'clientes',
+    respaldos: 'respaldos',
     chatConv: 'chat_conversaciones',
     chatMiem: 'chat_miembros',
     chatMsj: 'chat_mensajes',
@@ -1487,6 +1497,9 @@ const FILTRO_DIA_FECHA = {
   vence: t => t.fecha_vencimiento,
 };
 
+// Copias de seguridad de las tareas que se conservan (igual que en supabase/respaldos.sql).
+const RESPALDOS_MAX = 5;
+
 const CAMPOS_TAREA = ['titulo', 'descripcion', 'asignado_a', 'asignado_nombre', 'empresa', 'categoria', 'prioridad', 'estado',
   'fecha_inicio', 'fecha_vencimiento', 'progreso', 'checklist', 'etiquetas', 'completada_at', 'iniciada_at', 'pausada_at', 'pausa_seg', 'origen_ref'];
 
@@ -1831,18 +1844,76 @@ class SupabaseStore {
     }
   }
 
-  async importarTareas(lista, alAvanzar) {
+  // ids: si se pasa un arreglo, se llena con los ids de las tareas creadas (para la copia de seguridad).
+  async importarTareas(lista, alAvanzar, ids) {
     let hechas = 0;
     for (let i = 0; i < lista.length; i += 500) {
       const lote = lista.slice(i, i + 500);
       // origen_ref evita duplicados al reimportar el mismo archivo
-      const { error } = await this._reintentarSinCronometro(() => this.sb.from(CONFIG.TABLAS.tareas)
-        .upsert(lote.map(t => ({ ...this._limpiar(t), creado_por: this.usuario?.id })), { onConflict: 'origen_ref', ignoreDuplicates: true }));
+      const { data, error } = await this._reintentarSinCronometro(() => this.sb.from(CONFIG.TABLAS.tareas)
+        .upsert(lote.map(t => ({ ...this._limpiar(t), creado_por: this.usuario?.id })), { onConflict: 'origen_ref', ignoreDuplicates: true })
+        .select('id'));
       if (error) throw this._error(error, 'importar tareas');
+      ids?.push(...(data || []).map(x => x.id));
       hechas += lote.length;
       alAvanzar?.(hechas, lista.length);
     }
     return hechas;
+  }
+
+  // ── Copias de seguridad de las tareas (supabase/respaldos.sql; solo administradores) ──
+  _errorRespaldo(error, accion) {
+    const e = this._error(error, accion);
+    if (e.faltaEsquema) e.message = 'Faltan las copias de seguridad en Supabase: ejecuta una vez supabase/respaldos.sql en el SQL Editor.';
+    return e;
+  }
+
+  async respaldos() {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.respaldos).select('id, created_at, autor_nombre, motivo, archivo, total, creadas')
+      .order('created_at', { ascending: false }).order('id', { ascending: false });
+    if (error) throw this._errorRespaldo(error, 'ver las copias de seguridad');
+    return data || [];
+  }
+
+  async respaldo(id) {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.respaldos).select('*').eq('id', id).single();
+    if (error) throw this._errorRespaldo(error, 'leer la copia de seguridad');
+    return data;
+  }
+
+  async crearRespaldo({ motivo, archivo, tareas }) {
+    const fila = { motivo, archivo: archivo || null, total: tareas.length, tareas, autor_id: this.usuario?.id, autor_nombre: this.perfil?.nombre || null };
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.respaldos).insert(fila).select('id, created_at').single();
+    if (error) throw this._errorRespaldo(error, 'guardar la copia de seguridad');
+    return data;
+  }
+
+  async marcarRespaldo(id, creadas) {
+    const { error } = await this.sb.from(CONFIG.TABLAS.respaldos).update({ creadas }).eq('id', id);
+    if (error) throw this._errorRespaldo(error, 'guardar la copia de seguridad');
+  }
+
+  // Restaurar: vuelve a escribir las tareas tal como estaban en la copia (las borradas se crean con su mismo id).
+  async restaurarTareas(filas, alAvanzar) {
+    let hechas = 0;
+    for (let i = 0; i < filas.length; i += 200) {
+      const lote = filas.slice(i, i + 200);
+      const { error } = await this._reintentarSinCronometro(() => this.sb.from(CONFIG.TABLAS.tareas)
+        .upsert(lote.map(t => ({ ...this._limpiar(t), id: t.id, creado_por: t.creado_por ?? null })), { onConflict: 'id' }));
+      if (error) throw this._error(error, 'restaurar las tareas');
+      hechas += lote.length;
+      alAvanzar?.(hechas, filas.length);
+    }
+  }
+
+  async eliminarTareas(ids) {
+    let borradas = 0;
+    for (let i = 0; i < ids.length; i += 200) {
+      const { data, error } = await this.sb.from(CONFIG.TABLAS.tareas).delete().in('id', ids.slice(i, i + 200)).select('id');
+      if (error) throw this._error(error, 'eliminar tareas');
+      borradas += data?.length || 0;
+    }
+    return borradas;
   }
 
   // cb(evento, tareaNueva, tareaAnterior, estadoConexion)
@@ -2097,17 +2168,59 @@ class LocalStore {
     this._guardar();
   }
 
-  async importarTareas(lista, alAvanzar) {
+  async importarTareas(lista, alAvanzar, ids) {
     const refs = new Set(this.db.tareas.map(t => t.origen_ref).filter(Boolean));
     let n = 0;
     for (const t of lista) {
       if (t.origen_ref && refs.has(t.origen_ref)) continue;
-      await this.crearTarea(t);
+      const nueva = await this.crearTarea(t);
+      ids?.push(nueva.id);
       if (t.origen_ref) refs.add(t.origen_ref);
       n++;
     }
     alAvanzar?.(lista.length, lista.length);
     return n;
+  }
+
+  async respaldos() {
+    return (this.db.respaldos || []).map(({ tareas, ...r }) => structuredClone(r));
+  }
+
+  async respaldo(id) {
+    const r = (this.db.respaldos || []).find(x => x.id === id);
+    if (!r) throw new ErrorDatos('La copia ya no existe.');
+    return structuredClone(r);
+  }
+
+  async crearRespaldo({ motivo, archivo, tareas }) {
+    const r = { id: Date.now(), created_at: new Date().toISOString(), autor_nombre: this.perfil?.nombre || null, motivo, archivo: archivo || null,
+      total: tareas.length, tareas: structuredClone(tareas), creadas: [] };
+    this.db.respaldos = [r, ...(this.db.respaldos || [])].slice(0, RESPALDOS_MAX);
+    this._guardar();
+    return { id: r.id, created_at: r.created_at };
+  }
+
+  async marcarRespaldo(id, creadas) {
+    const r = (this.db.respaldos || []).find(x => x.id === id);
+    if (r) { r.creadas = creadas; this._guardar(); }
+  }
+
+  async restaurarTareas(filas, alAvanzar) {
+    for (const f of filas) {
+      const fila = normalizarTarea({ ...structuredClone(f), updated_at: new Date().toISOString() });
+      const i = this.db.tareas.findIndex(x => x.id === f.id);
+      if (i >= 0) this.db.tareas[i] = fila; else this.db.tareas.push(fila);
+    }
+    this._guardar();
+    alAvanzar?.(filas.length, filas.length);
+  }
+
+  async eliminarTareas(ids) {
+    const set = new Set(ids);
+    const antes = this.db.tareas.length;
+    this.db.tareas = this.db.tareas.filter(t => !set.has(t.id));
+    this._guardar();
+    return antes - this.db.tareas.length;
   }
 
   suscribir(cb) {
@@ -3295,9 +3408,16 @@ Vistas.admin = {
             <li><strong>Planner:</strong> columnas <code>TAREA</code> o <code>TITULO</code>, <code>COLABORADOR</code>, <code>FECHA</code>, y opcionales <code>EMPRESA</code>, <code>CATEGORIA</code>, <code>PRIORIDAD</code>, <code>ESTADO</code>, <code>DESCRIPCION</code>.</li>
             <li><strong>Calendario tributario anterior:</strong> <code>EMPRESA</code>, <code>CONTADOR</code>, <code>TIPO DE IMPUESTO</code>, <code>PERÍODO</code>, <code>FECHA VENCIMIENTO</code>. Cada obligación se convierte en una tarea de categoría Tributario.</li>
           </ul>
-          <p class="muted mini">El colaborador se asocia por nombre con la tabla de perfiles. Reimportar el mismo archivo no duplica tareas.</p>
+          <p class="muted mini">El colaborador se asocia por nombre con la tabla de perfiles. <strong>Nada se carga hasta que revisas y aceptas</strong>: la página muestra cuántas tareas están listas y cuáles revisar (posibles duplicadas, colaborador que no existe, sin fecha). Reimportar el mismo archivo no duplica tareas.</p>
           <button class="btn btn-primario" data-accion="importar">Seleccionar archivo Excel</button>
           <input type="file" id="archivo-excel" accept=".xlsx,.xls,.csv" hidden>
+        </section>
+
+        <section class="panel">
+          <header class="panel-cab"><h3>🗂 Copias de seguridad</h3></header>
+          <p class="muted">Antes de cada importación de Excel se guarda una copia de todas las tareas (se conservan las ${RESPALDOS_MAX} más recientes). Si algo se cargó mal, restaura la copia de antes.</p>
+          <div id="lista-respaldos">${Respaldos.html()}</div>
+          <div class="fila-botones"><button class="btn btn-sm" data-accion="crear-copia">＋ Crear copia ahora</button></div>
         </section>
 
         <section class="panel">
@@ -3315,6 +3435,7 @@ Vistas.admin = {
             <dt>Tareas</dt><dd>${App.estado.tareas.length}</dd>
             <dt>Cronómetro</dt><dd>${demo || (!Datos.sinCronometro && (!App.estado.tareas.length || 'iniciada_at' in App.estado.tareas[0])) ? 'Activo' : 'Falta ejecutar <code>supabase/cronometro.sql</code> en el SQL Editor de Supabase'}</dd>
             <dt>Pausa del cronómetro</dt><dd>${Datos.conPausa !== false ? 'Activa' : 'Falta ejecutar <code>supabase/pausa.sql</code> en el SQL Editor de Supabase'}</dd>
+            <dt>Copias de seguridad</dt><dd>${Respaldos.error?.faltaEsquema ? 'Falta ejecutar <code>supabase/respaldos.sql</code> en el SQL Editor de Supabase' : Respaldos.lista === null ? '…' : 'Activas'}</dd>
             <dt>Teams</dt><dd>${CONFIG.TEAMS_WEBHOOK_URL || Object.keys(CONFIG.TEAMS_WEBHOOKS_POR_COLABORADOR).length ? 'Configurado' : 'No configurado (js/config.js)'}</dd>
           </dl>
           <div class="fila-botones">
@@ -3339,11 +3460,20 @@ Vistas.admin = {
       e.target.value = '';
       if (f) Importador.importarArchivo(f);
     });
+    if (Respaldos.lista === null) this.pintarRespaldos();
+  },
+
+  async pintarRespaldos() {
+    await Respaldos.cargar();
+    const el = document.getElementById('lista-respaldos');
+    if (el) el.innerHTML = Respaldos.html();
   },
 
   acciones: {
     importar: () => document.getElementById('archivo-excel').click(),
     'exportar-todo': () => Importador.exportar(App.estado.tareas),
+    'crear-copia': () => Respaldos.crearAhora(),
+    'restaurar-copia': el => Respaldos.abrirRestaurar(Number(el.dataset.id)),
     'reiniciar-demo': async () => {
       if (!confirm('¿Borrar los cambios del modo demo y volver a los datos de ejemplo?')) return;
       Datos.reiniciar();
@@ -3875,8 +4005,11 @@ const Clientes = {
   // Las tareas guardan el nombre de la empresa; el NIT sale del cliente con ese nombre
   // (sin importar tildes, mayúsculas, espacios ni el orden de las palabras) o con ese
   // nombre en datos.alias (nombres alternos que agrega "Importar Excel" al vincular NIT).
+  // También ignora la sociedad: "HATO SAMPUES", "Hato Sampués SAS" y "HATO SAMPUES S.A.S." son el mismo.
   claveNombre(s) {
-    return Util.normalizar(s).replace(/[^A-Z0-9]+/g, ' ').trim().split(' ').filter(Boolean).sort().join(' ');
+    return Util.normalizar(s).replace(/\./g, '').replace(/[^A-Z0-9]+/g, ' ')
+      .replace(/\b(S A S|SAS|S A|SA|LTDA|LIMITADA|S EN C|SCA|EU|Y CIA|CIA)\b/g, ' ')
+      .trim().split(/\s+/).filter(Boolean).sort().join(' ');
   },
 
   _indiceNit: null,     // clave del nombre → NIT; se rehace en cada pintar() (después de cada cambio)
@@ -3899,6 +4032,71 @@ const Clientes = {
 
   nitDeEmpresa(nombre) {
     return nombre ? this.indiceNit().get(this.claveNombre(nombre)) || '' : '';
+  },
+
+  clientePorNit(nit) { return nit ? this.lista.find(g => g.nit === nit) : null; },
+
+  // Asocia a mano el NIT a una empresa (desde la ventana de la tarea):
+  //   - si hay un cliente con ese nombre, se le pone o cambia el NIT (pregunta si ya tenía otro);
+  //   - si no, y hay un cliente con ese NIT, el nombre queda como "otro nombre" de ese cliente;
+  //   - si no hay ninguno, se crea el cliente con nombre y NIT.
+  // Devuelve false si se canceló o falló.
+  async vincularNit(nombre, nit) {
+    if (!this.cargada) await this.cargar();
+    if (this.error) { UI.toast(this.error.faltaEsquema ? 'Para guardar el NIT falta activar Clientes en Supabase (supabase/clientes.sql).' : this.error.message, { tipo: 'error' }); return false; }
+    const k = this.claveNombre(nombre);
+    if (!k) return false;
+    const guardar = async g => {
+      const fila = this.normalizar(await Datos.guardarCliente({ id: g.id, nombre: g.nombre, nit: g.nit, datos: g.datos, vencimientos: g.vencimientos }));
+      const i = this.lista.findIndex(x => x.id === fila.id);
+      if (i >= 0) this.lista[i] = fila; else this.lista.push(fila);
+    };
+    try {
+      const propio = this.lista.find(g => this.claveNombre(g.nombre) === k);
+      if (propio) {
+        if (propio.nit === nit) return true;
+        if (propio.nit && !confirm(`El cliente "${propio.nombre}" tiene el NIT ${propio.nit}.\n\n¿Cambiarlo por ${nit}? Cambia en todas sus tareas.`)) return false;
+        await guardar({ ...structuredClone(propio), nit });
+      } else {
+        // Si el nombre estaba como "otro nombre" de un cliente con otro NIT, se le quita.
+        for (const g of this.lista.filter(g => g.nit !== nit && this.alias(g).some(a => this.claveNombre(a) === k))) {
+          const c = structuredClone(g);
+          c.datos.alias = this.alias(g).filter(a => this.claveNombre(a) !== k);
+          if (!c.datos.alias.length) delete c.datos.alias;
+          await guardar(c);
+        }
+        const conNit = this.clientePorNit(nit);
+        if (conNit) {
+          if (!this.alias(conNit).some(a => this.claveNombre(a) === k)) {
+            const c = structuredClone(conNit);
+            c.datos.alias = [...this.alias(conNit), nombre.trim()];
+            await guardar(c);
+          }
+        } else {
+          await guardar({ id: this.lista.some(g => g.id === 'c-nit-' + nit) ? Util.uid() : 'c-nit-' + nit, nombre: nombre.trim(), nit,
+            datos: /^[89]\d{8}$/.test(nit) ? {} : { cedula: nit }, vencimientos: {} });
+        }
+      }
+      this.pintar();
+      return true;
+    } catch (e) {
+      console.error(e);
+      this.pintar();
+      UI.toast('No se pudo guardar el NIT: ' + e.message, { tipo: 'error' });
+      return false;
+    }
+  },
+
+  // Relee el directorio en segundo plano (cambios de otras personas). No toca la vista Clientes abierta.
+  async refrescar() {
+    if (!this.cargada || this.error || this.editando || App.estado.vista === 'clientes') return false;
+    try {
+      const lista = (await Datos.clientes()).map(g => this.normalizar(g));
+      if (JSON.stringify(lista) === JSON.stringify(this.lista)) return false;
+      this.lista = lista;
+      this.pintar();
+      return true;
+    } catch { return false; }
   },
 
   // Empresa: NIT de 9 dígitos que empieza por 8 o 9 (el mismo criterio del importador).
@@ -3972,6 +4170,7 @@ const Clientes = {
     const agregar = (label, valor) => out.push(conValor ? { label, valor: valor || '(vacío)' } : label);
     if (!igual(a.nombre, b.nombre)) agregar('Nombre', a.nombre);
     if (!igual(a.nit, b.nit)) agregar('NIT', a.nit);
+    if (!igual(this.alias(a).join('; '), this.alias(b).join('; '))) agregar('Otros nombres', this.alias(a).join('; '));
     for (const c of CLIENTE_CAMPOS) {
       if (!igual(a.datos?.[c.id], b.datos?.[c.id])) agregar(c.label, a.datos?.[c.id]);
     }
@@ -4158,6 +4357,7 @@ const Clientes = {
       const input = (name, label, valor, tipo = 'text') => `<label>${Util.esc(label)}<input name="${name}" type="${tipo}" value="${Util.esc(valor || '')}" ${name === 'nombre' ? 'required' : ''}></label>`;
       return `<form class="cli-form" data-g="form-datos" data-id="${Util.esc(g.id)}"><h5>${g._nuevo ? 'Nuevo cliente' : 'Editar datos'}</h5>
         ${input('nombre', 'Nombre o razón social', g.nombre)}${input('d_cedula', 'Cédula (empresa: la del representante legal)', g.datos.cedula)}${input('nit', 'NIT', g.nit)}
+        ${input('alias', 'Otros nombres en las tareas (separados por ;)', this.alias(g).join('; '))}
         ${CLIENTE_CAMPOS.filter(c => !c.fija).map(c => input('d_' + c.id, c.label, g.datos[c.id], c.tipo === 'correo' ? 'email' : 'text')).join('')}
         <div class="cli-acciones"><button class="btn btn-sm btn-primario" type="submit">Guardar</button><button class="btn btn-sm" type="button" data-g="cancelar">Cancelar</button>
           ${!g._nuevo && Permisos.esAdmin() ? `<span class="separador"></span><button class="btn btn-sm btn-peligro" type="button" data-g="eliminar" data-id="${Util.esc(g.id)}">Eliminar</button>` : ''}</div>
@@ -4174,7 +4374,8 @@ const Clientes = {
       const copiable = (campo, label, v) => v ? Util.esc(v) + ` <button class="btn-icono btn-sm" data-g="copiar" data-id="${Util.esc(g.id)}" data-campo="${campo}" title="Copiar" aria-label="Copiar ${label}">📋</button>` : '<span class="muted">—</span>';
       const fijos = s.id !== 'datos' ? '' : fila('Nombre', Util.esc(g.nombre))
         + fila(this.esEmpresa(g) ? 'Cédula rep. legal' : 'Cédula', copiable('cedula', 'cédula', g.datos.cedula))
-        + fila('NIT', copiable('nit', 'NIT', g.nit));
+        + fila('NIT', copiable('nit', 'NIT', g.nit))
+        + (this.alias(g).length ? fila('Otros nombres', Util.esc(this.alias(g).join(' · '))) : '');
       return `<h5>${Util.esc(s.titulo)}</h5>${fijos}${filas}`;
     }).join('');
     return `<section class="cli-datos">${secciones}<div class="cli-acciones"><button class="btn btn-sm" data-g="editar" data-id="${Util.esc(g.id)}" data-que="datos">✎ Editar datos</button>
@@ -4251,6 +4452,8 @@ const Clientes = {
     if (form.dataset.g === 'form-datos') {
       copia.nombre = String(fd.get('nombre') || '').trim();
       copia.nit = String(fd.get('nit') || '').trim();
+      const alias = [...new Set(String(fd.get('alias') || '').split(';').map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean))];
+      if (alias.length) copia.datos.alias = alias; else delete copia.datos.alias;
       if (!copia.nombre) { UI.toast('Escribe el nombre.', { tipo: 'error' }); return; }
       for (const c of CLIENTE_CAMPOS) copia.datos[c.id] = String(fd.get('d_' + c.id) || '').trim();
       if (g._nuevo) this.guardar(copia, 'Cliente creado');
@@ -5236,10 +5439,13 @@ const TareaModal = {
                 <datalist id="lista-categorias">${App.categorias().map(c => `<option value="${Util.esc(c)}">`).join('')}</datalist></label>
               <label>Fecha de inicio<input type="date" name="fecha_inicio" value="${t.fecha_inicio || ''}" ${dis}></label>
               <label>Fecha límite<input type="date" name="fecha_vencimiento" value="${t.fecha_vencimiento || ''}" ${dis}></label>
-              <label class="campo-ancho">Empresa / cliente
+              <label>Empresa / cliente
                 <input name="empresa" list="lista-empresas" value="${Util.esc(t.empresa || '')}" ${dis} maxlength="200" placeholder="Opcional">
                 <datalist id="lista-empresas">${[...new Set([...App.estado.tareas.map(x => x.empresa), ...Clientes.lista.map(g => g.nombre)].filter(Boolean))].sort().slice(0, 500).map(e => `<option value="${Util.esc(e)}">`).join('')}</datalist>
-                ${App.nitDe(t) ? `<small class="nit">NIT ${Util.esc(App.nitDe(t))}${Clientes.nitDeEmpresa(t.empresa) ? '' : ' (tomado de la descripción)'}</small>` : t.empresa ? '<small class="muted mini">Sin NIT: vincúlalo en Clientes</small>' : ''}</label>
+              </label>
+              <label>NIT
+                <input name="nit" value="${Util.esc(App.nitDe(t))}" ${dis} maxlength="20" inputmode="numeric" placeholder="Sin NIT" autocomplete="off">
+                <small class="muted mini" id="nit-ayuda">${App.nitDe(t) && !Clientes.nitDeEmpresa(t.empresa) ? 'Tomado de la descripción. ' : ''}Queda en el cliente: aplica a todas las tareas de esta empresa.</small></label>
             </div>
             <label class="campo-ancho">Descripción
               <textarea name="descripcion" rows="3" ${dis} placeholder="Detalles, instrucciones, enlaces…">${Util.esc(t.descripcion || '')}</textarea></label>
@@ -5276,6 +5482,18 @@ const TareaModal = {
     const form = document.getElementById('form-tarea');
     form.addEventListener('submit', e => { e.preventDefault(); this.guardar(); });
     form.progreso?.addEventListener('input', e => { document.getElementById('progreso-valor').textContent = e.target.value + '%'; });
+    // Empresa ↔ NIT: al elegir la empresa se muestra su NIT; al escribir un NIT conocido sin empresa, se pone el cliente.
+    let nitEscrito = false;
+    this._nitTocado = false;
+    form.nit?.addEventListener('input', () => {
+      this._nitTocado = true;
+      nitEscrito = !!form.nit.value.trim();
+      const g = Clientes.clientePorNit(TareaModal._limpiarNit(form.nit.value));
+      if (g && !form.empresa.value.trim()) form.empresa.value = g.nombre;
+    });
+    form.empresa?.addEventListener('input', () => {
+      if (!nitEscrito) form.nit.value = Clientes.nitDeEmpresa(form.empresa.value);
+    });
     document.getElementById('check-input')?.addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); this.acciones['check-agregar'](); }
     });
@@ -5318,6 +5536,8 @@ const TareaModal = {
     }
   },
 
+  _limpiarNit(v) { return String(v || '').replace(/[\s.,]/g, '').trim(); },
+
   _leerFormulario() {
     const f = document.getElementById('form-tarea');
     const v = n => (f[n]?.value ?? '').trim();
@@ -5343,8 +5563,22 @@ const TareaModal = {
     if (datos.fecha_inicio && datos.fecha_vencimiento && datos.fecha_inicio > datos.fecha_vencimiento) {
       UI.toast('La fecha de inicio no puede ser posterior a la fecha límite.', { tipo: 'error' }); return;
     }
+    // NIT: se guarda en el directorio de Clientes, vinculado al nombre de la empresa.
+    const nit = this._limpiarNit(document.querySelector('#form-tarea [name=nit]')?.value);
+    if (nit && !/^\d{5,15}(-\d)?$/.test(nit)) { UI.toast('El NIT debe tener solo números (puede llevar el dígito de verificación: 900123456-7).', { tipo: 'error' }); return; }
+    const nitSinDv = nit.replace(/-\d$/, '');
+    if (nitSinDv && !datos.empresa && this._nitTocado) {
+      const g = Clientes.clientePorNit(nitSinDv);
+      if (!g) { UI.toast('Escribe la empresa para guardar el NIT.', { tipo: 'error' }); document.querySelector('#form-tarea [name=empresa]').focus(); return; }
+      datos.empresa = g.nombre;
+    }
     const btn = document.getElementById('btn-guardar');
     btn.disabled = true;
+    // Solo si la persona escribió el NIT (el que se muestra por defecto ya viene del directorio o de la descripción).
+    if (this._nitTocado && nitSinDv && nitSinDv !== Clientes.nitDeEmpresa(datos.empresa)) {
+      if (!(await Clientes.vincularNit(datos.empresa, nitSinDv))) { btn.disabled = false; return; }
+      App.render();
+    }
     try {
       if (!this.id) {
         await App.crear(datos);
@@ -5645,7 +5879,7 @@ const Importador = (() => {
         if (refs.has(ref)) { sinCambios++; continue; }
         refs.add(ref);
         nuevas.push({
-          titulo: titulo.slice(0, 300), asignado_a: c?.id || null, empresa: val('empresa') || null,
+          titulo: titulo.slice(0, 300), asignado_a: c?.id || null, asignado_nombre: c ? null : colab || null, empresa: val('empresa') || null,
           categoria: val('categoria') || 'Otro', prioridad: mapearPrioridad(val('prioridad')) || 'media', estado,
           fecha_inicio: col.fecha_inicio >= 0 ? U.parsearFecha(f[col.fecha_inicio]) : null, fecha_vencimiento: fecha,
           descripcion: val('descripcion') || null, progreso: estado === 'completada' ? 100 : 0, checklist: [], etiquetas: [],
@@ -5698,46 +5932,119 @@ const Importador = (() => {
       hechas++;
       progreso(10 + Math.round(70 * hechas / Math.max(1, total)), `Actualizando… ${hechas}/${total}`);
     }
-    let creadas = 0;
-    if (plan.nuevas.length) {
-      progreso(85, `Creando ${plan.nuevas.length} tareas nuevas…`);
-      creadas = await Datos.importarTareas(plan.nuevas, () => {});
+    const ids = [];
+    if (plan.crear.length) {
+      progreso(80, `Creando ${plan.crear.length} tareas nuevas…`);
+      await Datos.importarTareas(plan.crear, (hechas, n) => progreso(80 + Math.round(15 * hechas / n), `Creando… ${hechas}/${n}`), ids);
     }
-    return { actualizadas: total - fallas, fallas, creadas };
+    return { actualizadas: total - fallas, fallas, creadas: ids.length, ids };
   }
 
+  // ── Revisión antes de cargar ────────────────────────────────────────
+  // Nada se guarda hasta confirmar. Las tareas nuevas se separan en:
+  //   listas:    se crean al confirmar
+  //   revisar:   posible duplicada (ya existe una tarea igual o está repetida en el archivo),
+  //              colaborador que no existe o sin fecha límite. Cada una se marca o desmarca;
+  //              las duplicadas vienen desmarcadas.
+  //   omitidas:  filas ya importadas antes (mismo origen): nunca se repiten
+  function claveTarea(t) {
+    const empresa = typeof Clientes !== 'undefined' ? Clientes.claveNombre(t.empresa || '') : U.normalizar(t.empresa);
+    return [U.normalizar(t.titulo).replace(/\s+/g, ' '), empresa, t.fecha_vencimiento || ''].join('|');
+  }
+
+  function revisarNuevas(nuevas, actuales) {
+    const refs = new Set(actuales.map(t => t.origen_ref).filter(Boolean));
+    const existentes = new Map(actuales.map(t => [claveTarea(t), t]));
+    const enArchivo = new Set();
+    const listas = [], revisar = [];
+    let omitidas = 0;
+    for (const t of nuevas) {
+      if (t.origen_ref && refs.has(t.origen_ref)) { omitidas++; continue; }
+      if (t.origen_ref) refs.add(t.origen_ref);
+      const k = claveTarea(t), motivos = [];
+      let incluir = true;
+      const igual = existentes.get(k);
+      if (igual) { motivos.push(`Ya existe una tarea igual (misma tarea, empresa y fecha${igual.estado === 'completada' ? ', completada' : ''})`); incluir = false; }
+      else if (enArchivo.has(k)) { motivos.push('Repetida en el archivo'); incluir = false; }
+      enArchivo.add(k);
+      if (!t.asignado_a && t.asignado_nombre) motivos.push(`"${t.asignado_nombre}" no es un colaborador: queda sin asignar`);
+      if (!t.fecha_vencimiento) motivos.push('Sin fecha límite');
+      (motivos.length ? revisar : listas).push({ t, motivos, incluir });
+    }
+    return { listas, revisar, omitidas };
+  }
+
+  function lineaTarea(t) {
+    const c = t.asignado_a ? App.colaborador(t.asignado_a)?.nombre : t.asignado_nombre;
+    return `<strong>${U.esc(t.titulo)}</strong>${t.empresa ? ' · ' + U.esc(t.empresa) : ''}<br><span class="muted mini">${U.esc([
+      t.fecha_vencimiento ? 'vence ' + U.fmtFecha(t.fecha_vencimiento) : 'sin fecha', c || 'sin asignar', ESTADOS.find(e => e.id === t.estado)?.label].filter(Boolean).join(' · '))}</span>`;
+  }
+
+  // plan: { actualizar: [{ t, cambios, textos }], sinCambios, avisos, otras, nuevas: [tareas], log }
   function mostrarPlan(plan, archivo) {
-    const lista = plan.actualizar.slice(0, 40).map(({ t, textos }) =>
+    const rev = revisarNuevas(plan.nuevas || [], App.estado.tareas);
+    const actualizar = plan.actualizar || [];
+    const lista = actualizar.slice(0, 40).map(({ t, textos }) =>
       `<li><strong>${U.esc(t.titulo)}</strong>${t.empresa ? ' · ' + U.esc(t.empresa) : ''}<br><span class="muted mini">${U.esc(textos.join(' · '))}</span></li>`).join('');
-    UI.abrirModal(`<header class="modal-cab"><h3>Actualizar desde Excel</h3><button type="button" class="btn-icono btn-sm" data-accion="cerrar-modal" aria-label="Cerrar">✕</button></header>
-      <p class="muted mini">${U.esc(archivo.name)} · revisa los cambios antes de guardar.</p>
+    const avisos = [...(plan.avisos || []), ...(plan.log || []).filter(l => l.startsWith('⚠'))];
+    const caja = (n, txt, cls = '') => `<div class="${cls}"><strong>${n}</strong><span>${txt}</span></div>`;
+    UI.abrirModal(`<header class="modal-cab"><h3>Revisar antes de cargar</h3><button type="button" class="btn-icono btn-sm" data-accion="cerrar-modal" aria-label="Cerrar">✕</button></header>
+      <p class="muted mini">${U.esc(archivo.name)} · <strong>todavía no se ha guardado nada.</strong> Revisa y confirma; antes de guardar se hace una copia de seguridad de las tareas.</p>
       <div class="imp-resumen">
-        <div><strong>${plan.actualizar.length}</strong><span>se actualizan</span></div>
-        <div><strong>${plan.nuevas.length}</strong><span>tareas nuevas</span></div>
-        <div><strong>${plan.sinCambios}</strong><span>sin cambios</span></div>
+        ${caja(rev.listas.length, 'tareas nuevas listas')}
+        ${caja(rev.revisar.length, 'por revisar', rev.revisar.length ? 'imp-alerta' : '')}
+        ${actualizar.length ? caja(actualizar.length, 'se actualizan') : caja(rev.omitidas + (plan.sinCambios || 0), 'ya cargadas o repetidas (se omiten)')}
       </div>
-      ${plan.otras.length ? `<p class="mini muted">Solo se lee la hoja con la columna Código; se ignoran: ${U.esc(plan.otras.join(', '))}.</p>` : ''}
-      ${plan.avisos.length ? `<details class="imp-avisos" open><summary>${plan.avisos.length} aviso${plan.avisos.length > 1 ? 's' : ''}</summary>${plan.avisos.slice(0, 30).map(a => `<div>${U.esc(a)}</div>`).join('')}</details>` : ''}
-      ${lista ? `<ul class="imp-cambios">${lista}</ul>${plan.actualizar.length > 40 ? `<p class="muted mini">…y ${plan.actualizar.length - 40} más.</p>` : ''}` : ''}
+      ${actualizar.length && plan.sinCambios + rev.omitidas ? `<p class="mini muted">${plan.sinCambios + rev.omitidas} fila(s) sin cambios o ya importadas: se omiten.</p>` : ''}
+      ${plan.otras?.length ? `<p class="mini muted">Solo se lee la hoja con la columna Código; se ignoran: ${U.esc(plan.otras.join(', '))}.</p>` : ''}
+      ${avisos.length ? `<details class="imp-avisos"><summary>${avisos.length} aviso${avisos.length > 1 ? 's' : ''}</summary>${avisos.slice(0, 30).map(a => `<div>${U.esc(a)}</div>`).join('')}</details>` : ''}
+      ${rev.revisar.length ? `<h4 class="imp-titulo">Por revisar <span class="muted mini">marca las que sí quieres crear</span>
+          <span class="separador"></span><button type="button" class="btn btn-sm" id="imp-todas">Marcar todas</button><button type="button" class="btn btn-sm" id="imp-ninguna">Ninguna</button></h4>
+        <ul class="imp-cambios imp-revisar">${rev.revisar.map((r, i) => `<li><label><input type="checkbox" data-rev="${i}" ${r.incluir ? 'checked' : ''}>
+          <span>${lineaTarea(r.t)}<br><span class="imp-motivo">⚠ ${U.esc(r.motivos.join(' · '))}</span></span></label></li>`).join('')}</ul>` : ''}
+      ${rev.listas.length ? `<details><summary class="mini">Ver las ${rev.listas.length} tareas nuevas listas</summary>
+        <ul class="imp-cambios">${rev.listas.slice(0, 300).map(r => `<li>${lineaTarea(r.t)}</li>`).join('')}</ul>${rev.listas.length > 300 ? `<p class="muted mini">…y ${rev.listas.length - 300} más.</p>` : ''}</details>` : ''}
+      ${lista ? `<details><summary class="mini">Ver los ${actualizar.length} cambios a tareas existentes</summary><ul class="imp-cambios">${lista}</ul>${actualizar.length > 40 ? `<p class="muted mini">…y ${actualizar.length - 40} más.</p>` : ''}</details>` : ''}
       <p id="imp-estado" class="muted mini"></p>
       <div class="barra-progreso grande" hidden><span id="imp-barra" style="width:0%"></span></div>
       <div id="imp-log" class="imp-log" hidden></div>
       <div class="modal-pie"><span class="separador"></span>
         <button class="btn" data-accion="cerrar-modal" id="imp-cancelar">Cancelar</button>
-        <button class="btn btn-primario" id="imp-aplicar" ${plan.actualizar.length || plan.nuevas.length ? '' : 'disabled'}>Guardar cambios</button>
-      </div>`, { ancho: 620 });
-    document.getElementById('imp-aplicar').addEventListener('click', async e => {
-      const btn = e.currentTarget;
+        <button class="btn btn-primario" id="imp-aplicar">Aceptar y cargar</button>
+      </div>`, { ancho: 680 });
+
+    const btn = document.getElementById('imp-aplicar');
+    const marcadas = () => rev.revisar.filter((r, i) => document.querySelector(`[data-rev="${i}"]`)?.checked).map(r => r.t);
+    const contar = () => {
+      if (btn.dataset.listo) return;
+      const nuevas = rev.listas.length + marcadas().length;
+      const partes = [nuevas && `crear ${nuevas}`, actualizar.length && `actualizar ${actualizar.length}`].filter(Boolean);
+      btn.textContent = partes.length ? 'Aceptar: ' + partes.join(' y ') : 'Nada que cargar';
+      btn.disabled = !partes.length;
+    };
+    const marcarTodas = v => { document.querySelectorAll('[data-rev]').forEach(x => { x.checked = v; }); contar(); };
+    document.getElementById('imp-todas')?.addEventListener('click', () => marcarTodas(true));
+    document.getElementById('imp-ninguna')?.addEventListener('click', () => marcarTodas(false));
+    document.querySelectorAll('[data-rev]').forEach(x => x.addEventListener('change', contar));
+    contar();
+
+    btn.addEventListener('click', async () => {
       if (btn.dataset.listo) { UI.cerrarModal(); return; }
+      const crear = [...rev.listas.map(r => r.t), ...marcadas()];
       btn.disabled = true;
       btn.textContent = 'Guardando…';
-      document.getElementById('imp-cancelar')?.setAttribute('hidden', '');
+      document.querySelectorAll('[data-rev], #imp-todas, #imp-ninguna').forEach(x => { x.disabled = true; });
       document.querySelector('.modal .barra-progreso')?.removeAttribute('hidden');
       try {
-        const r = await aplicarActualizacion(plan);
+        progreso(3, 'Guardando copia de seguridad…');
+        const copia = await Respaldos.antesDeCambiar(`Antes de importar ${archivo.name}`, archivo.name);
+        if (copia === false) { btn.disabled = false; contar(); progreso(0, 'Cancelado: no se guardó nada.'); document.querySelectorAll('[data-rev], #imp-todas, #imp-ninguna').forEach(x => { x.disabled = false; }); return; }
+        document.getElementById('imp-cancelar')?.setAttribute('hidden', '');
+        const r = await aplicarActualizacion({ actualizar, crear });
+        if (copia) await Datos.marcarRespaldo(copia.id, r.ids).catch(e => console.warn('[copia]', e.message));
         await App.cargar();
         App.render();
-        progreso(100, `✅ Listo: ${r.actualizadas} actualizadas, ${r.creadas} nuevas${r.fallas ? `, ${r.fallas} no se pudieron guardar` : ''}. Ya puedes cerrar esta ventana.`);
+        progreso(100, `✅ Listo: ${r.creadas} tareas creadas${actualizar.length ? `, ${r.actualizadas} actualizadas` : ''}${r.fallas ? `, ${r.fallas} no se pudieron guardar` : ''}.${copia ? ' Si algo quedó mal, en Administración → Copias de seguridad puedes volver a como estaba.' : ''}`);
       } catch (err) { console.error(err); progreso(100, '❌ ' + err.message); }
       // Al terminar, el mismo botón cierra la ventana
       btn.dataset.listo = '1';
@@ -5770,11 +6077,9 @@ const Importador = (() => {
       }
       const { tareas, log } = filasATareas(hojas, App.estado.colaboradores);
       if (!tareas.length) { progreso(100, 'No se encontraron tareas en el archivo.', log); return; }
-      progreso(40, `Guardando ${tareas.length} tareas…`, log);
-      const creadas = await Datos.importarTareas(tareas, (hechas, total) => progreso(40 + Math.round(55 * hechas / total), `Guardando… ${hechas}/${total}`));
-      await App.cargar();
-      App.render();
-      progreso(100, `Listo: ${tareas.length} tareas procesadas${Datos.modo === 'demo' ? `, ${creadas} nuevas` : ' (las repetidas se omiten)'}.`, log);
+      // Nada se guarda todavía: primero la revisión
+      mostrarPlan({ nuevas: tareas, log, sinCambios: 0 }, archivo);
+      return;
     } catch (e) {
       console.error(e);
       progreso(100, '❌ ' + e.message);
@@ -5814,8 +6119,155 @@ const Importador = (() => {
     UI.toast(`${tareas.length} tareas exportadas`, { tipo: 'ok' });
   }
 
-  return { filasATareas, mapearEstado, mapearPrioridad, huella, importarArchivo, exportar, cargarXLSX, hojaConCodigo, planActualizacion, esExportacionSinCodigo };
+  return { filasATareas, mapearEstado, mapearPrioridad, huella, importarArchivo, exportar, cargarXLSX, hojaConCodigo, planActualizacion, esExportacionSinCodigo, revisarNuevas, progreso };
 })();
+
+// ═══════════════════════════════════════════════════════════════════
+// COPIAS DE SEGURIDAD DE LAS TAREAS (supabase/respaldos.sql)
+// Antes de cada importación (y de cada restauración) se guarda una copia completa
+// de las tareas; se conservan las RESPALDOS_MAX más recientes. Restaurar deja las
+// tareas como estaban en la copia: devuelve los cambios, vuelve a crear las borradas
+// y elimina las que se crearon después (se eligen en la revisión).
+// ═══════════════════════════════════════════════════════════════════
+const Respaldos = {
+  lista: null,      // null = sin cargar
+  error: null,
+
+  async cargar() {
+    try { this.lista = await Datos.respaldos(); this.error = null; }
+    catch (e) { this.lista = []; this.error = e; }
+    return this.lista;
+  },
+
+  // Guarda la copia antes de un cambio masivo. Devuelve { id } si se guardó, null si se sigue
+  // sin copia (la tabla no existe y la persona aceptó) o false si la persona canceló.
+  async antesDeCambiar(motivo, archivo) {
+    try {
+      const tareas = await Datos.tareas();
+      const r = await Datos.crearRespaldo({ motivo, archivo, tareas });
+      this.lista = null;
+      return r;
+    } catch (e) {
+      console.warn('[copia]', e.message);
+      const seguir = confirm(`No se pudo guardar la copia de seguridad:\n${e.message}\n\n¿Continuar SIN copia? (no podrás volver atrás)`);
+      return seguir ? null : false;
+    }
+  },
+
+  // Qué cambia al restaurar una copia. Pura.
+  campos: CAMPOS_TAREA.filter(k => k !== 'origen_ref'),
+  comparar(copia, actuales, creadasPorImportacion = new Set()) {
+    const ahora = new Map(actuales.map(t => [t.id, t]));
+    const enCopia = new Set(copia.map(t => t.id));
+    const n = v => JSON.stringify(v === '' || v === undefined ? null : v);
+    const modificadas = [], borradas = [];
+    for (const t of copia) {
+      const a = ahora.get(t.id);
+      if (!a) borradas.push(t);
+      else if (this.campos.some(k => n(t[k]) !== n(a[k]))) modificadas.push({ antes: t, ahora: a });
+    }
+    const nuevas = actuales.filter(t => !enCopia.has(t.id)).map(t => ({ t, deImportacion: creadasPorImportacion.has(t.id) }));
+    return { modificadas, borradas, nuevas };
+  },
+
+  fecha(r) { return Util.fmtFechaHora(r.created_at); },
+
+  async abrirRestaurar(id) {
+    UI.abrirModal(`<header class="modal-cab"><h3>Restaurar copia</h3></header><p class="muted">Comparando con las tareas actuales…</p>`, { ancho: 680 });
+    let r, actuales;
+    try {
+      [r, actuales] = await Promise.all([Datos.respaldo(id), Datos.tareas()]);
+    } catch (e) { UI.toast(e.message, { tipo: 'error' }); UI.cerrarModal(); return; }
+    // Las tareas creadas por importaciones posteriores a esta copia se proponen para eliminar.
+    const lista = this.lista || await this.cargar();
+    const posteriores = new Set(lista.filter(x => x.created_at >= r.created_at).flatMap(x => x.creadas || []));
+    const dif = this.comparar(r.tareas || [], actuales, posteriores);
+    const linea = t => `<strong>${Util.esc(t.titulo)}</strong>${t.empresa ? ' · ' + Util.esc(t.empresa) : ''}<span class="muted mini">${t.fecha_vencimiento ? ' · vence ' + Util.fmtFecha(t.fecha_vencimiento) : ''}</span>`;
+    const nombres = { titulo: 'nombre', descripcion: 'descripción', asignado_a: 'colaborador', asignado_nombre: 'colaborador', empresa: 'empresa', categoria: 'categoría',
+      prioridad: 'prioridad', estado: 'estado', fecha_inicio: 'fecha de inicio', fecha_vencimiento: 'fecha límite', progreso: 'progreso', checklist: 'lista de pasos',
+      etiquetas: 'etiquetas', completada_at: 'completada', iniciada_at: 'cronómetro', pausada_at: 'pausa', pausa_seg: 'pausa' };
+    const queCambia = ({ antes, ahora }) => [...new Set(this.campos.filter(k => JSON.stringify(antes[k] ?? null) !== JSON.stringify(ahora[k] ?? null)).map(k => nombres[k] || k))].join(', ');
+    const hay = dif.modificadas.length || dif.borradas.length || dif.nuevas.length;
+    UI.abrirModal(`<header class="modal-cab"><h3>Restaurar copia del ${Util.esc(this.fecha(r))}</h3><button type="button" class="btn-icono btn-sm" data-accion="cerrar-modal" aria-label="Cerrar">✕</button></header>
+      <p class="muted mini">${Util.esc(r.motivo || 'Copia manual')}${r.autor_nombre ? ' · ' + Util.esc(r.autor_nombre) : ''} · ${r.total} tareas en la copia.
+        <strong>Todavía no se ha cambiado nada.</strong> Antes de restaurar se guarda una copia del estado actual, por si necesitas deshacerlo.</p>
+      <div class="imp-resumen">
+        <div><strong>${dif.modificadas.length}</strong><span>vuelven a como estaban</span></div>
+        <div><strong>${dif.borradas.length}</strong><span>borradas: se recuperan</span></div>
+        <div class="${dif.nuevas.length ? 'imp-alerta' : ''}"><strong>${dif.nuevas.length}</strong><span>creadas después</span></div>
+      </div>
+      ${dif.nuevas.length ? `<h4 class="imp-titulo">Creadas después de la copia <span class="muted mini">marca las que se eliminan</span>
+          <span class="separador"></span><button type="button" class="btn btn-sm" id="res-todas">Marcar todas</button><button type="button" class="btn btn-sm" id="res-ninguna">Ninguna</button></h4>
+        <p class="muted mini">Vienen marcadas las que creó una importación de Excel; las creadas a mano vienen sin marcar.</p>
+        <ul class="imp-cambios imp-revisar">${dif.nuevas.map((x, i) => `<li><label><input type="checkbox" data-res="${i}" ${x.deImportacion ? 'checked' : ''}>
+          <span>${linea(x.t)}<br><span class="muted mini">${x.deImportacion ? 'Creada al importar Excel' : 'Creada a mano'}</span></span></label></li>`).join('')}</ul>` : ''}
+      ${dif.modificadas.length ? `<details><summary class="mini">Ver las ${dif.modificadas.length} tareas que vuelven a como estaban</summary><ul class="imp-cambios">${dif.modificadas.slice(0, 300).map(m =>
+        `<li>${linea(m.antes)}<br><span class="muted mini">Cambia: ${Util.esc(queCambia(m))}</span></li>`).join('')}</ul></details>` : ''}
+      ${dif.borradas.length ? `<details><summary class="mini">Ver las ${dif.borradas.length} tareas que se recuperan</summary><ul class="imp-cambios">${dif.borradas.slice(0, 300).map(t => `<li>${linea(t)}</li>`).join('')}</ul></details>` : ''}
+      ${hay ? '' : '<p class="muted">Las tareas están igual que en esta copia: no hay nada que restaurar.</p>'}
+      <p id="imp-estado" class="muted mini"></p>
+      <div class="barra-progreso grande" hidden><span id="imp-barra" style="width:0%"></span></div>
+      <div id="imp-log" class="imp-log" hidden></div>
+      <div class="modal-pie"><span class="separador"></span>
+        <button class="btn" data-accion="cerrar-modal" id="res-cancelar">Cancelar</button>
+        ${hay ? '<button class="btn btn-primario" id="res-ok">Restaurar</button>' : ''}
+      </div>`, { ancho: 680 });
+
+    const marcar = v => document.querySelectorAll('[data-res]').forEach(x => { x.checked = v; });
+    document.getElementById('res-todas')?.addEventListener('click', () => marcar(true));
+    document.getElementById('res-ninguna')?.addEventListener('click', () => marcar(false));
+    const btn = document.getElementById('res-ok');
+    btn?.addEventListener('click', async () => {
+      if (btn.dataset.listo) { UI.cerrarModal(); return; }
+      const eliminar = dif.nuevas.filter((x, i) => document.querySelector(`[data-res="${i}"]`)?.checked).map(x => x.t.id);
+      const resumen = [dif.modificadas.length && `${dif.modificadas.length} vuelven a como estaban`, dif.borradas.length && `${dif.borradas.length} se recuperan`,
+        eliminar.length && `${eliminar.length} se eliminan`].filter(Boolean).join(', ');
+      if (!resumen) { UI.toast('No hay nada marcado para restaurar.', { tipo: 'error' }); return; }
+      if (!confirm(`¿Restaurar la copia del ${this.fecha(r)}?\n\n${resumen}.`)) return;
+      btn.disabled = true;
+      document.querySelectorAll('[data-res], #res-todas, #res-ninguna').forEach(x => { x.disabled = true; });
+      document.querySelector('.modal .barra-progreso')?.removeAttribute('hidden');
+      const progreso = Importador.progreso;
+      try {
+        progreso(5, 'Guardando copia del estado actual…');
+        const copia = await this.antesDeCambiar(`Antes de restaurar la copia del ${this.fecha(r)}`, null);
+        if (copia === false) { btn.disabled = false; progreso(0, 'Cancelado: no se cambió nada.'); return; }
+        document.getElementById('res-cancelar')?.setAttribute('hidden', '');
+        const escribir = [...dif.modificadas.map(m => m.antes), ...dif.borradas];
+        if (escribir.length) await Datos.restaurarTareas(escribir, (h, n) => progreso(10 + Math.round(70 * h / n), `Restaurando… ${h}/${n}`));
+        let borradas = 0;
+        if (eliminar.length) { progreso(85, `Eliminando ${eliminar.length} tareas…`); borradas = await Datos.eliminarTareas(eliminar); }
+        for (const t of escribir) App._registrar(t.id, 'edicion', `Restauró la copia de seguridad del ${this.fecha(r)}`);
+        await App.cargar();
+        App.render();
+        this.lista = null;
+        progreso(100, `✅ Listo: ${escribir.length} tareas restauradas${eliminar.length ? `, ${borradas} eliminadas` : ''}.${borradas < eliminar.length ? ` ${eliminar.length - borradas} no se pudieron eliminar (sin permiso).` : ''}`);
+      } catch (e) { console.error(e); progreso(100, '❌ ' + e.message); }
+      btn.dataset.listo = '1';
+      btn.textContent = 'Cerrar';
+      btn.disabled = false;
+    });
+  },
+
+  async crearAhora() {
+    try {
+      const tareas = await Datos.tareas();
+      await Datos.crearRespaldo({ motivo: 'Copia manual', archivo: null, tareas });
+      this.lista = null;
+      UI.toast(`Copia guardada (${tareas.length} tareas)`, { tipo: 'ok' });
+    } catch (e) { UI.toast(e.message, { tipo: 'error' }); }
+    Vistas.admin.pintarRespaldos();
+  },
+
+  html() {
+    if (this.lista === null) return '<p class="muted mini">Cargando copias…</p>';
+    if (this.error) return `<p class="muted">${Util.esc(this.error.message)}</p>`;
+    if (!this.lista.length) return '<p class="muted">Aún no hay copias. Se crea una automáticamente cada vez que importas un Excel.</p>';
+    return `<ul class="respaldos">${this.lista.map(r => `<li>
+        <span><strong>${Util.esc(this.fecha(r))}</strong><br><span class="muted mini">${Util.esc(r.motivo || 'Copia')}${r.autor_nombre ? ' · ' + Util.esc(r.autor_nombre) : ''} · ${r.total} tareas${r.creadas?.length ? ` · la importación creó ${r.creadas.length}` : ''}</span></span>
+        <button class="btn btn-sm" data-accion="restaurar-copia" data-id="${r.id}">↺ Restaurar</button></li>`).join('')}</ul>`;
+  },
+};
 
 if (typeof module !== 'undefined') module.exports = { Importador };
 
@@ -6387,6 +6839,7 @@ const App = {
         if (JSON.stringify(colabs) !== JSON.stringify(this.estado.colaboradores)) { this.estado.colaboradores = colabs; cambio = true; }
       }
       if (this.estado.errorCarga) { this.estado.errorCarga = null; cambio = true; }
+      if (await Clientes.refrescar()) cambio = true;
       if (cambio || this._hoyPintado !== Util.hoyISO()) this.render();
     } catch (e) {
       console.warn('[refresco]', e.message);
