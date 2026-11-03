@@ -1029,6 +1029,7 @@ const CONFIG = {
     notas: 'notas',
     clientes: 'clientes',
     respaldos: 'respaldos',
+    calendarioDian: 'calendario_dian',
     chatConv: 'chat_conversaciones',
     chatMiem: 'chat_miembros',
     chatMsj: 'chat_mensajes',
@@ -1840,6 +1841,14 @@ class SupabaseStore {
     }
   }
 
+  // Calendario DIAN guardado en Supabase (supabase/vencimientos.sql). null si la tabla no existe o está vacía.
+  async calendarioDian() {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.calendarioDian).select('anio, obligacion, digitos, orden, periodo, clave, fecha')
+      .order('anio', { ascending: false }).order('orden').range(0, 9999);
+    if (error) { if (this._error(error, '').faltaEsquema) return null; throw this._error(error, 'leer el calendario DIAN'); }
+    return data?.length ? data : null;
+  }
+
   async guardarCliente(g) {
     // El historial de versiones lo arma el trigger de supabase/clientes.sql; aquí no se envía.
     const fila = { id: g.id, nombre: g.nombre, nit: g.nit || null, datos: g.datos, vencimientos: g.vencimientos };
@@ -2156,6 +2165,8 @@ class LocalStore {
     if (!this.db.clientes) { this.db.clientes = DatosDemo.clientes(); this._guardar(); }
     return structuredClone(this.db.clientes);
   }
+
+  async calendarioDian() { return null; }
 
   async guardarCliente(g) {
     this.db.clientes ||= [];
@@ -3453,6 +3464,7 @@ Vistas.admin = {
             <dt>Tareas</dt><dd>${App.estado.tareas.length}</dd>
             <dt>Cronómetro</dt><dd>${demo || (!Datos.sinCronometro && (!App.estado.tareas.length || 'iniciada_at' in App.estado.tareas[0])) ? 'Activo' : 'Falta ejecutar <code>supabase/cronometro.sql</code> en el SQL Editor de Supabase'}</dd>
             <dt>Pausa del cronómetro</dt><dd>${Datos.conPausa !== false ? 'Activa' : 'Falta ejecutar <code>supabase/pausa.sql</code> en el SQL Editor de Supabase'}</dd>
+            <dt>Vencimientos DIAN</dt><dd>${Clientes.origenCalendario === 'supabase' ? `Calendario ${CALENDARIO_DIAN.anio} desde Supabase (tabla <code>vencimientos</code> activa)` : demo ? 'Calendario de la página' : 'Calendario de la página · falta ejecutar <code>supabase/vencimientos.sql</code> para la tabla de vencimientos'}</dd>
             <dt>Copias de seguridad</dt><dd>${Respaldos.error?.faltaEsquema ? 'Falta ejecutar <code>supabase/respaldos.sql</code> en el SQL Editor de Supabase' : Respaldos.lista === null ? '…' : 'Activas'}</dd>
             <dt>Teams</dt><dd>${CONFIG.TEAMS_WEBHOOK_URL || Object.keys(CONFIG.TEAMS_WEBHOOKS_POR_COLABORADOR).length ? 'Configurado' : 'No configurado (js/config.js)'}</dd>
           </dl>
@@ -4067,9 +4079,31 @@ const Clientes = {
     if (!this.cargada) this.cargar(); else this.pintar();
   },
 
+  // Si Supabase tiene el calendario (supabase/vencimientos.sql), manda sobre el de esta página:
+  // así, para un año nuevo basta con cargar sus fechas allá.
+  origenCalendario: 'pagina',   // 'pagina' | 'supabase'
+  async cargarCalendario() {
+    try {
+      const filas = await Datos.calendarioDian();
+      if (!filas) return;
+      const anio = Math.max(...filas.map(f => f.anio));
+      const obligaciones = {};
+      for (const f of filas.filter(x => x.anio === anio)) {
+        const o = obligaciones[f.obligacion] ||= { digitos: f.digitos, periodos: [] };
+        let p = o.periodos.find(x => x.periodo === f.periodo);
+        if (!p) o.periodos.push(p = { periodo: f.periodo, orden: f.orden, fechas: {} });
+        p.fechas[f.clave] = String(f.fecha).slice(0, 10);
+      }
+      for (const o of Object.values(obligaciones)) o.periodos.sort((a, b) => a.orden - b.orden);
+      Object.assign(CALENDARIO_DIAN, { anio, obligaciones });
+      this.origenCalendario = 'supabase';
+    } catch (e) { console.warn('[calendario DIAN]', e.message); }
+  },
+
   async cargar() {
     this.error = null;
     try {
+      if (this.origenCalendario === 'pagina') await this.cargarCalendario();
       this.lista = (await Datos.clientes()).map(g => this.normalizar(g));
     } catch (e) {
       console.error(e);
