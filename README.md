@@ -135,6 +135,16 @@ El tablero, la lista (columna **NIT**, ordenable), el calendario y la ventana de
   - si el cliente ya tiene **otro** NIT, no se cambia (sale en los avisos para revisarlo en su ficha).
 - En la celda NIT se toma el primer número de 5 o más dígitos (`NIT 900705082 YCC. …` → `900705082`).
 
+### Impuestos DIAN
+
+En la ficha de cada cliente, dentro de **Vencimientos**, está el apartado **🏛 Impuestos DIAN 2026**. No crea tareas ni toca el tablero.
+
+- **✎ Impuestos asociados** despliega las obligaciones (IVA bimestral, retención en la fuente, IVA cuatrimestral, renta, Régimen Simple, exógena); se marcan o desmarcan con un toque y se guarda al momento.
+- **Predeterminado**: persona natural → IVA bimestral; empresa (NIT de 9 dígitos que empieza por 8 o 9) → IVA bimestral y retención en la fuente. Mientras no se toque, el cliente sigue lo predeterminado; si se personaliza, se puede volver a lo predeterminado.
+- Cada obligación muestra su **próxima fecha** según el último dígito del NIT (renta de personas naturales y exógena, los dos últimos) y "Todas las fechas" del año. Amarillo si vence en 10 días o menos (`DIAN_DIAS_ALERTA`), rojo el día del vencimiento. La fila del cliente y el filtro **Vencimientos** también los tienen en cuenta.
+- **🏛 Vencimientos DIAN** (en la barra de Clientes): todos los vencimientos de todos los clientes ordenados por fecha (hoy, próximos 7 días, próximos 30 días), con filtro por obligación y enlace al PDF oficial.
+- Las fechas están en `CALENDARIO_DIAN` en `index.html`, copiadas del [Calendario Tributario 2026 de la DIAN](https://www.dian.gov.co/Calendarios/Calendario_Tributario_2026.pdf): IVA bimestral, IVA cuatrimestral, retención en la fuente, renta de personas jurídicas (2 cuotas), de personas naturales (por los dos últimos dígitos) y Régimen Simple (anticipos bimestrales, declaración anual consolidada y consolidada de IVA). La exógena no está en ese PDF: sus fechas salen de otra resolución de la DIAN y aún no están cargadas. Cada año se reemplaza con el calendario nuevo.
+
 ### Agregar un dato nuevo a la ficha
 
 En `index.html`, la lista `CLIENTE_CAMPOS` define los datos de la ficha y `CLIENTE_VENCIMIENTOS` los vencimientos. Para agregar uno basta con sumar una línea, por ejemplo:

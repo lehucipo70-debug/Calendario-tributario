@@ -730,6 +730,24 @@ body.nav-compacta .lateral-pie { display: block; margin-top: auto; padding: 0 6p
 .cli-form label, .cli-venc-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text2); }
 .cli-venc { border: 1px solid var(--borde); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
 .cli-venc.editando { border-color: var(--text2); }
+.cli-dian { border: 1px solid color-mix(in srgb, var(--azul) 40%, transparent); background: color-mix(in srgb, var(--azul) 6%, transparent); border-radius: 14px; padding: 12px 14px; margin-top: 4px; }
+.cli-dian > .cli-venc-cab { margin-bottom: 8px; }
+.cli-dian-obs { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; }
+.cli-dian-chip { border: 1px solid var(--borde); background: var(--bg2); color: var(--text2); border-radius: 999px; padding: 5px 11px; font-size: 12px; cursor: pointer; }
+.cli-dian-chip.on { background: color-mix(in srgb, var(--azul) 16%, transparent); border-color: color-mix(in srgb, var(--azul) 55%, transparent); color: var(--azul); font-weight: 600; }
+.cli-dian-ob { border: 1px solid var(--borde); background: var(--bg2); border-radius: 12px; padding: 9px 12px; margin-top: 8px; }
+.cli-dian-ob .cli-venc-cab { font-size: 13.5px; }
+.cli-dian-fechas { list-style: none; padding: 0; margin: 6px 0 0; font-size: 12.5px; }
+.cli-dian-fechas li { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed var(--borde); }
+.cli-dian-fechas li.pasada { color: var(--text3); text-decoration: line-through; }
+.cli-dian-titulo { margin: 0; font-size: 18px; }
+.cli-dian-grupo { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text2); margin: 16px 0 6px; }
+.cli-dian-fila { display: grid; grid-template-columns: 90px minmax(0, 280px) minmax(0, 1fr) 130px; gap: 12px; align-items: center; width: 100%; text-align: left; background: var(--bg2); border: 1px solid var(--borde); border-radius: 12px; padding: 9px 13px; margin-bottom: 6px; color: var(--text); font-size: 13px; cursor: pointer; }
+.cli-dian-fila:hover { border-color: var(--azul); }
+.cli-dian-fila .f { font-weight: 700; }
+.cli-dian-fila .chip { justify-self: end; }
+.enlace { background: none; border: none; color: var(--azul); cursor: pointer; padding: 0; font: inherit; text-decoration: underline; }
+@media (max-width: 720px) { .cli-dian-fila { grid-template-columns: 1fr auto; } }
 .cli-venc-cab { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; flex-wrap: wrap; }
 .cli-venc-barra { height: 6px; border-radius: 9px; background: var(--bg3); margin-top: 10px; overflow: hidden; }
 .cli-venc-barra span { display: block; height: 100%; border-radius: 9px; background: var(--verde); }
@@ -3953,6 +3971,78 @@ const CLIENTE_VENCIMIENTOS = [
   { id: 'soporte', label: 'Documento soporte', corto: 'Doc. soporte', icono: '📄', excel: ['VENCIMIENTO DOCUMENTO SOPORTE', 'VENCIMIENTO SOPORTE'] },
 ];
 
+// ── Impuestos DIAN de cada cliente ───────────────────────────────────
+// Obligaciones que se pueden asociar a un cliente (Clientes → ficha → Impuestos DIAN).
+// Sus fechas salen de CALENDARIO_DIAN según el último dígito del NIT (o los dos últimos).
+// Por defecto: persona natural → IVA bimestral; empresa → IVA bimestral y retención.
+// Lo que se marque o desmarque en la ficha se guarda en datos.obligaciones del cliente.
+const DIAN_OBLIGACIONES = [
+  { id: 'iva_bimestral', label: 'IVA bimestral', corto: 'IVA', digitos: 1 },
+  { id: 'retencion', label: 'Retención en la fuente (mensual)', corto: 'Retención', digitos: 1 },
+  { id: 'iva_cuatrimestral', label: 'IVA cuatrimestral', corto: 'IVA', digitos: 1 },
+  { id: 'renta_pn', label: 'Renta personas naturales', corto: 'Renta', digitos: 2 },
+  { id: 'renta_pj', label: 'Renta personas jurídicas', corto: 'Renta', digitos: 1 },
+  { id: 'simple', label: 'Régimen Simple', corto: 'Simple', digitos: 1 },
+  { id: 'exogena', label: 'Información exógena', corto: 'Exógena', digitos: 2 },
+];
+const DIAN_PREDETERMINADAS = { persona: ['iva_bimestral'], empresa: ['iva_bimestral', 'retencion'] };
+const DIAN_DIAS_ALERTA = 10;   // amarillo cuando el vencimiento está a estos días o menos; rojo el mismo día
+
+// Calendario Tributario: se actualiza una vez al año con el PDF oficial de la DIAN.
+//   obligaciones: { <id de DIAN_OBLIGACIONES>: { digitos?, periodos: [{ periodo: 'Ene–Feb', fechas: { '1': '2026-03-10', … } }] } }
+//   Claves de fechas: último dígito del NIT ('1' … '9', '0') o rango de los dos últimos ('01-02' … '99-00').
+const CALENDARIO_DIAN = {
+  anio: 2026,
+  fuente: 'https://www.dian.gov.co/Calendarios/Calendario_Tributario_2026.pdf',
+  // Copiado del PDF oficial (versión del 1 jul 2026). La exógena no está en ese PDF (la fija otra resolución de la DIAN).
+  obligaciones: {
+    iva_bimestral: { periodos: [
+      { periodo: 'Ene–Feb', fechas: {"1": "2026-03-10", "2": "2026-03-11", "3": "2026-03-12", "4": "2026-03-13", "5": "2026-03-16", "6": "2026-03-17", "7": "2026-03-18", "8": "2026-03-19", "9": "2026-03-20", "0": "2026-03-24"} },
+      { periodo: 'Mar–Abr', fechas: {"1": "2026-05-12", "2": "2026-05-13", "3": "2026-05-14", "4": "2026-05-15", "5": "2026-05-19", "6": "2026-05-20", "7": "2026-05-21", "8": "2026-05-22", "9": "2026-05-25", "0": "2026-05-26"} },
+      { periodo: 'May–Jun', fechas: {"1": "2026-07-09", "2": "2026-07-10", "3": "2026-07-14", "4": "2026-07-15", "5": "2026-07-16", "6": "2026-07-17", "7": "2026-07-21", "8": "2026-07-22", "9": "2026-07-23", "0": "2026-07-24"} },
+      { periodo: 'Jul–Ago', fechas: {"1": "2026-09-09", "2": "2026-09-10", "3": "2026-09-11", "4": "2026-09-14", "5": "2026-09-15", "6": "2026-09-16", "7": "2026-09-17", "8": "2026-09-18", "9": "2026-09-21", "0": "2026-09-22"} },
+      { periodo: 'Sep–Oct', fechas: {"1": "2026-11-11", "2": "2026-11-12", "3": "2026-11-13", "4": "2026-11-17", "5": "2026-11-18", "6": "2026-11-19", "7": "2026-11-20", "8": "2026-11-23", "9": "2026-11-24", "0": "2026-11-25"} },
+      { periodo: 'Nov–Dic', fechas: {"1": "2027-01-13", "2": "2027-01-14", "3": "2027-01-15", "4": "2027-01-18", "5": "2027-01-19", "6": "2027-01-20", "7": "2027-01-21", "8": "2027-01-22", "9": "2027-01-25", "0": "2027-01-26"} },
+    ] },
+    retencion: { periodos: [
+      { periodo: 'Enero', fechas: {"1": "2026-02-10", "2": "2026-02-11", "3": "2026-02-12", "4": "2026-02-13", "5": "2026-02-16", "6": "2026-02-17", "7": "2026-02-18", "8": "2026-02-19", "9": "2026-02-20", "0": "2026-02-23"} },
+      { periodo: 'Febrero', fechas: {"1": "2026-03-10", "2": "2026-03-11", "3": "2026-03-12", "4": "2026-03-13", "5": "2026-03-16", "6": "2026-03-17", "7": "2026-03-18", "8": "2026-03-19", "9": "2026-03-20", "0": "2026-03-24"} },
+      { periodo: 'Marzo', fechas: {"1": "2026-04-13", "2": "2026-04-14", "3": "2026-04-15", "4": "2026-04-16", "5": "2026-04-20", "6": "2026-04-21", "7": "2026-04-22", "8": "2026-04-23", "9": "2026-04-24", "0": "2026-04-27"} },
+      { periodo: 'Abril', fechas: {"1": "2026-05-12", "2": "2026-05-13", "3": "2026-05-14", "4": "2026-05-15", "5": "2026-05-19", "6": "2026-05-20", "7": "2026-05-21", "8": "2026-05-22", "9": "2026-05-25", "0": "2026-05-26"} },
+      { periodo: 'Mayo', fechas: {"1": "2026-06-10", "2": "2026-06-11", "3": "2026-06-12", "4": "2026-06-16", "5": "2026-06-17", "6": "2026-06-18", "7": "2026-06-19", "8": "2026-06-22", "9": "2026-06-23", "0": "2026-06-24"} },
+      { periodo: 'Junio', fechas: {"1": "2026-07-09", "2": "2026-07-10", "3": "2026-07-14", "4": "2026-07-15", "5": "2026-07-16", "6": "2026-07-17", "7": "2026-07-21", "8": "2026-07-22", "9": "2026-07-23", "0": "2026-07-24"} },
+      { periodo: 'Julio', fechas: {"1": "2026-08-12", "2": "2026-08-13", "3": "2026-08-14", "4": "2026-08-18", "5": "2026-08-19", "6": "2026-08-20", "7": "2026-08-21", "8": "2026-08-24", "9": "2026-08-25", "0": "2026-08-26"} },
+      { periodo: 'Agosto', fechas: {"1": "2026-09-09", "2": "2026-09-10", "3": "2026-09-11", "4": "2026-09-14", "5": "2026-09-15", "6": "2026-09-16", "7": "2026-09-17", "8": "2026-09-18", "9": "2026-09-21", "0": "2026-09-22"} },
+      { periodo: 'Septiembre', fechas: {"1": "2026-10-09", "2": "2026-10-13", "3": "2026-10-14", "4": "2026-10-15", "5": "2026-10-16", "6": "2026-10-19", "7": "2026-10-20", "8": "2026-10-21", "9": "2026-10-22", "0": "2026-10-23"} },
+      { periodo: 'Octubre', fechas: {"1": "2026-11-11", "2": "2026-11-12", "3": "2026-11-13", "4": "2026-11-17", "5": "2026-11-18", "6": "2026-11-19", "7": "2026-11-20", "8": "2026-11-23", "9": "2026-11-24", "0": "2026-11-25"} },
+      { periodo: 'Noviembre', fechas: {"1": "2026-12-10", "2": "2026-12-11", "3": "2026-12-14", "4": "2026-12-15", "5": "2026-12-16", "6": "2026-12-17", "7": "2026-12-18", "8": "2026-12-21", "9": "2026-12-22", "0": "2026-12-23"} },
+      { periodo: 'Diciembre', fechas: {"1": "2027-01-13", "2": "2027-01-14", "3": "2027-01-15", "4": "2027-01-18", "5": "2027-01-19", "6": "2027-01-20", "7": "2027-01-21", "8": "2027-01-22", "9": "2027-01-25", "0": "2027-01-26"} },
+    ] },
+    iva_cuatrimestral: { periodos: [
+      { periodo: 'Ene–Abr', fechas: {"1": "2026-05-12", "2": "2026-05-13", "3": "2026-05-14", "4": "2026-05-15", "5": "2026-05-19", "6": "2026-05-20", "7": "2026-05-21", "8": "2026-05-22", "9": "2026-05-25", "0": "2026-05-26"} },
+      { periodo: 'May–Ago', fechas: {"1": "2026-09-09", "2": "2026-09-10", "3": "2026-09-11", "4": "2026-09-14", "5": "2026-09-15", "6": "2026-09-16", "7": "2026-09-17", "8": "2026-09-18", "9": "2026-09-21", "0": "2026-09-22"} },
+      { periodo: 'Sep–Dic', fechas: {"1": "2027-01-13", "2": "2027-01-14", "3": "2027-01-15", "4": "2027-01-18", "5": "2027-01-19", "6": "2027-01-20", "7": "2027-01-21", "8": "2027-01-22", "9": "2027-01-25", "0": "2027-01-26"} },
+    ] },
+    renta_pn: { digitos: 2, periodos: [
+      { periodo: 'Año gravable 2025', fechas: {"01-02": "2026-08-12", "03-04": "2026-08-13", "05-06": "2026-08-14", "07-08": "2026-08-18", "09-10": "2026-08-19", "11-12": "2026-08-20", "13-14": "2026-08-21", "15-16": "2026-08-24", "17-18": "2026-08-25", "19-20": "2026-08-26", "21-22": "2026-08-27", "23-24": "2026-08-28", "25-26": "2026-08-31", "27-28": "2026-09-01", "29-30": "2026-09-02", "31-32": "2026-09-03", "33-34": "2026-09-04", "35-36": "2026-09-07", "37-38": "2026-09-08", "39-40": "2026-09-09", "41-42": "2026-09-10", "43-44": "2026-09-11", "45-46": "2026-09-14", "47-48": "2026-09-15", "49-50": "2026-09-16", "51-52": "2026-09-17", "53-54": "2026-09-18", "55-56": "2026-09-21", "57-58": "2026-09-22", "59-60": "2026-09-23", "61-62": "2026-09-24", "63-64": "2026-09-25", "65-66": "2026-09-28", "67-68": "2026-10-01", "69-70": "2026-10-02", "71-72": "2026-10-05", "73-74": "2026-10-06", "75-76": "2026-10-07", "77-78": "2026-10-08", "79-80": "2026-10-09", "81-82": "2026-10-13", "83-84": "2026-10-14", "85-86": "2026-10-15", "87-88": "2026-10-16", "89-90": "2026-10-19", "91-92": "2026-10-20", "93-94": "2026-10-21", "95-96": "2026-10-22", "97-98": "2026-10-23", "99-00": "2026-10-26"} },
+    ] },
+    simple: { periodos: [
+      { periodo: 'Declaración consolidada de IVA · año 2025', fechas: {"1": "2026-02-16", "2": "2026-02-16", "3": "2026-02-17", "4": "2026-02-17", "5": "2026-02-18", "6": "2026-02-18", "7": "2026-02-19", "8": "2026-02-19", "9": "2026-02-20", "0": "2026-02-20"} },
+      { periodo: 'Declaración anual consolidada · año 2025', fechas: {"1": "2026-04-20", "2": "2026-04-20", "3": "2026-04-21", "4": "2026-04-21", "5": "2026-04-22", "6": "2026-04-22", "7": "2026-04-23", "8": "2026-04-23", "9": "2026-04-24", "0": "2026-04-24"} },
+      { periodo: 'Anticipo Ene–Feb', fechas: {"1": "2026-05-12", "2": "2026-05-13", "3": "2026-05-14", "4": "2026-05-15", "5": "2026-05-19", "6": "2026-05-20", "7": "2026-05-21", "8": "2026-05-22", "9": "2026-05-25", "0": "2026-05-26"} },
+      { periodo: 'Anticipo Mar–Abr', fechas: {"1": "2026-06-10", "2": "2026-06-11", "3": "2026-06-12", "4": "2026-06-16", "5": "2026-06-17", "6": "2026-06-18", "7": "2026-06-19", "8": "2026-06-22", "9": "2026-06-23", "0": "2026-06-24"} },
+      { periodo: 'Anticipo May–Jun', fechas: {"1": "2026-07-09", "2": "2026-07-10", "3": "2026-07-14", "4": "2026-07-15", "5": "2026-07-16", "6": "2026-07-17", "7": "2026-07-21", "8": "2026-07-22", "9": "2026-07-23", "0": "2026-07-24"} },
+      { periodo: 'Anticipo Jul–Ago', fechas: {"1": "2026-09-09", "2": "2026-09-10", "3": "2026-09-11", "4": "2026-09-14", "5": "2026-09-15", "6": "2026-09-16", "7": "2026-09-17", "8": "2026-09-18", "9": "2026-09-21", "0": "2026-09-22"} },
+      { periodo: 'Anticipo Sep–Oct', fechas: {"1": "2026-11-11", "2": "2026-11-12", "3": "2026-11-13", "4": "2026-11-17", "5": "2026-11-18", "6": "2026-11-19", "7": "2026-11-20", "8": "2026-11-23", "9": "2026-11-24", "0": "2026-11-25"} },
+      { periodo: 'Anticipo Nov–Dic', fechas: {"1": "2027-01-13", "2": "2027-01-14", "3": "2027-01-15", "4": "2027-01-18", "5": "2027-01-19", "6": "2027-01-20", "7": "2027-01-21", "8": "2027-01-22", "9": "2027-01-25", "0": "2027-01-26"} },
+    ] },
+    renta_pj: { periodos: [
+      { periodo: '1a. cuota (declaración y pago)', fechas: {"1": "2026-05-12", "2": "2026-05-13", "3": "2026-05-14", "4": "2026-05-15", "5": "2026-05-19", "6": "2026-05-20", "7": "2026-05-21", "8": "2026-05-22", "9": "2026-05-25", "0": "2026-05-26"} },
+      { periodo: '2a. cuota', fechas: {"1": "2026-07-09", "2": "2026-07-10", "3": "2026-07-14", "4": "2026-07-15", "5": "2026-07-16", "6": "2026-07-17", "7": "2026-07-21", "8": "2026-07-22", "9": "2026-07-23", "0": "2026-07-24"} },
+    ] },
+  },
+};
+
 const Clientes = {
   raiz: null,
   lista: [],
@@ -3961,11 +4051,14 @@ const Clientes = {
   filtro: { texto: '', lechera: '', venc: '', letra: '' },
   abiertoId: null,
   editando: null,      // { id, que: 'datos' | <id de vencimiento> }
+  dianAbierto: null,   // cliente con el apartado de impuestos desplegado
+  vistaDian: false,    // panel "Vencimientos DIAN" de todos los clientes
+  filtroDian: { ob: '', dias: '30' },
 
   // ── Ciclo de vida ─────────────────────────────────────────────────
   reiniciar() {
     this.raiz?.remove();
-    Object.assign(this, { _indiceNit: null, raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '' }, abiertoId: null, editando: null });
+    Object.assign(this, { _indiceNit: null, raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '' }, abiertoId: null, editando: null, dianAbierto: null, vistaDian: false, filtroDian: { ob: '', dias: '30' } });
   },
 
   montar(main) {
@@ -4109,6 +4202,53 @@ const Clientes = {
     return { estado: dias < 0 ? 'vencido' : dias <= CLIENTE_DIAS_ALERTA ? 'pronto' : 'ok', dias };
   },
 
+  // ── Impuestos DIAN ────────────────────────────────────────────────
+  tipoDian(g) { return this.esEmpresa(g) ? 'empresa' : 'persona'; },
+  obligacionesPropias(g) { return Array.isArray(g.datos?.obligaciones); },
+  // Las marcadas en la ficha; si nunca se tocaron, las predeterminadas según el tipo de cliente.
+  obligaciones(g) { return this.obligacionesPropias(g) ? g.datos.obligaciones : DIAN_PREDETERMINADAS[this.tipoDian(g)]; },
+  nitBase(g) { return String(g.nit || '').replace(/-\d$/, '').replace(/\D/g, ''); },
+  calendarioCargado() { return Object.keys(CALENDARIO_DIAN.obligaciones).length > 0; },
+
+  // Fecha de un periodo para un NIT: por el último dígito o por rango de los dos últimos ('00' es el último).
+  fechaPorNit(fechas, nit, digitos) {
+    const n = digitos === 2 ? nit.slice(-2).padStart(2, '0') : nit.slice(-1);
+    if (!n) return null;
+    if (fechas[n]) return fechas[n];
+    const v = x => (x === '00' ? 100 : Number(x));
+    for (const [k, f] of Object.entries(fechas)) {
+      const m = k.match(/^(\d+)\s*-\s*(\d+)$/);
+      if (m && v(n) >= v(m[1]) && v(n) <= v(m[2])) return f;
+    }
+    return null;
+  },
+
+  // Todas las fechas del año para el cliente: [{ ob, periodo, fecha }] ordenadas.
+  fechasDian(g, ids = this.obligaciones(g)) {
+    const nit = this.nitBase(g);
+    if (!nit) return [];
+    const out = [];
+    for (const id of ids) {
+      const ob = DIAN_OBLIGACIONES.find(o => o.id === id), cal = CALENDARIO_DIAN.obligaciones[id];
+      if (!ob || !cal) continue;
+      for (const p of cal.periodos || []) {
+        const fecha = this.fechaPorNit(p.fechas || {}, nit, cal.digitos || ob.digitos);
+        if (fecha) out.push({ ob, periodo: p.periodo, fecha });
+      }
+    }
+    return out.sort((a, b) => a.fecha.localeCompare(b.fecha));
+  },
+
+  // Próximo vencimiento (hoy o después) de cada obligación del cliente.
+  proximosDian(g, hoy = Util.hoyISO()) {
+    const prox = new Map();
+    for (const f of this.fechasDian(g)) if (f.fecha >= hoy && !prox.has(f.ob.id)) prox.set(f.ob.id, { ...f, dias: Util.diasEntre(hoy, f.fecha) });
+    return [...prox.values()].sort((a, b) => a.dias - b.dias);
+  },
+
+  estadoDian(dias) { return dias <= 0 ? 'vencido' : dias <= DIAN_DIAS_ALERTA ? 'pronto' : 'ok'; },
+  textoDias(dias) { return dias === 0 ? 'vence hoy' : dias === 1 ? 'vence mañana' : `en ${dias} días`; },
+
   // Lo más urgente del cliente, para la etiqueta de la fila (null si no hay nada que avisar).
   alerta(g) {
     const hoy = Util.hoyISO();
@@ -4116,8 +4256,13 @@ const Clientes = {
     const vencidos = est.filter(e => e.estado === 'vencido');
     if (vencidos.length > 1) return { estado: 'vencido', texto: `${vencidos.length} vencidos` };
     if (vencidos.length) return { estado: 'vencido', texto: `Vencido: ${vencidos[0].v.corto}` };
-    const pronto = est.filter(e => e.estado === 'pronto').sort((a, b) => a.dias - b.dias)[0];
-    if (pronto) return { estado: 'pronto', texto: `${pronto.v.corto} ${pronto.dias === 0 ? 'vence hoy' : `en ${pronto.dias} día${pronto.dias === 1 ? '' : 's'}`}` };
+    // Vencimientos DIAN dentro del aviso compiten con firma, resolución y documento soporte.
+    const candidatos = [
+      ...est.filter(e => e.estado === 'pronto').map(e => ({ dias: e.dias, texto: `${e.v.corto} ${e.dias === 0 ? 'vence hoy' : `en ${e.dias} día${e.dias === 1 ? '' : 's'}`}` })),
+      ...this.proximosDian(g, hoy).filter(p => p.dias <= DIAN_DIAS_ALERTA).map(p => ({ dias: p.dias, texto: `🏛 ${p.ob.corto} ${this.textoDias(p.dias)}`, dian: true })),
+    ].sort((a, b) => a.dias - b.dias || (b.dian ? 1 : 0) - (a.dian ? 1 : 0));
+    const c = candidatos[0];
+    if (c) return { estado: c.dias === 0 ? 'vencido' : 'pronto', texto: c.texto };
     return null;
   },
 
@@ -4125,7 +4270,7 @@ const Clientes = {
   estadoGeneral(g) {
     const a = this.alerta(g);
     if (a) return a.estado;
-    return CLIENTE_VENCIMIENTOS.some(v => g.vencimientos[v.id]?.fin) ? 'ok' : 'sin';
+    return CLIENTE_VENCIMIENTOS.some(v => g.vencimientos[v.id]?.fin) || this.proximosDian(g).length ? 'ok' : 'sin';
   },
 
   letra(g) { return Util.normalizar(g.nombre).charAt(0) || '#'; },
@@ -4288,6 +4433,7 @@ const Clientes = {
       return;
     }
 
+    if (this.vistaDian) { this.raiz.innerHTML = this._panelDianHtml(); return; }
     const f = this.filtro;
     const visibles = this.visibles();
     const lecheras = [...new Map(this.lista.filter(g => g.datos.lechera_nombre).map(g => [Util.normalizar(g.datos.lechera_nombre), g.datos.lechera_nombre.trim()])).entries()]
@@ -4310,6 +4456,7 @@ const Clientes = {
       <div class="barra-vista">
         <span class="muted">${this.cargada ? `${visibles.length === this.lista.length ? '' : visibles.length + ' de '}${this.lista.length} clientes · toca un nombre para ver su información` : 'Cargando clientes…'}</span>
         <span class="separador"></span>
+        <button class="btn btn-sm" data-g="dian-panel">🏛 Vencimientos DIAN</button>
         ${Permisos.importar() ? `<label class="btn btn-sm">⬆ Importar Excel<input type="file" accept=".xlsx,.xls" data-g="importar" hidden></label>` : ''}
         <button class="btn btn-sm btn-primario" data-g="nuevo">＋ Nuevo cliente</button>
       </div>
@@ -4333,7 +4480,7 @@ const Clientes = {
         ${a ? this.chip(a.estado, a.texto) : ''}
         <span class="cli-flecha" aria-hidden="true">›</span>
       </button>
-      ${abierto ? `<div class="cli-cuerpo">${this._datosHtml(g)}<section><h5>Vencimientos</h5>${CLIENTE_VENCIMIENTOS.map(v => this._vencHtml(g, v)).join('')}</section></div>` : ''}
+      ${abierto ? `<div class="cli-cuerpo">${this._datosHtml(g)}<section><h5>Vencimientos</h5>${CLIENTE_VENCIMIENTOS.map(v => this._vencHtml(g, v)).join('')}${this._dianHtml(g)}</section></div>` : ''}
     </div>`;
   },
 
@@ -4382,6 +4529,103 @@ const Clientes = {
       <button class="btn btn-sm" data-g="versiones" data-id="${Util.esc(g.id)}">🕘 Versiones (${g.historial.length})</button></div></section>`;
   },
 
+  _dianHtml(g) {
+    const id = Util.esc(g.id);
+    const activas = this.obligaciones(g);
+    const nit = this.nitBase(g);
+    const tipo = this.tipoDian(g) === 'empresa' ? 'Empresa' : 'Persona natural';
+    const abierto = this.dianAbierto === g.id;
+    const hoy = Util.hoyISO();
+    const todas = this.fechasDian(g);
+    const tarjetas = activas.map(obId => {
+      const ob = DIAN_OBLIGACIONES.find(o => o.id === obId);
+      if (!ob) return '';
+      const fechas = todas.filter(f => f.ob.id === obId);
+      const prox = fechas.find(f => f.fecha >= hoy);
+      let detalle, chip = '';
+      if (!nit) detalle = 'Sin NIT: escríbelo en los datos del cliente para calcular la fecha.';
+      else if (!CALENDARIO_DIAN.obligaciones[obId]) detalle = `Sus fechas aún no están cargadas del Calendario Tributario ${CALENDARIO_DIAN.anio}.`;
+      else if (!prox) detalle = `Sin más vencimientos en el calendario ${CALENDARIO_DIAN.anio}.`;
+      else {
+        const dias = Util.diasEntre(hoy, prox.fecha);
+        detalle = `${Util.esc(prox.periodo)} · vence ${Util.fmtFecha(prox.fecha)}`;
+        chip = this.chip(this.estadoDian(dias), this.textoDias(dias));
+      }
+      return `<div class="cli-dian-ob"><div class="cli-venc-cab">${Util.esc(ob.label)}<span class="separador"></span>${chip}</div>
+        <div class="muted mini">${detalle}</div>
+        ${fechas.length ? `<details><summary class="mini">Todas las fechas ${CALENDARIO_DIAN.anio}</summary><ul class="cli-dian-fechas">${fechas.map(f =>
+          `<li class="${f.fecha < hoy ? 'pasada' : ''}"><span>${Util.esc(f.periodo)}</span><span>${Util.fmtFecha(f.fecha)}</span></li>`).join('')}</ul></details>` : ''}</div>`;
+    }).join('');
+    return `<section class="cli-dian">
+      <div class="cli-venc-cab">🏛 Impuestos DIAN ${CALENDARIO_DIAN.anio}<span class="muted mini">· ${tipo}${nit ? ` · último dígito del NIT: <b>${Util.esc(nit.slice(-1))}</b>` : ''}</span>
+        <span class="separador"></span><button class="btn btn-sm" data-g="dian-abrir" data-id="${id}" aria-expanded="${abierto}">✎ Impuestos asociados ${abierto ? '▴' : '▾'}</button></div>
+      ${abierto ? `<div class="cli-dian-obs">${DIAN_OBLIGACIONES.map(o => `<button class="cli-dian-chip ${activas.includes(o.id) ? 'on' : ''}" data-g="dian-ob" data-id="${id}" data-ob="${o.id}" aria-pressed="${activas.includes(o.id)}">${activas.includes(o.id) ? '✓ ' : ''}${Util.esc(o.label)}</button>`).join('')}</div>
+        <p class="muted mini">${this.obligacionesPropias(g)
+          ? `Personalizado para este cliente · <button class="enlace" data-g="dian-reset" data-id="${id}">Volver a lo predeterminado de ${tipo.toLowerCase()}</button>`
+          : `Predeterminado de ${tipo.toLowerCase()}: ${DIAN_PREDETERMINADAS[this.tipoDian(g)].map(x => DIAN_OBLIGACIONES.find(o => o.id === x).label).join(' y ')}. Toca una obligación para marcarla o desmarcarla.`}</p>` : ''}
+      ${tarjetas || '<p class="muted mini">Sin impuestos asociados.</p>'}
+    </section>`;
+  },
+
+  async cambiarObligacion(g, obId) {
+    const actuales = this.obligaciones(g);
+    const nuevas = DIAN_OBLIGACIONES.map(o => o.id).filter(x => x === obId ? !actuales.includes(x) : actuales.includes(x));
+    const copia = structuredClone({ ...g, _nuevo: undefined });
+    delete copia._nuevo;
+    const pred = DIAN_PREDETERMINADAS[this.tipoDian(g)];
+    // Si queda igual que lo predeterminado, sigue lo predeterminado (por si cambia el tipo de cliente).
+    if (nuevas.length === pred.length && pred.every(x => nuevas.includes(x))) delete copia.datos.obligaciones;
+    else copia.datos.obligaciones = nuevas;
+    const ob = DIAN_OBLIGACIONES.find(o => o.id === obId);
+    await this.guardar(copia, `${ob.label}: ${nuevas.includes(obId) ? 'asociado' : 'quitado'}`);
+  },
+
+  // ── Panel de vencimientos DIAN de todos los clientes ──────────────
+  filasDian(hoy = Util.hoyISO()) {
+    const { ob, dias } = this.filtroDian;
+    const hasta = dias === 'anio' ? '9999-12-31' : Util.sumarDias(hoy, Number(dias));
+    const out = [];
+    for (const g of this.lista) {
+      for (const f of this.fechasDian(g)) {
+        if (f.fecha < hoy || f.fecha > hasta || (ob && f.ob.id !== ob)) continue;
+        out.push({ g, ...f, dias: Util.diasEntre(hoy, f.fecha) });
+      }
+    }
+    return out.sort((a, b) => a.fecha.localeCompare(b.fecha) || a.g.nombre.localeCompare(b.g.nombre, 'es'));
+  },
+
+  _panelDianHtml() {
+    const f = this.filtroDian;
+    const cab = `<div class="barra-vista"><button class="btn btn-sm" data-g="dian-volver">← Clientes</button><h3 class="cli-dian-titulo">🏛 Vencimientos DIAN ${CALENDARIO_DIAN.anio}</h3>
+      <span class="separador"></span><a class="btn btn-sm" href="${Util.esc(CALENDARIO_DIAN.fuente)}" target="_blank" rel="noopener">📄 Calendario oficial (PDF)</a></div>`;
+    if (!this.calendarioCargado()) {
+      const n = { persona: 0, empresa: 0 };
+      for (const g of this.lista) n[this.tipoDian(g)]++;
+      return cab + `<div class="vacio"><h3>Falta cargar las fechas del Calendario Tributario ${CALENDARIO_DIAN.anio}</h3>
+        <p>Los impuestos ya están asociados: ${n.persona} persona(s) natural(es) con IVA bimestral y ${n.empresa} empresa(s) con IVA bimestral y retención en la fuente (se cambian en la ficha de cada cliente).
+        Cuando se carguen las fechas del PDF de la DIAN, aquí aparecen todos los vencimientos ordenados por fecha.</p></div>`;
+    }
+    const filas = this.filasDian();
+    const grupo = d => d === 0 ? 'Hoy' : d <= 7 ? 'Próximos 7 días' : d <= 30 ? 'Próximos 30 días' : 'Más adelante';
+    let actual = '', cuerpo = '';
+    for (const x of filas) {
+      const gr = grupo(x.dias);
+      if (gr !== actual) { actual = gr; cuerpo += `<h5 class="cli-dian-grupo">${gr}</h5>`; }
+      cuerpo += `<button class="cli-dian-fila" data-g="dian-ir" data-id="${Util.esc(x.g.id)}">
+        <span class="f">${Util.fmtFecha(x.fecha)}</span><span>${Util.esc(x.ob.label)} · ${Util.esc(x.periodo)}</span>
+        <span><b>${Util.esc(x.g.nombre)}</b> <span class="muted mini">NIT ${Util.esc(x.g.nit)}</span></span>
+        ${this.chip(this.estadoDian(x.dias), this.textoDias(x.dias))}</button>`;
+    }
+    const opt = (v, l) => `<option value="${v}" ${f.dias === v ? 'selected' : ''}>${l}</option>`;
+    return cab + `<div class="barra-filtros">
+        <div class="cli-letras">${[['', 'Todas'], ...DIAN_OBLIGACIONES.filter(o => CALENDARIO_DIAN.obligaciones[o.id]).map(o => [o.id, o.label])].map(([v, l]) =>
+          `<button class="${f.ob === v ? 'on' : ''}" data-g="dian-filtro" data-ob="${v}">${Util.esc(l)}</button>`).join('')}</div>
+        <select data-gfd="dias" aria-label="Periodo">${opt('7', 'Próximos 7 días')}${opt('30', 'Próximos 30 días')}${opt('90', 'Próximos 90 días')}${opt('anio', 'Todo el calendario')}</select>
+      </div>
+      <p class="muted mini">${filas.length} vencimiento(s) · toca uno para abrir el cliente.</p>
+      <div class="cli-dian-lista">${cuerpo || '<p class="muted pad centrado">No hay vencimientos en este periodo.</p>'}</div>`;
+  },
+
   _vencHtml(g, v) {
     const val = g.vencimientos[v.id] || {};
     const editando = this.editando?.id === g.id && this.editando.que === v.id;
@@ -4428,6 +4672,14 @@ const Clientes = {
       case 'eliminar': this.eliminar(b.dataset.id); break;
       case 'versiones': this.verVersiones(b.dataset.id); break;
       case 'copiar': if (g) this.copiar(b.dataset.campo === 'nit' ? g.nit : g.datos[b.dataset.campo] || ''); break;
+      case 'dian-abrir': this.dianAbierto = this.dianAbierto === b.dataset.id ? null : b.dataset.id; this.pintar(); break;
+      case 'dian-ob': if (g) this.cambiarObligacion(g, b.dataset.ob); break;
+      case 'dian-reset': if (g) { const c = structuredClone({ ...g }); delete c.datos.obligaciones; this.guardar(c, 'Impuestos predeterminados'); } break;
+      case 'dian-panel': if (this.editando) this.cancelarEdicion(); this.vistaDian = true; this.pintar(); break;
+      case 'dian-volver': this.vistaDian = false; this.pintar(); break;
+      case 'dian-filtro': this.filtroDian.ob = b.dataset.ob; this.pintar(); break;
+      case 'dian-ir': this.vistaDian = false; this.filtro = { texto: '', lechera: '', venc: '', letra: '' }; this.abiertoId = b.dataset.id; this.pintar();
+        this.raiz.querySelector('.cli-item.abierto')?.scrollIntoView({ block: 'start' }); break;
     }
   },
 
@@ -4438,6 +4690,7 @@ const Clientes = {
   _alCambiar(e) {
     const t = e.target;
     if (t.dataset.gf) { this.filtro[t.dataset.gf] = t.value; this.pintar(); return; }
+    if (t.dataset.gfd) { this.filtroDian[t.dataset.gfd] = t.value; this.pintar(); return; }
     if (t.dataset.g === 'importar' && t.files[0]) { Clientes.importarArchivo(t.files[0]); t.value = ''; }
   },
 
