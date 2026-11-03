@@ -262,6 +262,9 @@ textarea { width: 100%; resize: vertical; }
 .nav button:hover { background: var(--bg3); color: var(--text); }
 .nav button.activo { background: var(--primario-bg); color: var(--primario-texto); }
 body.nav-ajustada .nav button { padding: 7px 9px; gap: 6px; }
+body.nav-apretada .nav button { padding: 6px 7px; font-size: 12.5px; }
+body.nav-apretada .marca { margin-right: 4px; }
+body.nav-apretada .barra-sup { gap: 8px; }
 .nav-icono { display: none; }
 .nav-badge { background: var(--acento-solido); color: #fff; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 0 7px; line-height: 18px; }
 .lateral-pie { display: none; }
@@ -4067,13 +4070,11 @@ const Clientes = {
   abiertoId: null,
   editando: null,      // { id, que: 'datos' | <id de vencimiento> }
   dianAbierto: null,   // cliente con el apartado de impuestos desplegado
-  vistaDian: false,    // panel "Vencimientos DIAN" de todos los clientes
-  filtroDian: { ob: '', dias: '30' },
 
   // ── Ciclo de vida ─────────────────────────────────────────────────
   reiniciar() {
     this.raiz?.remove();
-    Object.assign(this, { _indiceNit: null, raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '', digito: '' }, abiertoId: null, editando: null, dianAbierto: null, vistaDian: false, filtroDian: { ob: '', dias: '30' } });
+    Object.assign(this, { _indiceNit: null, raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '', digito: '' }, abiertoId: null, editando: null, dianAbierto: null });
   },
 
   montar(main) {
@@ -4126,6 +4127,15 @@ const Clientes = {
     if (this.cargada) return;
     await this.cargar();
     if (this.lista.length && App.estado.perfil && App.estado.vista !== 'clientes') App.render();
+  },
+
+  // Abre la ficha de un cliente desde otra vista (p. ej. Vencimientos).
+  abrirCliente(id) {
+    this.filtro = { texto: '', lechera: '', venc: '', letra: '', digito: '' };
+    this.abiertoId = id;
+    this.editando = null;
+    App.ir('clientes');
+    requestAnimationFrame(() => requestAnimationFrame(() => this.raiz?.querySelector('.cli-item.abierto')?.scrollIntoView({ block: 'start', behavior: 'smooth' })));
   },
 
   // ── Consultas ─────────────────────────────────────────────────────
@@ -4471,7 +4481,6 @@ const Clientes = {
       return;
     }
 
-    if (this.vistaDian) { this.raiz.innerHTML = this._panelDianHtml(); return; }
     const f = this.filtro;
     const visibles = this.visibles();
     const lecheras = [...new Map(this.lista.filter(g => g.datos.lechera_nombre).map(g => [Util.normalizar(g.datos.lechera_nombre), g.datos.lechera_nombre.trim()])).entries()]
@@ -4501,7 +4510,7 @@ const Clientes = {
       <div class="barra-vista">
         <span class="muted">${this.cargada ? `${visibles.length === this.lista.length ? '' : visibles.length + ' de '}${this.lista.length} clientes · toca un nombre para ver su información` : 'Cargando clientes…'}</span>
         <span class="separador"></span>
-        <button class="btn btn-sm" data-g="dian-panel">🏛 Vencimientos DIAN</button>
+        <button class="btn btn-sm" data-g="ir-vencimientos">📆 Ver todos los vencimientos</button>
         ${Permisos.importar() ? `<label class="btn btn-sm">⬆ Importar Excel<input type="file" accept=".xlsx,.xls" data-g="importar" hidden></label>` : ''}
         <button class="btn btn-sm btn-primario" data-g="nuevo">＋ Nuevo cliente</button>
       </div>
@@ -4625,52 +4634,6 @@ const Clientes = {
     await this.guardar(copia, `${ob.label}: ${nuevas.includes(obId) ? 'asociado' : 'quitado'}`);
   },
 
-  // ── Panel de vencimientos DIAN de todos los clientes ──────────────
-  filasDian(hoy = Util.hoyISO()) {
-    const { ob, dias } = this.filtroDian;
-    const hasta = dias === 'anio' ? '9999-12-31' : Util.sumarDias(hoy, Number(dias));
-    const out = [];
-    for (const g of this.lista) {
-      for (const f of this.fechasDian(g)) {
-        if (f.fecha < hoy || f.fecha > hasta || (ob && f.ob.id !== ob)) continue;
-        out.push({ g, ...f, dias: Util.diasEntre(hoy, f.fecha) });
-      }
-    }
-    return out.sort((a, b) => a.fecha.localeCompare(b.fecha) || a.g.nombre.localeCompare(b.g.nombre, 'es'));
-  },
-
-  _panelDianHtml() {
-    const f = this.filtroDian;
-    const cab = `<div class="barra-vista"><button class="btn btn-sm" data-g="dian-volver">← Clientes</button><h3 class="cli-dian-titulo">🏛 Vencimientos DIAN ${CALENDARIO_DIAN.anio}</h3>
-      <span class="separador"></span><a class="btn btn-sm" href="${Util.esc(CALENDARIO_DIAN.fuente)}" target="_blank" rel="noopener">📄 Calendario oficial (PDF)</a></div>`;
-    if (!this.calendarioCargado()) {
-      const n = { persona: 0, empresa: 0 };
-      for (const g of this.lista) n[this.tipoDian(g)]++;
-      return cab + `<div class="vacio"><h3>Falta cargar las fechas del Calendario Tributario ${CALENDARIO_DIAN.anio}</h3>
-        <p>Los impuestos ya están asociados: ${n.persona} persona(s) natural(es) con IVA bimestral y ${n.empresa} empresa(s) con IVA bimestral y retención en la fuente (se cambian en la ficha de cada cliente).
-        Cuando se carguen las fechas del PDF de la DIAN, aquí aparecen todos los vencimientos ordenados por fecha.</p></div>`;
-    }
-    const filas = this.filasDian();
-    const grupo = d => d === 0 ? 'Hoy' : d <= 7 ? 'Próximos 7 días' : d <= 30 ? 'Próximos 30 días' : 'Más adelante';
-    let actual = '', cuerpo = '';
-    for (const x of filas) {
-      const gr = grupo(x.dias);
-      if (gr !== actual) { actual = gr; cuerpo += `<h5 class="cli-dian-grupo">${gr}</h5>`; }
-      cuerpo += `<button class="cli-dian-fila" data-g="dian-ir" data-id="${Util.esc(x.g.id)}">
-        <span class="f">${Util.fmtFecha(x.fecha)}</span><span>${Util.esc(x.ob.label)} · ${Util.esc(x.periodo)}</span>
-        <span><b>${Util.esc(x.g.nombre)}</b> <span class="muted mini">NIT ${Util.esc(x.g.nit)}</span></span>
-        ${this.chip(this.estadoDian(x.dias), this.textoDias(x.dias))}</button>`;
-    }
-    const opt = (v, l) => `<option value="${v}" ${f.dias === v ? 'selected' : ''}>${l}</option>`;
-    return cab + `<div class="barra-filtros">
-        <div class="cli-letras">${[['', 'Todas'], ...DIAN_OBLIGACIONES.filter(o => CALENDARIO_DIAN.obligaciones[o.id]).map(o => [o.id, o.label])].map(([v, l]) =>
-          `<button class="${f.ob === v ? 'on' : ''}" data-g="dian-filtro" data-ob="${v}">${Util.esc(l)}</button>`).join('')}</div>
-        <select data-gfd="dias" aria-label="Periodo">${opt('7', 'Próximos 7 días')}${opt('30', 'Próximos 30 días')}${opt('90', 'Próximos 90 días')}${opt('anio', 'Todo el calendario')}</select>
-      </div>
-      <p class="muted mini">${filas.length} vencimiento(s) · toca uno para abrir el cliente.</p>
-      <div class="cli-dian-lista">${cuerpo || '<p class="muted pad centrado">No hay vencimientos en este periodo.</p>'}</div>`;
-  },
-
   _vencHtml(g, v) {
     const val = g.vencimientos[v.id] || {};
     const editando = this.editando?.id === g.id && this.editando.que === v.id;
@@ -4721,11 +4684,7 @@ const Clientes = {
       case 'dian-abrir': this.dianAbierto = this.dianAbierto === b.dataset.id ? null : b.dataset.id; this.pintar(); break;
       case 'dian-ob': if (g) this.cambiarObligacion(g, b.dataset.ob); break;
       case 'dian-reset': if (g) { const c = structuredClone({ ...g }); delete c.datos.obligaciones; this.guardar(c, 'Impuestos predeterminados'); } break;
-      case 'dian-panel': if (this.editando) this.cancelarEdicion(); this.vistaDian = true; this.pintar(); break;
-      case 'dian-volver': this.vistaDian = false; this.pintar(); break;
-      case 'dian-filtro': this.filtroDian.ob = b.dataset.ob; this.pintar(); break;
-      case 'dian-ir': this.vistaDian = false; this.filtro = { texto: '', lechera: '', venc: '', letra: '', digito: '' }; this.abiertoId = b.dataset.id; this.pintar();
-        this.raiz.querySelector('.cli-item.abierto')?.scrollIntoView({ block: 'start' }); break;
+      case 'ir-vencimientos': if (this.editando) this.cancelarEdicion(); App.ir('vencimientos'); break;
     }
   },
 
@@ -4736,7 +4695,6 @@ const Clientes = {
   _alCambiar(e) {
     const t = e.target;
     if (t.dataset.gf) { this.filtro[t.dataset.gf] = t.value; this.pintar(); return; }
-    if (t.dataset.gfd) { this.filtroDian[t.dataset.gfd] = t.value; this.pintar(); return; }
     if (t.dataset.g === 'importar' && t.files[0]) { Clientes.importarArchivo(t.files[0]); t.value = ''; }
   },
 
@@ -5005,6 +4963,116 @@ Vistas.clientes = {
   nodo: () => Clientes.raiz,
   render: () => '',
   montar: main => Clientes.montar(main),
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// VISTA: VENCIMIENTOS — todos los vencimientos de todos los clientes:
+// impuestos DIAN (según el NIT y los impuestos asociados de cada cliente)
+// y firma, resolución de facturación y documento soporte. No son tareas.
+// ═══════════════════════════════════════════════════════════════════
+Vistas.vencimientos = {
+  titulo: 'Vencimientos',
+  icono: '📆',
+  orden: 6.6,
+  visible: () => true,
+  filtro: { tipo: '', dias: '30', digito: '', texto: '' },
+
+  tipos() {
+    return [
+      ...DIAN_OBLIGACIONES.filter(o => CALENDARIO_DIAN.obligaciones[o.id]).map(o => ({ id: 'dian:' + o.id, label: o.label })),
+      ...CLIENTE_VENCIMIENTOS.map(v => ({ id: 'cli:' + v.id, label: v.label })),
+    ];
+  },
+
+  // [{ g, tipo, nombre, detalle, fecha, dias, dian }] ordenadas por fecha. Los DIAN que ya pasaron no se
+  // muestran (no se registra si se presentaron); firma, resolución y soporte vencidos sí.
+  filas(hoy = Util.hoyISO()) {
+    const f = this.filtro;
+    const hasta = f.dias === 'todo' ? '9999-12-31' : Util.sumarDias(hoy, Number(f.dias));
+    const q = Util.normalizar(f.texto);
+    const out = [];
+    for (const g of Clientes.lista) {
+      if (f.digito && Clientes.nitBase(g).slice(-1) !== f.digito) continue;
+      if (q && !Util.normalizar(`${g.nombre} ${g.nit}`).includes(q)) continue;
+      for (const x of Clientes.fechasDian(g)) {
+        if (x.fecha < hoy || x.fecha > hasta || (f.tipo && f.tipo !== 'dian:' + x.ob.id)) continue;
+        out.push({ g, tipo: 'dian:' + x.ob.id, nombre: '🏛 ' + x.ob.label, detalle: x.periodo, fecha: x.fecha, dias: Util.diasEntre(hoy, x.fecha), dian: true });
+      }
+      for (const v of CLIENTE_VENCIMIENTOS) {
+        const fin = g.vencimientos[v.id]?.fin;
+        if (!fin || fin > hasta || (f.tipo && f.tipo !== 'cli:' + v.id)) continue;
+        out.push({ g, tipo: 'cli:' + v.id, nombre: v.icono + ' ' + v.label, detalle: '', fecha: fin, dias: Util.diasEntre(hoy, fin), dian: false });
+      }
+    }
+    return out.sort((a, b) => a.fecha.localeCompare(b.fecha) || a.g.nombre.localeCompare(b.g.nombre, 'es'));
+  },
+
+  chip(x) {
+    if (x.dian) return Clientes.chip(Clientes.estadoDian(x.dias), Clientes.textoDias(x.dias));
+    if (x.dias < 0) return Clientes.chip('vencido', `venció hace ${-x.dias} día${x.dias === -1 ? '' : 's'}`);
+    return Clientes.chip(x.dias <= CLIENTE_DIAS_ALERTA ? 'pronto' : 'ok', Clientes.textoDias(x.dias));
+  },
+
+  grupo(d) { return d < 0 ? 'Vencidos' : d === 0 ? 'Hoy' : d <= 7 ? 'Próximos 7 días' : d <= 30 ? 'Próximos 30 días' : 'Más adelante'; },
+
+  render() {
+    if (!Clientes.cargada) { Clientes.cargarParaTareas().then(() => App.render()); return '<div class="cargando">Cargando vencimientos…</div>'; }
+    if (Clientes.error) {
+      return `<div class="vacio"><h3>${Clientes.error.faltaEsquema ? 'Falta activar Clientes en Supabase' : 'No se pudieron cargar los clientes'}</h3>
+        <p>${Clientes.error.faltaEsquema ? 'Ejecuta una vez <code>supabase/clientes.sql</code> en el SQL Editor de Supabase.' : Util.esc(Clientes.error.message || '')}</p></div>`;
+    }
+    const f = this.filtro;
+    const hoy = Util.hoyISO();
+    const filas = this.filas(hoy);
+    const cuenta = cond => filas.filter(cond).length;
+    const opt = (v, l, actual) => `<option value="${v}" ${actual === v ? 'selected' : ''}>${Util.esc(l)}</option>`;
+    let actual = '', cuerpo = '';
+    for (const x of filas) {
+      const gr = this.grupo(x.dias);
+      if (gr !== actual) { actual = gr; cuerpo += `<h5 class="cli-dian-grupo">${gr}</h5>`; }
+      cuerpo += `<button class="cli-dian-fila" data-accion="venc-abrir" data-id="${Util.esc(x.g.id)}">
+        <span class="f">${Util.fmtFecha(x.fecha)}</span><span>${Util.esc(x.nombre)}${x.detalle ? ` <span class="muted mini">· ${Util.esc(x.detalle)}</span>` : ''}</span>
+        <span><b>${Util.esc(x.g.nombre)}</b> <span class="muted mini">${x.g.nit ? 'NIT ' + Util.esc(x.g.nit) : 'Sin NIT'}</span></span>
+        ${this.chip(x)}</button>`;
+    }
+    const hayFiltro = f.tipo || f.digito || f.texto || f.dias !== '30';
+    return `
+      <div class="kpis">
+        ${Vistas.inicio.kpi('Vencidos (firma, resolución, soporte)', cuenta(x => x.dias < 0), 'rojo', '⚠')}
+        ${Vistas.inicio.kpi('Vencen hoy', cuenta(x => x.dias === 0), 'ambar', '◷')}
+        ${Vistas.inicio.kpi('Próximos 7 días', cuenta(x => x.dias > 0 && x.dias <= 7), 'azul', '▦')}
+        ${Vistas.inicio.kpi('En el periodo', filas.length, 'violeta', '📆')}
+      </div>
+      <div class="barra-filtros">
+        <input type="search" class="venc-buscar" placeholder="🔍 Cliente o NIT…" value="${Util.esc(f.texto)}" aria-label="Buscar cliente">
+        <select data-vf="dias" aria-label="Periodo">${opt('7', 'Próximos 7 días', f.dias)}${opt('30', 'Próximos 30 días', f.dias)}${opt('90', 'Próximos 90 días', f.dias)}${opt('todo', 'Todo el calendario', f.dias)}</select>
+        <select data-vf="digito" aria-label="Último dígito del NIT"><option value="">Último dígito del NIT</option>${['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map(d => opt(d, 'NIT terminado en ' + d, f.digito)).join('')}</select>
+        ${hayFiltro ? '<button class="btn btn-sm" data-accion="venc-limpiar">✕ Limpiar</button>' : ''}
+      </div>
+      <div class="cli-letras" role="group" aria-label="Tipo de vencimiento">
+        <button class="${f.tipo ? '' : 'on'}" data-accion="venc-tipo" data-tipo="">Todos</button>
+        ${this.tipos().map(t => `<button class="${f.tipo === t.id ? 'on' : ''}" data-accion="venc-tipo" data-tipo="${t.id}">${Util.esc(t.label)}</button>`).join('')}
+      </div>
+      <div class="barra-vista"><span class="muted">${filas.length} vencimiento(s) de ${Clientes.lista.length} clientes · toca uno para abrir el cliente</span><span class="separador"></span>
+        <a class="btn btn-sm" href="${Util.esc(CALENDARIO_DIAN.fuente)}" target="_blank" rel="noopener">📄 Calendario DIAN ${CALENDARIO_DIAN.anio} (PDF)</a></div>
+      <div class="cli-dian-lista">${cuerpo || '<p class="muted pad centrado">No hay vencimientos con estos filtros.</p>'}</div>
+      <p class="muted mini">Impuestos DIAN según el último dígito del NIT y los impuestos asociados en la ficha de cada cliente (persona natural: IVA bimestral; empresa: IVA bimestral y retención, si no se cambian). Las fechas DIAN que ya pasaron no se muestran.</p>`;
+  },
+
+  montar(main) {
+    main.querySelectorAll('[data-vf]').forEach(el => el.addEventListener('change', () => { this.filtro[el.dataset.vf] = el.value; App.render(); }));
+    const b = main.querySelector('.venc-buscar');
+    if (b) {
+      b.addEventListener('input', () => { this.filtro.texto = b.value; this._foco = b.selectionStart; App.render(); });
+      if (this._foco != null) { b.focus(); b.setSelectionRange(this._foco, this._foco); this._foco = null; }
+    }
+  },
+
+  acciones: {
+    'venc-tipo': el => { Vistas.vencimientos.filtro.tipo = el.dataset.tipo; App.render(); },
+    'venc-limpiar': () => { Vistas.vencimientos.filtro = { tipo: '', dias: '30', digito: '', texto: '' }; App.render(); },
+    'venc-abrir': el => Clientes.abrirCliente(el.dataset.id),
+  },
 };
 
 </script>
@@ -7039,7 +7107,7 @@ const App = {
   // Si las pestañas no caben junto a los botones de la barra, se usa el menú lateral.
   _ajustarNav() {
     const cuerpo = document.body;
-    cuerpo.classList.remove('nav-compacta', 'nav-ajustada');
+    cuerpo.classList.remove('nav-compacta', 'nav-ajustada', 'nav-apretada');
     if (innerWidth <= 1240) return;
     const nav = document.getElementById('nav'), nueva = document.querySelector('.btn-nueva');
     if (!nav?.firstElementChild || !nueva) return;
@@ -7047,7 +7115,9 @@ const App = {
     if (cabe()) return;
     cuerpo.classList.add('nav-ajustada'); // primero, pestañas más juntas
     if (cabe()) return;
-    cuerpo.classList.remove('nav-ajustada');
+    cuerpo.classList.add('nav-apretada'); // luego, aún más juntas y letra un poco menor
+    if (cabe()) return;
+    cuerpo.classList.remove('nav-ajustada', 'nav-apretada');
     const lateral = nav.closest('.lateral');
     lateral.style.transition = 'none'; // sin animación de deslizamiento al cambiar de modo
     cuerpo.classList.add('nav-compacta');
