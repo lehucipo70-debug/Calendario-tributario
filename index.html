@@ -705,6 +705,9 @@ body.nav-compacta .lateral-pie { display: block; margin-top: auto; padding: 0 6p
 .cli-letras button { border: 0; background: var(--bg3); color: var(--text2); border-radius: 8px; min-width: 28px; height: 28px; padding: 0 8px; font-size: 12px; font-weight: 600; }
 .cli-letras button:hover { color: var(--text); }
 .cli-letras button.on { background: var(--text); color: var(--bg); }
+.cli-letras-titulo { align-self: center; font-size: 12px; color: var(--text2); margin-right: 4px; }
+.cli-letras-n { margin-left: 4px; font-weight: 400; opacity: .55; font-size: 10.5px; }
+.cli-letras button.vacio:not(.on) { opacity: .45; }
 .cli-lista { display: flex; flex-direction: column; gap: 8px; }
 .cli-item { background: var(--bg2); border: 1px solid var(--borde); border-radius: 16px; overflow: hidden; }
 .cli-item.abierto { border-color: var(--vidrio-fila-borde); box-shadow: var(--sombra); }
@@ -4060,7 +4063,7 @@ const Clientes = {
   lista: [],
   cargada: false,
   error: null,
-  filtro: { texto: '', lechera: '', venc: '', letra: '' },
+  filtro: { texto: '', lechera: '', venc: '', letra: '', digito: '' },
   abiertoId: null,
   editando: null,      // { id, que: 'datos' | <id de vencimiento> }
   dianAbierto: null,   // cliente con el apartado de impuestos desplegado
@@ -4070,7 +4073,7 @@ const Clientes = {
   // ── Ciclo de vida ─────────────────────────────────────────────────
   reiniciar() {
     this.raiz?.remove();
-    Object.assign(this, { _indiceNit: null, raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '' }, abiertoId: null, editando: null, dianAbierto: null, vistaDian: false, filtroDian: { ob: '', dias: '30' } });
+    Object.assign(this, { _indiceNit: null, raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '', digito: '' }, abiertoId: null, editando: null, dianAbierto: null, vistaDian: false, filtroDian: { ob: '', dias: '30' } });
   },
 
   montar(main) {
@@ -4315,6 +4318,7 @@ const Clientes = {
     const textoBusqueda = g => Util.normalizar([g.nombre, g.nit, ...this.alias(g), ...CLIENTE_CAMPOS.filter(c => c.tipo !== 'clave').map(c => g.datos[c.id] || '')].join(' '));
     return this.lista
       .filter(g => !f.letra || this.letra(g) === f.letra)
+      .filter(g => !f.digito || this.nitBase(g).slice(-1) === f.digito)
       .filter(g => !f.lechera || Util.normalizar(g.datos.lechera_nombre) === f.lechera)
       .filter(g => !f.venc || this.estadoGeneral(g) === f.venc)
       .filter(g => !q || textoBusqueda(g).includes(q))
@@ -4404,7 +4408,7 @@ const Clientes = {
   nuevo() {
     const g = this.normalizar({ id: Util.uid(), nombre: '', nit: '', _nuevo: true });
     this.lista.push(g);
-    Object.assign(this.filtro, { texto: '', lechera: '', venc: '', letra: '' });
+    Object.assign(this.filtro, { texto: '', lechera: '', venc: '', letra: '', digito: '' });
     this.abiertoId = g.id;
     this.editando = { id: g.id, que: 'datos' };
     this.pintar();
@@ -4473,6 +4477,8 @@ const Clientes = {
     const lecheras = [...new Map(this.lista.filter(g => g.datos.lechera_nombre).map(g => [Util.normalizar(g.datos.lechera_nombre), g.datos.lechera_nombre.trim()])).entries()]
       .sort((a, b) => a[1].localeCompare(b[1], 'es'));
     const letras = [...new Set(this.lista.map(g => this.letra(g)))].sort();
+    const porDigito = {};
+    for (const g of this.lista) { const d = this.nitBase(g).slice(-1); if (d) porDigito[d] = (porDigito[d] || 0) + 1; }
     const opt = (v, l, actual) => `<option value="${Util.esc(v)}" ${actual === v ? 'selected' : ''}>${Util.esc(l)}</option>`;
 
     this.raiz.innerHTML = `
@@ -4481,11 +4487,16 @@ const Clientes = {
         <select data-gf="lechera" aria-label="Empresa lechera"><option value="">Empresa lechera</option>${lecheras.map(([v, l]) => opt(v, l, f.lechera)).join('')}</select>
         <select data-gf="venc" aria-label="Vencimientos"><option value="">Vencimientos</option>
           ${opt('vencido', 'Con algo vencido', f.venc)}${opt('pronto', `Vence en ${CLIENTE_DIAS_ALERTA} días`, f.venc)}${opt('ok', 'Todo al día', f.venc)}${opt('sin', 'Sin fechas', f.venc)}</select>
-        ${f.texto || f.lechera || f.venc || f.letra ? '<button class="btn btn-sm" data-g="limpiar">✕ Limpiar</button>' : ''}
+        ${f.texto || f.lechera || f.venc || f.letra || f.digito ? '<button class="btn btn-sm" data-g="limpiar">✕ Limpiar</button>' : ''}
       </div>
       <div class="cli-letras" role="group" aria-label="Inicial">
         <button class="${f.letra ? '' : 'on'}" data-g="letra" data-l="">Todos</button>
         ${letras.map(l => `<button class="${f.letra === l ? 'on' : ''}" data-g="letra" data-l="${Util.esc(l)}">${Util.esc(l)}</button>`).join('')}
+      </div>
+      <div class="cli-letras" role="group" aria-label="Último dígito del NIT">
+        <span class="cli-letras-titulo">Último dígito del NIT</span>
+        <button class="${f.digito ? '' : 'on'}" data-g="digito" data-d="">Todos</button>
+        ${['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map(d => `<button class="${f.digito === d ? 'on' : ''} ${porDigito[d] ? '' : 'vacio'}" data-g="digito" data-d="${d}" title="${porDigito[d] || 0} cliente(s) con NIT terminado en ${d}">${d}<span class="cli-letras-n">(${porDigito[d] || 0})</span></button>`).join('')}
       </div>
       <div class="barra-vista">
         <span class="muted">${this.cargada ? `${visibles.length === this.lista.length ? '' : visibles.length + ' de '}${this.lista.length} clientes · toca un nombre para ver su información` : 'Cargando clientes…'}</span>
@@ -4693,8 +4704,9 @@ const Clientes = {
     const g = this.cliente(b.dataset.id);
     switch (b.dataset.g) {
       case 'reintentar': this.cargada = false; this.error = null; this.pintar(); this.cargar(); break;
-      case 'limpiar': Object.assign(this.filtro, { texto: '', lechera: '', venc: '', letra: '' }); this.pintar(); break;
+      case 'limpiar': Object.assign(this.filtro, { texto: '', lechera: '', venc: '', letra: '', digito: '' }); this.pintar(); break;
       case 'letra': this.filtro.letra = b.dataset.l; this.pintar(); break;
+      case 'digito': this.filtro.digito = b.dataset.d; this.pintar(); break;
       case 'nuevo': if (this.editando) this.cancelarEdicion(); this.nuevo(); break;
       case 'abrir':
         if (this.editando) this.cancelarEdicion();
@@ -4712,7 +4724,7 @@ const Clientes = {
       case 'dian-panel': if (this.editando) this.cancelarEdicion(); this.vistaDian = true; this.pintar(); break;
       case 'dian-volver': this.vistaDian = false; this.pintar(); break;
       case 'dian-filtro': this.filtroDian.ob = b.dataset.ob; this.pintar(); break;
-      case 'dian-ir': this.vistaDian = false; this.filtro = { texto: '', lechera: '', venc: '', letra: '' }; this.abiertoId = b.dataset.id; this.pintar();
+      case 'dian-ir': this.vistaDian = false; this.filtro = { texto: '', lechera: '', venc: '', letra: '', digito: '' }; this.abiertoId = b.dataset.id; this.pintar();
         this.raiz.querySelector('.cli-item.abierto')?.scrollIntoView({ block: 'start' }); break;
     }
   },
