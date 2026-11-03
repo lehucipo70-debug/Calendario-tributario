@@ -3875,8 +3875,11 @@ const Clientes = {
   // Las tareas guardan el nombre de la empresa; el NIT sale del cliente con ese nombre
   // (sin importar tildes, mayúsculas, espacios ni el orden de las palabras) o con ese
   // nombre en datos.alias (nombres alternos que agrega "Importar Excel" al vincular NIT).
+  // También ignora la sociedad: "HATO SAMPUES", "Hato Sampués SAS" y "HATO SAMPUES S.A.S." son el mismo.
   claveNombre(s) {
-    return Util.normalizar(s).replace(/[^A-Z0-9]+/g, ' ').trim().split(' ').filter(Boolean).sort().join(' ');
+    return Util.normalizar(s).replace(/\./g, '').replace(/[^A-Z0-9]+/g, ' ')
+      .replace(/\b(S A S|SAS|S A|SA|LTDA|LIMITADA|S EN C|SCA|EU|Y CIA|CIA)\b/g, ' ')
+      .trim().split(/\s+/).filter(Boolean).sort().join(' ');
   },
 
   _indiceNit: null,     // clave del nombre → NIT; se rehace en cada pintar() (después de cada cambio)
@@ -3899,6 +3902,71 @@ const Clientes = {
 
   nitDeEmpresa(nombre) {
     return nombre ? this.indiceNit().get(this.claveNombre(nombre)) || '' : '';
+  },
+
+  clientePorNit(nit) { return nit ? this.lista.find(g => g.nit === nit) : null; },
+
+  // Asocia a mano el NIT a una empresa (desde la ventana de la tarea):
+  //   - si hay un cliente con ese nombre, se le pone o cambia el NIT (pregunta si ya tenía otro);
+  //   - si no, y hay un cliente con ese NIT, el nombre queda como "otro nombre" de ese cliente;
+  //   - si no hay ninguno, se crea el cliente con nombre y NIT.
+  // Devuelve false si se canceló o falló.
+  async vincularNit(nombre, nit) {
+    if (!this.cargada) await this.cargar();
+    if (this.error) { UI.toast(this.error.faltaEsquema ? 'Para guardar el NIT falta activar Clientes en Supabase (supabase/clientes.sql).' : this.error.message, { tipo: 'error' }); return false; }
+    const k = this.claveNombre(nombre);
+    if (!k) return false;
+    const guardar = async g => {
+      const fila = this.normalizar(await Datos.guardarCliente({ id: g.id, nombre: g.nombre, nit: g.nit, datos: g.datos, vencimientos: g.vencimientos }));
+      const i = this.lista.findIndex(x => x.id === fila.id);
+      if (i >= 0) this.lista[i] = fila; else this.lista.push(fila);
+    };
+    try {
+      const propio = this.lista.find(g => this.claveNombre(g.nombre) === k);
+      if (propio) {
+        if (propio.nit === nit) return true;
+        if (propio.nit && !confirm(`El cliente "${propio.nombre}" tiene el NIT ${propio.nit}.\n\n¿Cambiarlo por ${nit}? Cambia en todas sus tareas.`)) return false;
+        await guardar({ ...structuredClone(propio), nit });
+      } else {
+        // Si el nombre estaba como "otro nombre" de un cliente con otro NIT, se le quita.
+        for (const g of this.lista.filter(g => g.nit !== nit && this.alias(g).some(a => this.claveNombre(a) === k))) {
+          const c = structuredClone(g);
+          c.datos.alias = this.alias(g).filter(a => this.claveNombre(a) !== k);
+          if (!c.datos.alias.length) delete c.datos.alias;
+          await guardar(c);
+        }
+        const conNit = this.clientePorNit(nit);
+        if (conNit) {
+          if (!this.alias(conNit).some(a => this.claveNombre(a) === k)) {
+            const c = structuredClone(conNit);
+            c.datos.alias = [...this.alias(conNit), nombre.trim()];
+            await guardar(c);
+          }
+        } else {
+          await guardar({ id: this.lista.some(g => g.id === 'c-nit-' + nit) ? Util.uid() : 'c-nit-' + nit, nombre: nombre.trim(), nit,
+            datos: /^[89]\d{8}$/.test(nit) ? {} : { cedula: nit }, vencimientos: {} });
+        }
+      }
+      this.pintar();
+      return true;
+    } catch (e) {
+      console.error(e);
+      this.pintar();
+      UI.toast('No se pudo guardar el NIT: ' + e.message, { tipo: 'error' });
+      return false;
+    }
+  },
+
+  // Relee el directorio en segundo plano (cambios de otras personas). No toca la vista Clientes abierta.
+  async refrescar() {
+    if (!this.cargada || this.error || this.editando || App.estado.vista === 'clientes') return false;
+    try {
+      const lista = (await Datos.clientes()).map(g => this.normalizar(g));
+      if (JSON.stringify(lista) === JSON.stringify(this.lista)) return false;
+      this.lista = lista;
+      this.pintar();
+      return true;
+    } catch { return false; }
   },
 
   // Empresa: NIT de 9 dígitos que empieza por 8 o 9 (el mismo criterio del importador).
@@ -3972,6 +4040,7 @@ const Clientes = {
     const agregar = (label, valor) => out.push(conValor ? { label, valor: valor || '(vacío)' } : label);
     if (!igual(a.nombre, b.nombre)) agregar('Nombre', a.nombre);
     if (!igual(a.nit, b.nit)) agregar('NIT', a.nit);
+    if (!igual(this.alias(a).join('; '), this.alias(b).join('; '))) agregar('Otros nombres', this.alias(a).join('; '));
     for (const c of CLIENTE_CAMPOS) {
       if (!igual(a.datos?.[c.id], b.datos?.[c.id])) agregar(c.label, a.datos?.[c.id]);
     }
@@ -4158,6 +4227,7 @@ const Clientes = {
       const input = (name, label, valor, tipo = 'text') => `<label>${Util.esc(label)}<input name="${name}" type="${tipo}" value="${Util.esc(valor || '')}" ${name === 'nombre' ? 'required' : ''}></label>`;
       return `<form class="cli-form" data-g="form-datos" data-id="${Util.esc(g.id)}"><h5>${g._nuevo ? 'Nuevo cliente' : 'Editar datos'}</h5>
         ${input('nombre', 'Nombre o razón social', g.nombre)}${input('d_cedula', 'Cédula (empresa: la del representante legal)', g.datos.cedula)}${input('nit', 'NIT', g.nit)}
+        ${input('alias', 'Otros nombres en las tareas (separados por ;)', this.alias(g).join('; '))}
         ${CLIENTE_CAMPOS.filter(c => !c.fija).map(c => input('d_' + c.id, c.label, g.datos[c.id], c.tipo === 'correo' ? 'email' : 'text')).join('')}
         <div class="cli-acciones"><button class="btn btn-sm btn-primario" type="submit">Guardar</button><button class="btn btn-sm" type="button" data-g="cancelar">Cancelar</button>
           ${!g._nuevo && Permisos.esAdmin() ? `<span class="separador"></span><button class="btn btn-sm btn-peligro" type="button" data-g="eliminar" data-id="${Util.esc(g.id)}">Eliminar</button>` : ''}</div>
@@ -4174,7 +4244,8 @@ const Clientes = {
       const copiable = (campo, label, v) => v ? Util.esc(v) + ` <button class="btn-icono btn-sm" data-g="copiar" data-id="${Util.esc(g.id)}" data-campo="${campo}" title="Copiar" aria-label="Copiar ${label}">📋</button>` : '<span class="muted">—</span>';
       const fijos = s.id !== 'datos' ? '' : fila('Nombre', Util.esc(g.nombre))
         + fila(this.esEmpresa(g) ? 'Cédula rep. legal' : 'Cédula', copiable('cedula', 'cédula', g.datos.cedula))
-        + fila('NIT', copiable('nit', 'NIT', g.nit));
+        + fila('NIT', copiable('nit', 'NIT', g.nit))
+        + (this.alias(g).length ? fila('Otros nombres', Util.esc(this.alias(g).join(' · '))) : '');
       return `<h5>${Util.esc(s.titulo)}</h5>${fijos}${filas}`;
     }).join('');
     return `<section class="cli-datos">${secciones}<div class="cli-acciones"><button class="btn btn-sm" data-g="editar" data-id="${Util.esc(g.id)}" data-que="datos">✎ Editar datos</button>
@@ -4251,6 +4322,8 @@ const Clientes = {
     if (form.dataset.g === 'form-datos') {
       copia.nombre = String(fd.get('nombre') || '').trim();
       copia.nit = String(fd.get('nit') || '').trim();
+      const alias = [...new Set(String(fd.get('alias') || '').split(';').map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean))];
+      if (alias.length) copia.datos.alias = alias; else delete copia.datos.alias;
       if (!copia.nombre) { UI.toast('Escribe el nombre.', { tipo: 'error' }); return; }
       for (const c of CLIENTE_CAMPOS) copia.datos[c.id] = String(fd.get('d_' + c.id) || '').trim();
       if (g._nuevo) this.guardar(copia, 'Cliente creado');
@@ -5236,10 +5309,13 @@ const TareaModal = {
                 <datalist id="lista-categorias">${App.categorias().map(c => `<option value="${Util.esc(c)}">`).join('')}</datalist></label>
               <label>Fecha de inicio<input type="date" name="fecha_inicio" value="${t.fecha_inicio || ''}" ${dis}></label>
               <label>Fecha límite<input type="date" name="fecha_vencimiento" value="${t.fecha_vencimiento || ''}" ${dis}></label>
-              <label class="campo-ancho">Empresa / cliente
+              <label>Empresa / cliente
                 <input name="empresa" list="lista-empresas" value="${Util.esc(t.empresa || '')}" ${dis} maxlength="200" placeholder="Opcional">
                 <datalist id="lista-empresas">${[...new Set([...App.estado.tareas.map(x => x.empresa), ...Clientes.lista.map(g => g.nombre)].filter(Boolean))].sort().slice(0, 500).map(e => `<option value="${Util.esc(e)}">`).join('')}</datalist>
-                ${App.nitDe(t) ? `<small class="nit">NIT ${Util.esc(App.nitDe(t))}${Clientes.nitDeEmpresa(t.empresa) ? '' : ' (tomado de la descripción)'}</small>` : t.empresa ? '<small class="muted mini">Sin NIT: vincúlalo en Clientes</small>' : ''}</label>
+              </label>
+              <label>NIT
+                <input name="nit" value="${Util.esc(App.nitDe(t))}" ${dis} maxlength="20" inputmode="numeric" placeholder="Sin NIT" autocomplete="off">
+                <small class="muted mini" id="nit-ayuda">${App.nitDe(t) && !Clientes.nitDeEmpresa(t.empresa) ? 'Tomado de la descripción. ' : ''}Queda en el cliente: aplica a todas las tareas de esta empresa.</small></label>
             </div>
             <label class="campo-ancho">Descripción
               <textarea name="descripcion" rows="3" ${dis} placeholder="Detalles, instrucciones, enlaces…">${Util.esc(t.descripcion || '')}</textarea></label>
@@ -5276,6 +5352,18 @@ const TareaModal = {
     const form = document.getElementById('form-tarea');
     form.addEventListener('submit', e => { e.preventDefault(); this.guardar(); });
     form.progreso?.addEventListener('input', e => { document.getElementById('progreso-valor').textContent = e.target.value + '%'; });
+    // Empresa ↔ NIT: al elegir la empresa se muestra su NIT; al escribir un NIT conocido sin empresa, se pone el cliente.
+    let nitEscrito = false;
+    this._nitTocado = false;
+    form.nit?.addEventListener('input', () => {
+      this._nitTocado = true;
+      nitEscrito = !!form.nit.value.trim();
+      const g = Clientes.clientePorNit(TareaModal._limpiarNit(form.nit.value));
+      if (g && !form.empresa.value.trim()) form.empresa.value = g.nombre;
+    });
+    form.empresa?.addEventListener('input', () => {
+      if (!nitEscrito) form.nit.value = Clientes.nitDeEmpresa(form.empresa.value);
+    });
     document.getElementById('check-input')?.addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); this.acciones['check-agregar'](); }
     });
@@ -5318,6 +5406,8 @@ const TareaModal = {
     }
   },
 
+  _limpiarNit(v) { return String(v || '').replace(/[\s.,]/g, '').trim(); },
+
   _leerFormulario() {
     const f = document.getElementById('form-tarea');
     const v = n => (f[n]?.value ?? '').trim();
@@ -5343,8 +5433,22 @@ const TareaModal = {
     if (datos.fecha_inicio && datos.fecha_vencimiento && datos.fecha_inicio > datos.fecha_vencimiento) {
       UI.toast('La fecha de inicio no puede ser posterior a la fecha límite.', { tipo: 'error' }); return;
     }
+    // NIT: se guarda en el directorio de Clientes, vinculado al nombre de la empresa.
+    const nit = this._limpiarNit(document.querySelector('#form-tarea [name=nit]')?.value);
+    if (nit && !/^\d{5,15}(-\d)?$/.test(nit)) { UI.toast('El NIT debe tener solo números (puede llevar el dígito de verificación: 900123456-7).', { tipo: 'error' }); return; }
+    const nitSinDv = nit.replace(/-\d$/, '');
+    if (nitSinDv && !datos.empresa && this._nitTocado) {
+      const g = Clientes.clientePorNit(nitSinDv);
+      if (!g) { UI.toast('Escribe la empresa para guardar el NIT.', { tipo: 'error' }); document.querySelector('#form-tarea [name=empresa]').focus(); return; }
+      datos.empresa = g.nombre;
+    }
     const btn = document.getElementById('btn-guardar');
     btn.disabled = true;
+    // Solo si la persona escribió el NIT (el que se muestra por defecto ya viene del directorio o de la descripción).
+    if (this._nitTocado && nitSinDv && nitSinDv !== Clientes.nitDeEmpresa(datos.empresa)) {
+      if (!(await Clientes.vincularNit(datos.empresa, nitSinDv))) { btn.disabled = false; return; }
+      App.render();
+    }
     try {
       if (!this.id) {
         await App.crear(datos);
@@ -6387,6 +6491,7 @@ const App = {
         if (JSON.stringify(colabs) !== JSON.stringify(this.estado.colaboradores)) { this.estado.colaboradores = colabs; cambio = true; }
       }
       if (this.estado.errorCarga) { this.estado.errorCarga = null; cambio = true; }
+      if (await Clientes.refrescar()) cambio = true;
       if (cambio || this._hoyPintado !== Util.hoyISO()) this.render();
     } catch (e) {
       console.warn('[refresco]', e.message);

@@ -101,7 +101,11 @@ La sección **Clientes** es el directorio de clientes: una lista de nombres y NI
 El tablero, la lista (columna **NIT**, ordenable), el calendario y la ventana de la tarea muestran el NIT de la empresa de cada tarea. El buscador también encuentra tareas por NIT, y **Exportar a Excel** trae la columna NIT.
 
 - El NIT sale del directorio de Clientes: la tarea se vincula con el cliente que tiene **el mismo nombre que la columna Empresa** (no importan tildes, mayúsculas ni el orden de las palabras). Si se corrige el NIT en la ficha del cliente, cambia en todas sus tareas.
+- El nombre se compara sin tildes, mayúsculas, puntos ni el orden de las palabras, y sin la sociedad: "HATO SAMPUES", "Hato Sampués SAS" y "HATO SAMPUES S.A.S." son el mismo cliente.
+- **Asociar a mano desde la tarea**: en la ventana de la tarea, el campo **NIT** (junto a Empresa) muestra el NIT de la empresa y se puede escribir o corregir. Al guardar, el NIT queda en el cliente y aplica a todas las tareas de esa empresa: si el cliente existe se le pone (si ya tenía otro, pregunta antes de cambiarlo); si no existe pero el NIT ya es de otro cliente, el nombre de la empresa queda en sus **Otros nombres**; si no hay ninguno, se crea el cliente. Si escribes un NIT conocido con la empresa vacía, se pone el nombre del cliente.
+- **Otros nombres** (en la ficha del cliente, **✎ Editar datos**): nombres con que aparece la empresa en las tareas, separados por `;`. Sirve cuando la tarea dice, por ejemplo, "Hato Sampués" y el cliente se llama "Agropecuaria Hato Sampués".
 - Si la empresa no está en el directorio, se usa el NIT escrito en la descripción de la tarea (`NIT 900123456 · …`), si lo hay.
+- Los cambios de NIT de otras personas se ven en la siguiente resincronización (o al recargar).
 - **Vincular los NIT desde Excel** (administradores): en **Clientes → Importar Excel** sube un archivo con las columnas `EMPRESA` y `NIT` (por ejemplo, la lista de tareas exportada con la columna NIT). Antes de guardar muestra un resumen:
   - las empresas que no están en el directorio se crean como clientes con su nombre y NIT;
   - los clientes que estaban sin NIT lo reciben;
