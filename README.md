@@ -145,6 +145,21 @@ En la ficha de cada cliente, dentro de **Vencimientos**, está el apartado **�
 - **🏛 Vencimientos DIAN** (en la barra de Clientes): todos los vencimientos de todos los clientes ordenados por fecha (hoy, próximos 7 días, próximos 30 días), con filtro por obligación y enlace al PDF oficial.
 - Las fechas están en `CALENDARIO_DIAN` en `index.html`, copiadas del [Calendario Tributario 2026 de la DIAN](https://www.dian.gov.co/Calendarios/Calendario_Tributario_2026.pdf): IVA bimestral, IVA cuatrimestral, retención en la fuente, renta de personas jurídicas (2 cuotas), de personas naturales (por los dos últimos dígitos) y Régimen Simple (anticipos bimestrales, declaración anual consolidada y consolidada de IVA). La exógena no está en ese PDF: sus fechas salen de otra resolución de la DIAN y aún no están cargadas. Cada año se reemplaza con el calendario nuevo.
 
+### Tabla de vencimientos en Supabase
+
+[`supabase/vencimientos.sql`](supabase/vencimientos.sql) (ejecutar una vez en el **SQL Editor**, después de `clientes.sql`) crea:
+
+- **`calendario_dian`**: las fechas del Calendario Tributario (obligación, periodo, dígito del NIT y fecha). La página toma el calendario de aquí; si la tabla no existe, usa el que trae `index.html`.
+- **`vencimientos`**: los vencimientos de cada cliente (cliente, NIT, obligación, periodo y fecha). **Se mantiene sola**:
+  - al crear un cliente (a mano, al importar o al vincular NIT) se generan sus vencimientos;
+  - al cambiarle el NIT o los impuestos asociados (en la ficha), se recalculan;
+  - al eliminar el cliente, se borran;
+  - al cambiar el calendario, se recalculan los de todos.
+
+Al ejecutarlo se generan los vencimientos de los clientes que ya existen. Todos los usuarios los pueden leer; solo los triggers los escriben.
+
+**Año nuevo**: insertar en `calendario_dian` las filas del año nuevo (mismo formato); los vencimientos se recalculan solos y la página muestra el año más reciente.
+
 ### Agregar un dato nuevo a la ficha
 
 En `index.html`, la lista `CLIENTE_CAMPOS` define los datos de la ficha y `CLIENTE_VENCIMIENTOS` los vencimientos. Para agregar uno basta con sumar una línea, por ejemplo:
