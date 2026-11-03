@@ -402,6 +402,8 @@ body.nav-compacta .lateral-pie { display: block; margin-top: auto; padding: 0 6p
 .tarjeta-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-right: 28px; }
 .tarjeta-titulo { font-family: Inter, sans-serif; font-size: 13.5px; font-weight: 600; margin: 7px 0 3px; line-height: 1.35; word-break: break-word; }
 .tarjeta-empresa { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nit { font-size: 11.5px; color: var(--text2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tarjeta-empresa .nit { margin-left: 4px; }
 .tarjeta-pie { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 12px; }
 .pie-der { display: inline-flex; align-items: center; gap: 8px; }
 .fecha { color: var(--text2); white-space: nowrap; }
@@ -526,6 +528,7 @@ body.nav-compacta .lateral-pie { display: block; margin-top: auto; padding: 0 6p
 .ev-punto { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1.5px var(--bg2); }
 .ev-prio { font-size: 9px; }
 .ev-texto { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev-nit { margin-left: auto; flex-shrink: 0; font-size: 10px; color: var(--text2); font-variant-numeric: tabular-nums; }
 .ev-vencida { background: var(--rojo-suave); color: var(--rojo); }
 .ev-completada { opacity: .6; }
 .ev-completada .ev-texto { text-decoration: line-through; }
@@ -906,7 +909,7 @@ input[type="range"] { accent-color: var(--acento); padding: 0; border: none; box
   .kpis-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .campos { grid-template-columns: 1fr; }
   .dia { min-height: 64px; padding: 3px; }
-  .ev-texto, .ev-prio { display: none; }
+  .ev-texto, .ev-prio, .ev-nit { display: none; }
   .ev { justify-content: center; padding: 3px; }
   .barra-fila { grid-template-columns: 90px minmax(0, 1fr) 28px; }
   .anillo { display: none; }
@@ -2426,6 +2429,12 @@ const Avisos = {
 const Vistas = {};
 
 const UI = {
+  // NIT de la empresa de la tarea (ver App.nitDe), para tarjetas y listas.
+  nit(t) {
+    const nit = App.nitDe(t);
+    return nit ? `<span class="nit">· NIT ${Util.esc(nit)}</span>` : '';
+  },
+
   // ── Colaboradores ──────────────────────────────────────────────────
   colorColaborador(id) {
     const idx = App.estado.colaboradores.findIndex(c => c.id === id);
@@ -2514,7 +2523,7 @@ const UI = {
         ${puede ? `<button class="check ${hecha ? 'on' : ''}" data-accion="completar" data-id="${t.id}" title="${hecha ? 'Reabrir tarea' : 'Marcar como completada'}" aria-label="${hecha ? 'Reabrir tarea' : 'Completar tarea'}">✓</button>` : ''}
       </div>
       <h4 class="tarjeta-titulo">${Util.esc(t.titulo)}</h4>
-      ${t.empresa ? `<div class="tarjeta-empresa">🏢 ${Util.esc(t.empresa)}</div>` : ''}
+      ${t.empresa || App.nitDe(t) ? `<div class="tarjeta-empresa">🏢 ${Util.esc(t.empresa || '')}${UI.nit(t)}</div>` : ''}
       ${p.pct > 0 && !hecha ? `<div class="mini-barra"><span style="width:${p.pct}%"></span></div>` : ''}
       <div class="tarjeta-pie">
         ${UI.fecha(t)}
@@ -2542,7 +2551,7 @@ const UI = {
         <button class="${f.alcance === 'mias' ? 'on' : ''}" data-accion="alcance" data-valor="mias">Mis tareas</button>
         <button class="${f.alcance === 'equipo' ? 'on' : ''}" data-accion="alcance" data-valor="equipo">Equipo</button>
       </div>` : ''}
-      <input type="search" data-filtro="texto" placeholder="🔍 Buscar tarea o empresa…" value="${Util.esc(f.texto)}" aria-label="Buscar">
+      <input type="search" data-filtro="texto" placeholder="🔍 Buscar tarea, empresa o NIT…" value="${Util.esc(f.texto)}" aria-label="Buscar">
       ${f.alcance === 'equipo' ? sel('colaborador', 'Colaborador', colabs) : ''}
       ${sel('estado', 'Estado', [...ESTADOS.map(e => [e.id, e.label]), ['vencida', 'Vencida']])}
       ${sel('prioridad', 'Prioridad', PRIORIDADES.map(p => [p.id, p.label]))}
@@ -2823,7 +2832,7 @@ Vistas.lista = {
   visible: () => true,
 
   COLUMNAS: [
-    ['titulo', 'Tarea'], ['asignado', 'Colaborador'], ['empresa', 'Empresa'], ['prioridad', 'Prioridad'],
+    ['titulo', 'Tarea'], ['asignado', 'Colaborador'], ['empresa', 'Empresa'], ['nit', 'NIT'], ['prioridad', 'Prioridad'],
     ['estado', 'Estado'], ['fecha_vencimiento', 'Vence'], ['tiempo', 'Tiempo'], ['progreso', 'Progreso'],
   ],
 
@@ -2838,6 +2847,7 @@ Vistas.lista = {
         case 'estado': return pesoEstado(t.estado);
         case 'progreso': return UI.progreso(t).pct;
         case 'tiempo': return Metricas.tiempoEjecucion(t) ?? -1;
+        case 'nit': return App.nitDe(t) || '~';
         case 'fecha_vencimiento': return t.fecha_vencimiento || '9999-99-99';
         default: return String(t[orden] || '~').toLowerCase();
       }
@@ -2869,6 +2879,7 @@ Vistas.lista = {
         </div></td>
         <td><span class="celda-colab">${UI.avatar(t, 22)} ${Util.esc(c?.nombre || 'Sin asignar')}</span></td>
         <td class="muted">${Util.esc(t.empresa || '—')}</td>
+        <td class="nit">${Util.esc(App.nitDe(t) || '—')}</td>
         <td>${UI.prioridad(t.prioridad)}</td>
         <td>${puede
           ? `<select class="sel-estado est-${ef}" data-cambio="estado" data-id="${t.id}" aria-label="Estado">
@@ -2946,11 +2957,14 @@ Vistas.calendario = {
     const color = c?.id ? UI.colorColaborador(c.id) : 'var(--text3)';
     const puede = Permisos.editarTarea(t);
     const prio = PRIORIDADES.find(p => p.id === t.prioridad);
+    const nit = App.nitDe(t);
+    const quien = [t.empresa, nit && 'NIT ' + nit].filter(Boolean).join(' · ');
     return `<button class="ev ev-${ef}" data-accion="abrir-tarea" data-id="${t.id}" ${puede ? 'draggable="true"' : ''} data-arrastrar="${t.id}"
-        title="${Util.esc(t.titulo)} · ${Util.esc(c?.nombre || 'Sin asignar')} · ${prio?.label}">
+        title="${Util.esc(t.titulo)}${quien ? ' · ' + Util.esc(quien) : ''} · ${Util.esc(c?.nombre || 'Sin asignar')} · ${prio?.label}">
       <span class="ev-punto" style="background:${color}"></span>
       ${t.prioridad === 'urgente' || t.prioridad === 'alta' ? `<span class="ev-prio" aria-hidden="true">${prio.icon}</span>` : ''}
       <span class="ev-texto">${Util.esc(t.titulo)}</span>
+      ${nit ? `<span class="ev-nit">${Util.esc(nit)}</span>` : ''}
     </button>`;
   },
 
@@ -3821,7 +3835,7 @@ const Clientes = {
   // ── Ciclo de vida ─────────────────────────────────────────────────
   reiniciar() {
     this.raiz?.remove();
-    Object.assign(this, { raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '' }, abiertoId: null, editando: null });
+    Object.assign(this, { _indiceNit: null, raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '' }, abiertoId: null, editando: null });
   },
 
   montar(main) {
@@ -3846,8 +3860,46 @@ const Clientes = {
     return { ...g, nit: g.nit || '', nombre: g.nombre || '', datos: g.datos || {}, vencimientos: g.vencimientos || {}, historial: Array.isArray(g.historial) ? g.historial : [] };
   },
 
+  // Carga el directorio al entrar, para mostrar el NIT en el tablero, la lista y el calendario.
+  // Si la tabla aún no existe, las tareas se ven igual (sin NIT del directorio).
+  async cargarParaTareas() {
+    if (this.cargada) return;
+    await this.cargar();
+    if (this.lista.length && App.estado.perfil && App.estado.vista !== 'clientes') App.render();
+  },
+
   // ── Consultas ─────────────────────────────────────────────────────
   cliente(id) { return this.lista.find(g => g.id === id); },
+
+  // ── NIT de las tareas ─────────────────────────────────────────────
+  // Las tareas guardan el nombre de la empresa; el NIT sale del cliente con ese nombre
+  // (sin importar tildes, mayúsculas, espacios ni el orden de las palabras) o con ese
+  // nombre en datos.alias (nombres alternos que agrega "Importar Excel" al vincular NIT).
+  claveNombre(s) {
+    return Util.normalizar(s).replace(/[^A-Z0-9]+/g, ' ').trim().split(' ').filter(Boolean).sort().join(' ');
+  },
+
+  _indiceNit: null,     // clave del nombre → NIT; se rehace en cada pintar() (después de cada cambio)
+  indiceNit() {
+    if (!this._indiceNit) {
+      const m = new Map();
+      for (const g of this.lista) {
+        if (!g.nit) continue;
+        for (const n of [g.nombre, ...this.alias(g)]) {
+          const k = this.claveNombre(n);
+          if (k && !m.has(k)) m.set(k, g.nit);
+        }
+      }
+      this._indiceNit = m;
+    }
+    return this._indiceNit;
+  },
+
+  alias(g) { return Array.isArray(g.datos?.alias) ? g.datos.alias : []; },
+
+  nitDeEmpresa(nombre) {
+    return nombre ? this.indiceNit().get(this.claveNombre(nombre)) || '' : '';
+  },
 
   // Empresa: NIT de 9 dígitos que empieza por 8 o 9 (el mismo criterio del importador).
   esEmpresa(g) { return /^[89]\d{8}$/.test(g.nit || ''); },
@@ -3883,7 +3935,7 @@ const Clientes = {
   visibles() {
     const f = this.filtro;
     const q = Util.normalizar(f.texto);
-    const textoBusqueda = g => Util.normalizar([g.nombre, g.nit, ...CLIENTE_CAMPOS.filter(c => c.tipo !== 'clave').map(c => g.datos[c.id] || '')].join(' '));
+    const textoBusqueda = g => Util.normalizar([g.nombre, g.nit, ...this.alias(g), ...CLIENTE_CAMPOS.filter(c => c.tipo !== 'clave').map(c => g.datos[c.id] || '')].join(' '));
     return this.lista
       .filter(g => !f.letra || this.letra(g) === f.letra)
       .filter(g => !f.lechera || Util.normalizar(g.datos.lechera_nombre) === f.lechera)
@@ -4023,6 +4075,7 @@ const Clientes = {
   },
 
   pintar() {
+    this._indiceNit = null;
     if (!this.raiz) return;
     const enfocado = document.activeElement;
     const buscando = enfocado?.classList?.contains('cli-buscar');
@@ -4289,6 +4342,130 @@ const Clientes = {
     return [...new Map(out.map(g => [g.id, g])).values()];
   },
 
+  // ── Vincular NIT desde Excel ──────────────────────────────────────
+  // Hoja con una columna EMPRESA (o CLIENTE) y una columna NIT, sin PRIMER NOMBRE:
+  // devuelve [{ nombre, nit, otros }] (una fila por empresa). Pura: no toca la página.
+  filasAVinculos(filas) {
+    const norm = h => Util.normalizar(h).replace(/\s+/g, ' ');
+    for (let i = 0; i < Math.min(8, filas.length); i++) {
+      const c = (filas[i] || []).map(norm);
+      const iNit = c.indexOf('NIT');
+      const iEmp = ['EMPRESA', 'CLIENTE', 'EMPRESA / CLIENTE', 'RAZON SOCIAL'].map(x => c.indexOf(x)).find(x => x >= 0) ?? -1;
+      if (iNit < 0 || iEmp < 0 || c.includes('PRIMER NOMBRE')) continue;
+      const porClave = new Map();
+      for (const f of filas.slice(i + 1)) {
+        const nombre = String(f?.[iEmp] ?? '').replace(/\s+/g, ' ').trim();
+        // El NIT es el primer número de 5 o más dígitos de la celda ("NIT 900705082 YCC. …" → 900705082).
+        const nit = (String(f?.[iNit] ?? '').replace(/\.0+$/, '').replace(/(\d)[.,](?=\d{3}\b)/g, '$1').match(/\d{5,}/) || [])[0];
+        if (!nombre || !nit) continue;
+        const k = this.claveNombre(nombre);
+        if (!porClave.has(k)) porClave.set(k, { nombre, nits: new Map() });
+        const v = porClave.get(k);
+        v.nits.set(nit, (v.nits.get(nit) || 0) + 1);
+      }
+      // Si una empresa trae NIT distintos en varias filas, se toma el que más se repite.
+      return [...porClave.values()].map(v => {
+        const orden = [...v.nits.entries()].sort((a, b) => b[1] - a[1]);
+        return { nombre: v.nombre, nit: orden[0][0], otros: orden.slice(1).map(x => x[0]) };
+      });
+    }
+    return [];
+  },
+
+  // Compara los vínculos con el directorio. Pura.
+  //   igual:     el cliente ya tiene ese NIT
+  //   completar: el cliente existe sin NIT → se le pone
+  //   alias:     otro nombre ya tiene ese NIT → este nombre se agrega como alias
+  //   nuevo:     no existe → se crea el cliente con nombre y NIT
+  //   distinto:  el cliente tiene otro NIT → no se cambia (se corrige a mano en su ficha)
+  planVinculos(vinculos, lista) {
+    const porNombre = new Map(), porNit = new Map();
+    for (const g of lista) {
+      for (const n of [g.nombre, ...this.alias(g)]) { const k = this.claveNombre(n); if (k && !porNombre.has(k)) porNombre.set(k, g); }
+      if (g.nit && !porNit.has(g.nit)) porNit.set(g.nit, g);
+    }
+    const plan = { igual: [], completar: [], alias: [], nuevo: [], distinto: [] };
+    for (const v of vinculos) {
+      const g = porNombre.get(this.claveNombre(v.nombre));
+      if (g) {
+        if (!g.nit) plan.completar.push({ ...v, g });
+        else if (g.nit === v.nit) plan.igual.push({ ...v, g });
+        else plan.distinto.push({ ...v, g });
+      } else if (porNit.has(v.nit)) plan.alias.push({ ...v, g: porNit.get(v.nit) });
+      else plan.nuevo.push(v);
+    }
+    return plan;
+  },
+
+  mostrarVinculos(vinculos, archivo) {
+    const plan = this.planVinculos(vinculos, this.lista);
+    const n = (k, txt) => plan[k].length ? `<li><strong>${plan[k].length}</strong> ${txt}</li>` : '';
+    const cambios = plan.completar.length + plan.alias.length + plan.nuevo.length;
+    const avisos = [
+      ...plan.distinto.map(v => `${v.nombre}: el Excel dice ${v.nit}, el directorio tiene ${v.g.nit} (se deja el del directorio; corrígelo en su ficha si hace falta)`),
+      ...vinculos.filter(v => v.otros.length).map(v => `${v.nombre}: el archivo trae varios NIT (${[v.nit, ...v.otros].join(', ')}); se usa ${v.nit}`),
+    ];
+    UI.abrirModal(`<header class="modal-cab"><h3>Vincular NIT: ${Util.esc(archivo.name)}</h3></header>
+      <p class="muted">${vinculos.length} empresas con NIT en el archivo. El NIT queda en el directorio de Clientes y se muestra en el tablero, la lista y el calendario de todas las tareas de esa empresa.</p>
+      <ul>
+        ${n('nuevo', 'cliente(s) nuevo(s) (se crean con su nombre y NIT)')}
+        ${n('completar', 'cliente(s) existente(s) sin NIT (se les pone)')}
+        ${n('alias', 'empresa(s) escrita(s) distinto a un cliente con el mismo NIT (se vinculan a ese cliente)')}
+        ${n('igual', 'ya estaban vinculados')}
+        ${n('distinto', 'con un NIT distinto al del directorio (no se cambian)')}
+      </ul>
+      ${avisos.length ? `<details><summary>${avisos.length} avisos</summary><ul class="mini">${avisos.map(a => `<li>${Util.esc(a)}</li>`).join('')}</ul></details>` : ''}
+      <p id="gvin-estado" class="muted"></p>
+      <div class="modal-pie"><span class="separador"></span><button class="btn" data-accion="cerrar-modal">Cancelar</button>
+        ${cambios ? `<button class="btn btn-primario" id="gvin-ok">Vincular ${cambios}</button>` : ''}</div>`, { ancho: 560 });
+    const btn = document.getElementById('gvin-ok');
+    btn?.addEventListener('click', async () => {
+      if (btn.dataset.listo) { UI.cerrarModal(); return; }
+      btn.disabled = true;
+      const estado = t => { const el = document.getElementById('gvin-estado'); if (el) el.textContent = t; };
+      let fallas = 0;
+      try {
+        // Varios nombres nuevos con el mismo NIT: un solo cliente, los demás nombres como alias.
+        const porNit = new Map();
+        for (const v of plan.nuevo) {
+          const g = porNit.get(v.nit);
+          if (g) { g.datos.alias = [...this.alias(g), v.nombre]; continue; }
+          porNit.set(v.nit, { id: 'c-nit-' + v.nit, nombre: v.nombre, nit: v.nit,
+            // Persona natural: su cédula es el mismo número del NIT
+            datos: /^[89]\d{8}$/.test(v.nit) ? {} : { cedula: v.nit }, vencimientos: {} });
+        }
+        const nuevos = [...porNit.values()];
+        if (nuevos.length) { estado(`Creando ${nuevos.length} clientes…`); await Datos.importarClientes(nuevos); }
+        const editar = [
+          ...plan.completar.map(v => ({ ...structuredClone(v.g), nit: v.nit })),
+          ...plan.alias.map(v => { const g = structuredClone(v.g); g.datos = { ...g.datos, alias: [...this.alias(g), v.nombre] }; return g; }),
+        ];
+        // Un cliente puede recibir varios alias: se juntan antes de guardar.
+        const porId = new Map();
+        for (const g of editar) {
+          const prev = porId.get(g.id);
+          if (prev) prev.datos.alias = [...new Set([...this.alias(prev), ...this.alias(g)])];
+          else porId.set(g.id, g);
+        }
+        let i = 0;
+        for (const g of porId.values()) {
+          estado(`Guardando ${++i} de ${porId.size}…`);
+          try { await Datos.guardarCliente({ id: g.id, nombre: g.nombre, nit: g.nit, datos: g.datos, vencimientos: g.vencimientos }); }
+          catch (e) { console.error(e); fallas++; }
+        }
+        await this.cargar();
+        App.render();
+        estado(`✅ Listo: ${cambios - fallas} empresas vinculadas${fallas ? `, ${fallas} no se pudieron guardar` : ''}.`);
+      } catch (e) {
+        console.error(e);
+        estado('❌ ' + e.message);
+      }
+      btn.dataset.listo = '1';
+      btn.textContent = 'Cerrar';
+      btn.disabled = false;
+    });
+  },
+
   async importarArchivo(archivo) {
     UI.abrirModal(`<header class="modal-cab"><h3>Importar clientes: ${Util.esc(archivo.name)}</h3></header>
       <p id="gimp-estado" class="muted">Leyendo archivo…</p>
@@ -4297,11 +4474,13 @@ const Clientes = {
     try {
       await Importador.cargarXLSX();
       const wb = XLSX.read(await archivo.arrayBuffer(), { type: 'array', cellDates: true });
+      const hojas = wb.SheetNames.map(nombre => XLSX.utils.sheet_to_json(wb.Sheets[nombre], { header: 1, defval: null, raw: true }));
+      // Archivo con columnas EMPRESA y NIT (p. ej. el de tareas): vincula el NIT a cada empresa.
+      const vinculos = hojas.flatMap(h => this.filasAVinculos(h));
+      if (vinculos.length) { this.mostrarVinculos(vinculos, archivo); return; }
       let lista = [];
-      for (const nombre of wb.SheetNames) {
-        lista = lista.concat(this.filasAClientes(XLSX.utils.sheet_to_json(wb.Sheets[nombre], { header: 1, defval: null, raw: true })));
-      }
-      if (!lista.length) { estado('No se encontraron clientes. La hoja debe tener una columna PRIMER NOMBRE o NOMBRE.'); return; }
+      for (const filas of hojas) lista = lista.concat(this.filasAClientes(filas));
+      if (!lista.length) { estado('No se encontraron clientes. La hoja debe tener una columna PRIMER NOMBRE o NOMBRE, o las columnas EMPRESA y NIT para vincular los NIT.'); return; }
       const existentes = new Set(this.lista.map(g => g.id));
       const nuevos = lista.filter(g => !existentes.has(g.id));
       estado(`Guardando ${nuevos.length} clientes nuevos…`);
@@ -5059,7 +5238,8 @@ const TareaModal = {
               <label>Fecha límite<input type="date" name="fecha_vencimiento" value="${t.fecha_vencimiento || ''}" ${dis}></label>
               <label class="campo-ancho">Empresa / cliente
                 <input name="empresa" list="lista-empresas" value="${Util.esc(t.empresa || '')}" ${dis} maxlength="200" placeholder="Opcional">
-                <datalist id="lista-empresas">${[...new Set(App.estado.tareas.map(x => x.empresa).filter(Boolean))].sort().slice(0, 300).map(e => `<option value="${Util.esc(e)}">`).join('')}</datalist></label>
+                <datalist id="lista-empresas">${[...new Set([...App.estado.tareas.map(x => x.empresa), ...Clientes.lista.map(g => g.nombre)].filter(Boolean))].sort().slice(0, 500).map(e => `<option value="${Util.esc(e)}">`).join('')}</datalist>
+                ${App.nitDe(t) ? `<small class="nit">NIT ${Util.esc(App.nitDe(t))}${Clientes.nitDeEmpresa(t.empresa) ? '' : ' (tomado de la descripción)'}</small>` : t.empresa ? '<small class="muted mini">Sin NIT: vincúlalo en Clientes</small>' : ''}</label>
             </div>
             <label class="campo-ancho">Descripción
               <textarea name="descripcion" rows="3" ${dis} placeholder="Detalles, instrucciones, enlaces…">${Util.esc(t.descripcion || '')}</textarea></label>
@@ -5585,7 +5765,7 @@ const Importador = (() => {
         return;
       }
       if (esExportacionSinCodigo(hojas)) {
-        progreso(100, '⚠ Este archivo es una exportación anterior de la página, sin la columna Código: subirlo crearía todas las tareas otra vez (repetidas). Descarga de nuevo con "Exportar a Excel" (ya trae el código), haz tus cambios en ese archivo y súbelo.');
+        progreso(100, '⚠ Este archivo es una exportación anterior de la página, sin la columna Código: subirlo crearía todas las tareas otra vez (repetidas). Descarga de nuevo con "Exportar a Excel" (ya trae el código), haz tus cambios en ese archivo y súbelo. Si solo quieres vincular los NIT de las empresas, sube este archivo en Clientes → Importar Excel.');
         return;
       }
       const { tareas, log } = filasATareas(hojas, App.estado.colaboradores);
@@ -5603,12 +5783,12 @@ const Importador = (() => {
 
   async function exportar(tareas) {
     // La primera columna es el código interno: al volver a subir el archivo, la tarea se actualiza en vez de duplicarse.
-    const cab = ['Código (no modificar)', 'Tarea', 'Colaborador', 'Empresa', 'Categoría', 'Prioridad', 'Estado', 'Fecha inicio', 'Fecha límite', 'Completada el', 'A tiempo', 'Iniciada el', 'Tiempo de ejecución (h)', 'Progreso %', 'Descripción'];
+    const cab = ['Código (no modificar)', 'Tarea', 'Colaborador', 'Empresa', 'NIT', 'Categoría', 'Prioridad', 'Estado', 'Fecha inicio', 'Fecha límite', 'Completada el', 'A tiempo', 'Iniciada el', 'Tiempo de ejecución (h)', 'Progreso %', 'Descripción'];
     const hoy = U.hoyISO();
     const filas = tareas.map(t => {
       const ef = Metricas.estadoEfectivo(t, hoy);
       const at = Metricas.aTiempo(t);
-      return [t.id, t.titulo, App.colaboradorDe(t)?.nombre || '', t.empresa || '', t.categoria || '',
+      return [t.id, t.titulo, App.colaboradorDe(t)?.nombre || '', t.empresa || '', App.nitDe(t), t.categoria || '',
         PRIORIDADES.find(p => p.id === t.prioridad)?.label || '', ef === 'vencida' ? 'Vencida' : ESTADOS.find(e => e.id === t.estado)?.label || '',
         t.fecha_inicio || '', t.fecha_vencimiento || '', U.fechaDeTimestamp(t.completada_at) || '', at === null ? '' : at ? 'Sí' : 'No',
         t.iniciada_at && t.estado !== 'pendiente' ? U.fmtFechaHora(t.iniciada_at) : '', (ms => ms === null ? '' : Math.round(ms / 360000) / 10)(Metricas.tiempoEjecucion(t)),
@@ -5843,6 +6023,13 @@ const App = {
     return [...new Set([...CATEGORIAS, ...this.estado.tareas.map(t => t.categoria).filter(Boolean)])];
   },
 
+  // NIT de la tarea: el del cliente del directorio con el mismo nombre de empresa
+  // (Clientes.nitDeEmpresa); si no está vinculado, el que venga escrito en la descripción ("NIT 900123456").
+  nitDe(t) {
+    return Clientes.nitDeEmpresa(t.empresa)
+      || (String(t.descripcion || '').match(/\bNIT\.?:?\s*(\d[\d.]{4,}(?:-\d)?)/i)?.[1] || '').replace(/\./g, '');
+  },
+
   esMia(t) {
     const uid = Permisos.uid;
     return t.asignado_a === uid || (!t.asignado_a && t.creado_por === uid);
@@ -5868,7 +6055,7 @@ const App = {
       (!rango || enRango(t)) &&
       (!f.prioridad || t.prioridad === f.prioridad) &&
       (!f.categoria || t.categoria === f.categoria) &&
-      (!q || Util.normalizar(`${t.titulo} ${t.empresa || ''} ${t.descripcion || ''}`).includes(q)));
+      (!q || Util.normalizar(`${t.titulo} ${t.empresa || ''} ${this.nitDe(t)} ${t.descripcion || ''}`).includes(q)));
   },
 
   // ── Acciones sobre tareas ──────────────────────────────────────────
@@ -6131,6 +6318,7 @@ const App = {
     this._conexiones = 0;
     Datos.suscribir((evento, nueva, anterior, conectado) => this._alCambiar(evento, nueva, anterior, conectado));
     Chat.iniciar();
+    Clientes.cargarParaTareas();
     clearInterval(this._temporizadorRefresco);
     this._temporizadorRefresco = setInterval(() => this.refrescar(), CONFIG.SEGUNDOS_REFRESCO * 1000);
     clearInterval(this._temporizadorCrono);

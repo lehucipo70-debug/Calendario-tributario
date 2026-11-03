@@ -96,6 +96,19 @@ La sección **Clientes** es el directorio de clientes: una lista de nombres y NI
 - Para activarla, ejecuta una sola vez [`supabase/clientes.sql`](supabase/clientes.sql) en Supabase → **SQL Editor**.
 - **Importar Excel** (administradores) lee la hoja con columnas `CEDULA`, `NIT`, `PRIMER NOMBRE`, `SEGUNDO NOMBRE`, `PRIMER APELLIDO` (y el segundo apellido en la columna siguiente), `EMPRESA LECHERA` (el número inicial se toma como código), `E-MAIL`, `CLAVE E-MAIL`, `CLAVE DIAN`, `VENCIMIENTO CERTIFICADO`, `VENCIMIENTO DE RESOLUCION FACTURACION` y `VENCIMIENTO DOCUMENTO SOPORTE`. Reimportar solo agrega los clientes nuevos: los que ya existen no se modifican.
 
+### NIT en las tareas
+
+El tablero, la lista (columna **NIT**, ordenable), el calendario y la ventana de la tarea muestran el NIT de la empresa de cada tarea. El buscador también encuentra tareas por NIT, y **Exportar a Excel** trae la columna NIT.
+
+- El NIT sale del directorio de Clientes: la tarea se vincula con el cliente que tiene **el mismo nombre que la columna Empresa** (no importan tildes, mayúsculas ni el orden de las palabras). Si se corrige el NIT en la ficha del cliente, cambia en todas sus tareas.
+- Si la empresa no está en el directorio, se usa el NIT escrito en la descripción de la tarea (`NIT 900123456 · …`), si lo hay.
+- **Vincular los NIT desde Excel** (administradores): en **Clientes → Importar Excel** sube un archivo con las columnas `EMPRESA` y `NIT` (por ejemplo, la lista de tareas exportada con la columna NIT). Antes de guardar muestra un resumen:
+  - las empresas que no están en el directorio se crean como clientes con su nombre y NIT;
+  - los clientes que estaban sin NIT lo reciben;
+  - si el nombre está escrito distinto pero el NIT ya existe, ese nombre queda como alias del cliente;
+  - si el cliente ya tiene **otro** NIT, no se cambia (sale en los avisos para revisarlo en su ficha).
+- En la celda NIT se toma el primer número de 5 o más dígitos (`NIT 900705082 YCC. …` → `900705082`).
+
 ### Agregar un dato nuevo a la ficha
 
 En `index.html`, la lista `CLIENTE_CAMPOS` define los datos de la ficha y `CLIENTE_VENCIMIENTOS` los vencimientos. Para agregar uno basta con sumar una línea, por ejemplo:
