@@ -4068,12 +4068,14 @@ const CLIENTE_VENCIMIENTOS = [
 // Por defecto: persona natural → IVA bimestral; empresa → IVA bimestral y retención.
 // Lo que se marque o desmarque en la ficha se guarda en datos.obligaciones del cliente.
 const DIAN_OBLIGACIONES = [
-  { id: 'iva_bimestral', label: 'IVA bimestral', corto: 'IVA', digitos: 1 },
-  { id: 'retencion', label: 'Retención en la fuente (mensual)', corto: 'Retención', digitos: 1 },
-  { id: 'iva_cuatrimestral', label: 'IVA cuatrimestral', corto: 'IVA', digitos: 1 },
+  // periodo: cómo se numeran sus periodos en los filtros ("Bimestre 5 · Sep–Oct", "Mes 10 · Octubre").
+  // En el Régimen Simple solo se numeran los anticipos (los que empiezan por "Anticipo").
+  { id: 'iva_bimestral', label: 'IVA bimestral', corto: 'IVA', digitos: 1, periodo: 'Bimestre' },
+  { id: 'retencion', label: 'Retención en la fuente (mensual)', corto: 'Retención', digitos: 1, periodo: 'Mes' },
+  { id: 'iva_cuatrimestral', label: 'IVA cuatrimestral', corto: 'IVA', digitos: 1, periodo: 'Cuatrimestre' },
   { id: 'renta_pn', label: 'Renta personas naturales', corto: 'Renta', digitos: 2 },
-  { id: 'renta_pj', label: 'Renta personas jurídicas', corto: 'Renta', digitos: 1 },
-  { id: 'simple', label: 'Régimen Simple', corto: 'Simple', digitos: 1 },
+  { id: 'renta_pj', label: 'Renta personas jurídicas', corto: 'Renta', digitos: 1, periodo: 'Cuota' },
+  { id: 'simple', label: 'Régimen Simple', corto: 'Simple', digitos: 1, periodo: 'Bimestre', soloQueEmpiezan: 'Anticipo' },
   { id: 'exogena', label: 'Información exógena', corto: 'Exógena', digitos: 2 },
 ];
 const DIAN_PREDETERMINADAS = { persona: ['iva_bimestral'], empresa: ['iva_bimestral', 'retencion'] };
@@ -4717,7 +4719,7 @@ const Clientes = {
       return `<div class="cli-dian-ob"><div class="cli-venc-cab">${Util.esc(ob.label)}<span class="separador"></span>${faltan ? Clientes.chip('vencido', `${faltan} sin presentar`) : ''}${chip}</div>
         <div class="muted mini">${detalle}</div>
         ${fechas.length ? `<details ${faltan ? 'open' : ''}><summary class="mini">Todas las fechas ${CALENDARIO_DIAN.anio}</summary><ul class="cli-dian-fechas">${fechas.map(f =>
-          `<li class="${f.fecha < hoy ? 'pasada' : ''}"><span>${Util.esc(f.periodo)}</span><span>${Util.fmtFecha(f.fecha)}</span><span class="mini">${presTxt(f)}</span>
+          `<li class="${f.fecha < hoy ? 'pasada' : ''}"><span>${Util.esc(Vistas.vencimientos.etiquetaPeriodo(obId, f.periodo))}</span><span>${Util.fmtFecha(f.fecha)}</span><span class="mini">${presTxt(f)}</span>
             <button class="enlace mini" data-accion="pres-abrir" data-id="${id}" data-ob="${obId}" data-periodo="${Util.esc(f.periodo)}">${this.presentada(g, obId, f.periodo) ? '✎' : 'Marcar'}</button></li>`).join('')}</ul></details>` : ''}</div>`;
     }).join('');
     return `<section class="cli-dian">
@@ -5095,10 +5097,30 @@ Vistas.vencimientos = {
     ];
   },
 
-  // Periodos de la obligación DIAN elegida en el filtro de tipo ([] si no es DIAN).
-  periodos() {
-    const id = this.filtro.tipo.startsWith('dian:') ? this.filtro.tipo.slice(5) : '';
-    return id ? (CALENDARIO_DIAN.obligaciones[id]?.periodos || []).map(p => p.periodo) : [];
+  // Periodos de una obligación DIAN con su número según la periodicidad:
+  // [{ periodo: 'Sep–Oct', etiqueta: 'Bimestre 5 · Sep–Oct' }]
+  periodosDe(obId) {
+    const ob = DIAN_OBLIGACIONES.find(o => o.id === obId);
+    let n = 0;
+    return (CALENDARIO_DIAN.obligaciones[obId]?.periodos || []).map(p => {
+      const numerar = ob?.periodo && (!ob.soloQueEmpiezan || p.periodo.startsWith(ob.soloQueEmpiezan));
+      return { periodo: p.periodo, etiqueta: numerar ? `${ob.periodo} ${++n} · ${p.periodo}` : p.periodo };
+    });
+  },
+
+  etiquetaPeriodo(obId, periodo) { return this.periodosDe(obId).find(p => p.periodo === periodo)?.etiqueta || periodo; },
+
+  // Opciones del filtro de periodo: las del impuesto elegido o, si no hay uno, todas agrupadas por impuesto.
+  _periodoHtml() {
+    const f = this.filtro;
+    const actual = f.periodo && f.tipo.startsWith('dian:') ? f.tipo.slice(5) + '|' + f.periodo : '';
+    const grupo = ob => this.periodosDe(ob.id).map(p => { const v = ob.id + '|' + p.periodo; return `<option value="${Util.esc(v)}" ${v === actual ? 'selected' : ''}>${Util.esc(p.etiqueta)}</option>`; }).join('');
+    // Si hay un impuesto elegido, sus periodos van primero; los demás siguen disponibles para cambiar directo.
+    const obs = DIAN_OBLIGACIONES.filter(o => CALENDARIO_DIAN.obligaciones[o.id])
+      .sort((x, y) => (f.tipo === 'dian:' + y.id) - (f.tipo === 'dian:' + x.id));
+    if (!obs.length) return '';
+    const opciones = obs.map(o => `<optgroup label="${Util.esc(o.label)}">${grupo(o)}</optgroup>`).join('');
+    return `<select class="venc-periodo" aria-label="Periodo de la declaración"><option value="">Periodo: todos (bimestre, mes…)</option>${opciones}</select>`;
   },
 
   // Estado de una fecha DIAN: 'presentada' | 'falta' (venció sin presentar) | 'pendiente'
@@ -5109,12 +5131,17 @@ Vistas.vencimientos = {
     const f = this.filtro;
     const q = Util.normalizar(f.texto);
     const out = [];
+    const cache = new Map();
+    const etiquetas = (obId, periodo) => {
+      if (!cache.has(obId)) cache.set(obId, new Map(this.periodosDe(obId).map(p => [p.periodo, p.etiqueta])));
+      return cache.get(obId).get(periodo) || periodo;
+    };
     for (const g of Clientes.lista) {
       if (f.digito && Clientes.nitBase(g).slice(-1) !== f.digito) continue;
       if (q && !Util.normalizar(`${g.nombre} ${g.nit}`).includes(q)) continue;
       for (const x of Clientes.fechasDian(g)) {
         const pres = Clientes.presentada(g, x.ob.id, x.periodo);
-        out.push({ g, ob: x.ob, tipo: 'dian:' + x.ob.id, nombre: '🏛 ' + x.ob.label, detalle: x.periodo, periodo: x.periodo, fecha: x.fecha,
+        out.push({ g, ob: x.ob, tipo: 'dian:' + x.ob.id, nombre: '🏛 ' + x.ob.label, detalle: etiquetas(x.ob.id, x.periodo), periodo: x.periodo, fecha: x.fecha,
           dias: Util.diasEntre(hoy, x.fecha), dian: true, pres, estado: this.estadoPres(pres, x.fecha, hoy) });
       }
     }
@@ -5181,7 +5208,7 @@ Vistas.vencimientos = {
     const faltan = todas.filter(x => !x.pres);
     const ob = DIAN_OBLIGACIONES.find(o => 'dian:' + o.id === f.tipo);
     return `<div class="venc-resumen">
-      <b>${Util.esc(ob?.label || '')} · ${Util.esc(f.periodo)} ${CALENDARIO_DIAN.anio}</b>
+      <b>${Util.esc(ob?.label || '')} · ${Util.esc(this.etiquetaPeriodo(ob?.id, f.periodo))} ${CALENDARIO_DIAN.anio}</b>
       <span class="chip est-completada">✓ ${n('presentada')} presentada${n('presentada') === 1 ? '' : 's'}</span>
       ${n('falta') ? `<span class="chip est-vencida">⚠ ${n('falta')} vencida${n('falta') === 1 ? '' : 's'} sin presentar</span>` : ''}
       ${n('pendiente') ? `<span class="chip est-en_revision">◷ ${n('pendiente')} pendiente${n('pendiente') === 1 ? '' : 's'}</span>` : ''}
@@ -5216,7 +5243,6 @@ Vistas.vencimientos = {
         ${this.chip(x)}${accion}</div>`;
     });
     const hayFiltro = f.tipo || f.digito || f.texto || f.estado || f.periodo || f.dias !== '30';
-    const periodos = this.periodos();
     const aviso = Clientes.presentacionesActivas === false
       ? '<div class="venc-aviso">Para marcar las declaraciones presentadas, un administrador debe ejecutar una vez <code>supabase/presentaciones.sql</code> en el SQL Editor de Supabase.</div>' : '';
     return `
@@ -5230,7 +5256,7 @@ Vistas.vencimientos = {
       <div class="barra-filtros">
         <input type="search" class="venc-buscar" placeholder="🔍 Cliente o NIT…" value="${Util.esc(f.texto)}" aria-label="Buscar cliente">
         <select data-vf="estado" aria-label="Estado de la declaración">${opt('', 'Todos los estados', f.estado)}${opt('sin', 'Sin presentar', f.estado)}${opt('falta', 'Vencidas sin presentar', f.estado)}${opt('pendiente', 'Pendientes (aún no vencen)', f.estado)}${opt('presentada', 'Presentadas', f.estado)}</select>
-        ${periodos.length ? `<select data-vf="periodo" aria-label="Periodo de la declaración"><option value="">Todos los periodos</option>${periodos.map(p => opt(p, p, f.periodo)).join('')}</select>` : ''}
+        ${this._periodoHtml()}
         ${f.periodo ? '' : `<select data-vf="dias" aria-label="Hasta">${opt('7', 'Próximos 7 días', f.dias)}${opt('30', 'Próximos 30 días', f.dias)}${opt('90', 'Próximos 90 días', f.dias)}${opt('todo', 'Todo el calendario', f.dias)}</select>`}
         <select data-vf="digito" aria-label="Último dígito del NIT"><option value="">Último dígito del NIT</option>${['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map(d => opt(d, 'NIT terminado en ' + d, f.digito)).join('')}</select>
         ${hayFiltro ? '<button class="btn btn-sm" data-accion="venc-limpiar">✕ Limpiar</button>' : ''}
@@ -5249,6 +5275,12 @@ Vistas.vencimientos = {
 
   montar(main) {
     main.querySelectorAll('[data-vf]').forEach(el => el.addEventListener('change', () => { this.filtro[el.dataset.vf] = el.value; App.render(); }));
+    main.querySelector('.venc-periodo')?.addEventListener('change', e => {
+      const v = e.target.value;
+      if (!v) this.filtro.periodo = '';
+      else { const i = v.indexOf('|'); Object.assign(this.filtro, { tipo: 'dian:' + v.slice(0, i), periodo: v.slice(i + 1) }); }
+      App.render();
+    });
     main.querySelectorAll('.cli-dian-fila[role="button"]').forEach(el => el.addEventListener('keydown', e => {
       if ((e.key === 'Enter' || e.key === ' ') && e.target === el) { e.preventDefault(); Clientes.abrirCliente(el.dataset.id); }
     }));
@@ -5318,7 +5350,7 @@ const Presentaciones = {
     this._actual = { g, obId, periodo };
     UI.abrirModal(`<header class="modal-cab"><h3>${p ? 'Declaración presentada' : 'Marcar como presentada'}</h3><button class="btn-icono" data-accion="cerrar-modal" aria-label="Cerrar">✕</button></header>
       <p><b>${Util.esc(g.nombre)}</b> <span class="muted">${g.nit ? 'NIT ' + Util.esc(g.nit) : ''}</span><br>
-        ${Util.esc(ob?.label || obId)} · ${Util.esc(periodo)} ${CALENDARIO_DIAN.anio}${fechaLimite ? ` · vence ${Util.fmtFecha(fechaLimite)}` : ''}</p>
+        ${Util.esc(ob?.label || obId)} · ${Util.esc(Vistas.vencimientos.etiquetaPeriodo(obId, periodo))} ${CALENDARIO_DIAN.anio}${fechaLimite ? ` · vence ${Util.fmtFecha(fechaLimite)}` : ''}</p>
       ${p ? `<p class="muted mini">Marcada${p.presentada_nombre ? ' por ' + Util.esc(p.presentada_nombre) : ''}${p.updated_at ? ' el ' + Util.esc(Util.fmtFechaHora(p.updated_at)) : ''}.</p>` : ''}
       <label class="campo"><span>Fecha de presentación</span><input type="date" id="pres-fecha" value="${Util.esc(p?.fecha_presentacion || hoy)}" max="${hoy}" autofocus></label>
       <div class="modal-pie">
@@ -5334,7 +5366,7 @@ const Presentaciones = {
     this._actual = { lote: items };
     const hoy = Util.hoyISO();
     UI.abrirModal(`<header class="modal-cab"><h3>Marcar ${items.length} como presentadas</h3><button class="btn-icono" data-accion="cerrar-modal" aria-label="Cerrar">✕</button></header>
-      <p>${Util.esc(x.ob.label)} · ${Util.esc(x.periodo)} ${CALENDARIO_DIAN.anio}</p>
+      <p>${Util.esc(x.ob.label)} · ${Util.esc(Vistas.vencimientos.etiquetaPeriodo(x.ob.id, x.periodo))} ${CALENDARIO_DIAN.anio}</p>
       <details><summary class="mini">Ver los ${items.length} clientes</summary><ul class="pres-lista mini">${items.map(i => `<li>${Util.esc(i.g.nombre)} <span class="muted">· vence ${Util.fmtFecha(i.fecha)}</span></li>`).join('')}</ul></details>
       <label class="campo"><span>Fecha de presentación</span>
         <select id="pres-modo"><option value="limite">La fecha límite de cada cliente</option><option value="fija">Una misma fecha para todos</option></select></label>
