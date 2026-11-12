@@ -160,6 +160,21 @@ Al ejecutarlo se generan los vencimientos de los clientes que ya existen. Todos 
 
 **Año nuevo**: insertar en `calendario_dian` las filas del año nuevo (mismo formato); los vencimientos se recalculan solos y la página muestra el año más reciente.
 
+### Declaraciones presentadas
+
+Sirve para llevar el control de quién ya presentó cada declaración y quién falta (por ejemplo: Pepito y Margarita ya presentaron el IVA de Sep–Oct; a Leoncio le falta).
+
+- **Activarlo en Supabase (una vez):** ejecuta [`supabase/presentaciones.sql`](supabase/presentaciones.sql) en el **SQL Editor**, después de `clientes.sql`. Mientras no esté activo, la pestaña Vencimientos muestra un aviso.
+- En la pestaña **📆 Vencimientos**, cada declaración DIAN tiene el botón **✓ Presentada**: pide la fecha de presentación (hoy por defecto) y la guarda con el nombre de quien la marcó. El botón **✎** de una ya presentada sirve para cambiar la fecha o **quitar la marca**.
+- Las declaraciones que **vencieron sin marcarse** siguen saliendo (grupo *Vencidos sin presentar*, en rojo) hasta que alguien las marque. Las ya presentadas se ven con **Todo el calendario**, con el estado **Presentadas** o al elegir un periodo.
+- Filtro **Estado**: sin presentar, vencidas sin presentar, pendientes (aún no vencen) y presentadas.
+- **Resumen por periodo**: al elegir un impuesto (por ejemplo *IVA bimestral*) aparece el filtro de **periodo**. Con un periodo elegido se ven todos los clientes de ese periodo y el resumen: cuántos presentaron, cuántos faltan y cuántos aún no vencen. El botón **Marcar las N que faltan…** las marca todas de una vez, con la fecha límite de cada cliente o con una misma fecha. Sirve para poner al día lo que ya se había presentado antes.
+- En la **ficha del cliente** (🏛 Impuestos DIAN), cada impuesto avisa cuántos periodos lleva **sin presentar**, y en *Todas las fechas* cada periodo dice si se presentó (y cuándo), si falta o si está pendiente, con un enlace para marcarlo.
+- Una declaración presentada deja de contar como "próximo vencimiento" del cliente.
+- **Exportar a Excel** baja la lista que se está viendo, con el estado y la fecha de presentación.
+- Todos los usuarios marcan y cambian fechas; quitar la marca solo puede hacerlo quien la puso o un administrador.
+- Las marcas se guardan aparte de la tabla `vencimientos` (que se recalcula sola), así que no se pierden si cambia el NIT del cliente o el calendario.
+
 ### Agregar un dato nuevo a la ficha
 
 En `index.html`, la lista `CLIENTE_CAMPOS` define los datos de la ficha y `CLIENTE_VENCIMIENTOS` los vencimientos. Para agregar uno basta con sumar una línea, por ejemplo:
