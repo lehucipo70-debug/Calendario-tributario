@@ -745,15 +745,29 @@ body.nav-compacta .lateral-pie { display: block; margin-top: auto; padding: 0 6p
 .cli-dian-ob .cli-venc-cab { font-size: 13.5px; }
 .cli-dian-fechas { list-style: none; padding: 0; margin: 6px 0 0; font-size: 12.5px; }
 .cli-dian-fechas li { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed var(--borde); }
-.cli-dian-fechas li.pasada { color: var(--text3); text-decoration: line-through; }
+.cli-dian-fechas li.pasada { color: var(--text3); }
 .cli-dian-titulo { margin: 0; font-size: 18px; }
 .cli-dian-grupo { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text2); margin: 16px 0 6px; }
-.cli-dian-fila { display: grid; grid-template-columns: 90px minmax(0, 280px) minmax(0, 1fr) 130px; gap: 12px; align-items: center; width: 100%; text-align: left; background: var(--bg2); border: 1px solid var(--borde); border-radius: 12px; padding: 9px 13px; margin-bottom: 6px; color: var(--text); font-size: 13px; cursor: pointer; }
+.cli-dian-fila { display: grid; grid-template-columns: 90px minmax(0, 280px) minmax(0, 1fr) auto 118px; gap: 12px; align-items: center; width: 100%; text-align: left; background: var(--bg2); border: 1px solid var(--borde); border-radius: 12px; padding: 9px 13px; margin-bottom: 6px; color: var(--text); font-size: 13px; cursor: pointer; }
 .cli-dian-fila:hover { border-color: var(--azul); }
 .cli-dian-fila .f { font-weight: 700; }
 .cli-dian-fila .chip { justify-self: end; }
 .enlace { background: none; border: none; color: var(--azul); cursor: pointer; padding: 0; font: inherit; text-decoration: underline; }
 @media (max-width: 720px) { .cli-dian-fila { grid-template-columns: 1fr auto; } }
+.cli-dian-fila > .btn { justify-self: end; }
+.cli-dian-fila.pres-falta { border-left: 3px solid var(--rojo); }
+.cli-dian-fila.pres-presentada { border-left: 3px solid var(--verde); }
+.cli-dian-fila.pres-presentada .f, .cli-dian-fila.pres-presentada b { color: var(--text2); }
+.venc-resumen { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: var(--bg2); border: 1px solid var(--borde); border-radius: 12px; padding: 10px 13px; margin: 10px 0; }
+.venc-aviso { background: var(--acento-suave); color: var(--acento-texto); border-radius: 12px; padding: 10px 13px; margin-bottom: 12px; font-size: 13px; }
+.cli-dian-fechas .pres-ok { color: var(--verde); font-weight: 600; text-decoration: none; display: inline-block; }
+.cli-dian-fechas .pres-falta { color: var(--rojo); font-weight: 600; text-decoration: none; display: inline-block; }
+.cli-dian-fechas li { gap: 8px; align-items: center; }
+.cli-dian-fechas li > span:first-child { flex: 1; }
+.campo { display: flex; flex-direction: column; gap: 5px; font-size: 12px; font-weight: 600; color: var(--text2); margin-top: 12px; }
+.campo input, .campo select { font: inherit; font-size: 14px; font-weight: 400; }
+.pres-lista { max-height: 200px; overflow: auto; margin: 6px 0; padding-left: 18px; }
+@media (max-width: 720px) { .cli-dian-fila > .btn { grid-column: 1 / -1; justify-self: stretch; } }
 .cli-venc-cab { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; flex-wrap: wrap; }
 .cli-venc-barra { height: 6px; border-radius: 9px; background: var(--bg3); margin-top: 10px; overflow: hidden; }
 .cli-venc-barra span { display: block; height: 100%; border-radius: 9px; background: var(--verde); }
@@ -1036,6 +1050,7 @@ const CONFIG = {
     clientes: 'clientes',
     respaldos: 'respaldos',
     calendarioDian: 'calendario_dian',
+    presentaciones: 'presentaciones',
     chatConv: 'chat_conversaciones',
     chatMiem: 'chat_miembros',
     chatMsj: 'chat_mensajes',
@@ -1855,6 +1870,41 @@ class SupabaseStore {
     return data?.length ? data : null;
   }
 
+  // Declaraciones DIAN presentadas (supabase/presentaciones.sql). null si la tabla no existe.
+  async presentaciones() {
+    const todos = [];
+    const PAGINA = 1000;
+    for (let desde = 0; ; desde += PAGINA) {
+      const { data, error } = await this.sb.from(CONFIG.TABLAS.presentaciones).select('*').order('cliente_id').order('anio').order('obligacion').order('periodo').range(desde, desde + PAGINA - 1);
+      if (error) { if (this._error(error, '').faltaEsquema) return null; throw this._error(error, 'leer las presentaciones'); }
+      todos.push(...(data || []));
+      if (!data || data.length < PAGINA) return todos;
+    }
+  }
+
+  // lista: [{ cliente_id, anio, obligacion, periodo, fecha_presentacion }]. Devuelve las filas guardadas.
+  async marcarPresentadas(lista) {
+    const out = [];
+    for (let i = 0; i < lista.length; i += 500) {
+      const lote = lista.slice(i, i + 500).map(({ cliente_id, anio, obligacion, periodo, fecha_presentacion }) => ({ cliente_id, anio, obligacion, periodo, fecha_presentacion }));
+      const { data, error } = await this.sb.from(CONFIG.TABLAS.presentaciones).upsert(lote, { onConflict: 'cliente_id,anio,obligacion,periodo' }).select();
+      if (error) {
+        const e = this._error(error, 'marcar la declaración como presentada');
+        if (e.faltaEsquema) e.message = 'Falta activar las presentaciones en Supabase: ejecuta una vez supabase/presentaciones.sql en el SQL Editor.';
+        throw e;
+      }
+      out.push(...(data || []));
+    }
+    return out;
+  }
+
+  async quitarPresentada({ cliente_id, anio, obligacion, periodo }) {
+    const { data, error } = await this.sb.from(CONFIG.TABLAS.presentaciones).delete()
+      .eq('cliente_id', cliente_id).eq('anio', anio).eq('obligacion', obligacion).eq('periodo', periodo).select('cliente_id');
+    if (error) throw this._error(error, 'quitar la marca de presentada');
+    if (!data?.length) throw new ErrorDatos('Solo quien la marcó o un administrador puede quitar la marca de presentada.');
+  }
+
   async guardarCliente(g) {
     // El historial de versiones lo arma el trigger de supabase/clientes.sql; aquí no se envía.
     const fila = { id: g.id, nombre: g.nombre, nit: g.nit || null, datos: g.datos, vencimientos: g.vencimientos };
@@ -2173,6 +2223,29 @@ class LocalStore {
   }
 
   async calendarioDian() { return null; }
+
+  async presentaciones() { return structuredClone(this.db.presentaciones || []); }
+
+  async marcarPresentadas(lista) {
+    this.db.presentaciones ||= [];
+    const out = [];
+    for (const p of lista) {
+      const i = this.db.presentaciones.findIndex(x => x.cliente_id === p.cliente_id && x.anio === p.anio && x.obligacion === p.obligacion && x.periodo === p.periodo);
+      const fila = { cliente_id: p.cliente_id, anio: p.anio, obligacion: p.obligacion, periodo: p.periodo, fecha_presentacion: p.fecha_presentacion,
+        presentada_por: this.perfil?.id || null, presentada_nombre: this.perfil?.nombre || null, updated_at: new Date().toISOString() };
+      if (i >= 0) this.db.presentaciones[i] = fila; else this.db.presentaciones.push(fila);
+      out.push(structuredClone(fila));
+    }
+    this._guardar();
+    return out;
+  }
+
+  async quitarPresentada(p) {
+    const fila = (this.db.presentaciones || []).find(x => x.cliente_id === p.cliente_id && x.anio === p.anio && x.obligacion === p.obligacion && x.periodo === p.periodo);
+    if (fila && fila.presentada_por !== this.perfil?.id && !Permisos.esAdmin()) throw new ErrorDatos('Solo quien la marcó o un administrador puede quitar la marca de presentada.');
+    this.db.presentaciones = (this.db.presentaciones || []).filter(x => x !== fila);
+    this._guardar();
+  }
 
   async guardarCliente(g) {
     this.db.clientes ||= [];
@@ -4070,11 +4143,13 @@ const Clientes = {
   abiertoId: null,
   editando: null,      // { id, que: 'datos' | <id de vencimiento> }
   dianAbierto: null,   // cliente con el apartado de impuestos desplegado
+  presentaciones: new Map(),     // declaraciones DIAN presentadas, por clavePres()
+  presentacionesActivas: null,   // false si falta supabase/presentaciones.sql
 
   // ── Ciclo de vida ─────────────────────────────────────────────────
   reiniciar() {
     this.raiz?.remove();
-    Object.assign(this, { _indiceNit: null, raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '', digito: '' }, abiertoId: null, editando: null, dianAbierto: null });
+    Object.assign(this, { presentaciones: new Map(), presentacionesActivas: null, _indiceNit: null, raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '', digito: '' }, abiertoId: null, editando: null, dianAbierto: null });
   },
 
   montar(main) {
@@ -4109,12 +4184,40 @@ const Clientes = {
     try {
       if (this.origenCalendario === 'pagina') await this.cargarCalendario();
       this.lista = (await Datos.clientes()).map(g => this.normalizar(g));
+      await this.cargarPresentaciones();
     } catch (e) {
       console.error(e);
       this.error = e;
     }
     this.cargada = true;
     this.pintar();
+  },
+
+  // ── Declaraciones presentadas (supabase/presentaciones.sql) ───────
+  async cargarPresentaciones() {
+    try {
+      const filas = await Datos.presentaciones();
+      this.presentacionesActivas = !!filas;
+      this.presentaciones = new Map((filas || []).map(p => [this.clavePres(p.cliente_id, p.anio, p.obligacion, p.periodo), p]));
+    } catch (e) { console.warn('[presentaciones]', e.message); }
+  },
+
+  clavePres(clienteId, anio, obligacion, periodo) { return `${clienteId}|${anio}|${obligacion}|${periodo}`; },
+
+  // Fila de presentación de una fecha DIAN del cliente (del año del calendario), o undefined.
+  presentada(g, obId, periodo, anio = CALENDARIO_DIAN.anio) { return this.presentaciones.get(this.clavePres(g.id, anio, obId, periodo)); },
+
+  // items: [{ g, obId, periodo, fecha }] (fecha = día en que se presentó)
+  async marcarPresentadas(items) {
+    const filas = await Datos.marcarPresentadas(items.map(x => ({ cliente_id: x.g.id, anio: CALENDARIO_DIAN.anio, obligacion: x.obId, periodo: x.periodo, fecha_presentacion: x.fecha })));
+    for (const p of filas) this.presentaciones.set(this.clavePres(p.cliente_id, p.anio, p.obligacion, p.periodo), p);
+    this.presentacionesActivas = true;
+  },
+
+  async quitarPresentada(g, obId, periodo) {
+    const anio = CALENDARIO_DIAN.anio;
+    await Datos.quitarPresentada({ cliente_id: g.id, anio, obligacion: obId, periodo });
+    this.presentaciones.delete(this.clavePres(g.id, anio, obId, periodo));
   },
 
   normalizar(g) {
@@ -4289,7 +4392,7 @@ const Clientes = {
   // Próximo vencimiento (hoy o después) de cada obligación del cliente.
   proximosDian(g, hoy = Util.hoyISO()) {
     const prox = new Map();
-    for (const f of this.fechasDian(g)) if (f.fecha >= hoy && !prox.has(f.ob.id)) prox.set(f.ob.id, { ...f, dias: Util.diasEntre(hoy, f.fecha) });
+    for (const f of this.fechasDian(g)) if (f.fecha >= hoy && !prox.has(f.ob.id) && !this.presentada(g, f.ob.id, f.periodo)) prox.set(f.ob.id, { ...f, dias: Util.diasEntre(hoy, f.fecha) });
     return [...prox.values()].sort((a, b) => a.dias - b.dias);
   },
 
@@ -4595,7 +4698,8 @@ const Clientes = {
       const ob = DIAN_OBLIGACIONES.find(o => o.id === obId);
       if (!ob) return '';
       const fechas = todas.filter(f => f.ob.id === obId);
-      const prox = fechas.find(f => f.fecha >= hoy);
+      const prox = fechas.find(f => f.fecha >= hoy && !this.presentada(g, obId, f.periodo));
+      const faltan = fechas.filter(f => f.fecha < hoy && !this.presentada(g, obId, f.periodo)).length;
       let detalle, chip = '';
       if (!nit) detalle = 'Sin NIT: escríbelo en los datos del cliente para calcular la fecha.';
       else if (!CALENDARIO_DIAN.obligaciones[obId]) detalle = `Sus fechas aún no están cargadas del Calendario Tributario ${CALENDARIO_DIAN.anio}.`;
@@ -4605,10 +4709,16 @@ const Clientes = {
         detalle = `${Util.esc(prox.periodo)} · vence ${Util.fmtFecha(prox.fecha)}`;
         chip = this.chip(this.estadoDian(dias), this.textoDias(dias));
       }
-      return `<div class="cli-dian-ob"><div class="cli-venc-cab">${Util.esc(ob.label)}<span class="separador"></span>${chip}</div>
+      const presTxt = f => {
+        const p = this.presentada(g, obId, f.periodo);
+        if (p) return `<span class="pres-ok" title="${Util.esc(p.presentada_nombre ? 'Marcó: ' + p.presentada_nombre : '')}">✓ Presentada ${Util.fmtFecha(p.fecha_presentacion)}</span>`;
+        return f.fecha < hoy ? '<span class="pres-falta">✗ Sin presentar</span>' : '<span class="muted">Pendiente</span>';
+      };
+      return `<div class="cli-dian-ob"><div class="cli-venc-cab">${Util.esc(ob.label)}<span class="separador"></span>${faltan ? Clientes.chip('vencido', `${faltan} sin presentar`) : ''}${chip}</div>
         <div class="muted mini">${detalle}</div>
-        ${fechas.length ? `<details><summary class="mini">Todas las fechas ${CALENDARIO_DIAN.anio}</summary><ul class="cli-dian-fechas">${fechas.map(f =>
-          `<li class="${f.fecha < hoy ? 'pasada' : ''}"><span>${Util.esc(f.periodo)}</span><span>${Util.fmtFecha(f.fecha)}</span></li>`).join('')}</ul></details>` : ''}</div>`;
+        ${fechas.length ? `<details ${faltan ? 'open' : ''}><summary class="mini">Todas las fechas ${CALENDARIO_DIAN.anio}</summary><ul class="cli-dian-fechas">${fechas.map(f =>
+          `<li class="${f.fecha < hoy ? 'pasada' : ''}"><span>${Util.esc(f.periodo)}</span><span>${Util.fmtFecha(f.fecha)}</span><span class="mini">${presTxt(f)}</span>
+            <button class="enlace mini" data-accion="pres-abrir" data-id="${id}" data-ob="${obId}" data-periodo="${Util.esc(f.periodo)}">${this.presentada(g, obId, f.periodo) ? '✎' : 'Marcar'}</button></li>`).join('')}</ul></details>` : ''}</div>`;
     }).join('');
     return `<section class="cli-dian">
       <div class="cli-venc-cab">🏛 Impuestos DIAN ${CALENDARIO_DIAN.anio}<span class="muted mini">· ${tipo}${nit ? ` · último dígito del NIT: <b>${Util.esc(nit.slice(-1))}</b>` : ''}</span>
@@ -4975,7 +5085,8 @@ Vistas.vencimientos = {
   icono: '📆',
   orden: 6.6,
   visible: () => true,
-  filtro: { tipo: '', dias: '30', digito: '', texto: '' },
+  FILTRO_INICIAL: { tipo: '', dias: '30', digito: '', texto: '', estado: '', periodo: '' },
+  filtro: { tipo: '', dias: '30', digito: '', texto: '', estado: '', periodo: '' },
 
   tipos() {
     return [
@@ -4984,36 +5095,101 @@ Vistas.vencimientos = {
     ];
   },
 
-  // [{ g, tipo, nombre, detalle, fecha, dias, dian }] ordenadas por fecha. Los DIAN que ya pasaron no se
-  // muestran (no se registra si se presentaron); firma, resolución y soporte vencidos sí.
-  filas(hoy = Util.hoyISO()) {
+  // Periodos de la obligación DIAN elegida en el filtro de tipo ([] si no es DIAN).
+  periodos() {
+    const id = this.filtro.tipo.startsWith('dian:') ? this.filtro.tipo.slice(5) : '';
+    return id ? (CALENDARIO_DIAN.obligaciones[id]?.periodos || []).map(p => p.periodo) : [];
+  },
+
+  // Estado de una fecha DIAN: 'presentada' | 'falta' (venció sin presentar) | 'pendiente'
+  estadoPres(pres, fecha, hoy) { return pres ? 'presentada' : fecha < hoy ? 'falta' : 'pendiente'; },
+
+  // Fechas DIAN de los clientes que pasan los filtros de cliente (dígito y texto), sin mirar fechas ni estado.
+  _dian(hoy) {
     const f = this.filtro;
-    const hasta = f.dias === 'todo' ? '9999-12-31' : Util.sumarDias(hoy, Number(f.dias));
     const q = Util.normalizar(f.texto);
     const out = [];
     for (const g of Clientes.lista) {
       if (f.digito && Clientes.nitBase(g).slice(-1) !== f.digito) continue;
       if (q && !Util.normalizar(`${g.nombre} ${g.nit}`).includes(q)) continue;
       for (const x of Clientes.fechasDian(g)) {
-        if (x.fecha < hoy || x.fecha > hasta || (f.tipo && f.tipo !== 'dian:' + x.ob.id)) continue;
-        out.push({ g, tipo: 'dian:' + x.ob.id, nombre: '🏛 ' + x.ob.label, detalle: x.periodo, fecha: x.fecha, dias: Util.diasEntre(hoy, x.fecha), dian: true });
-      }
-      for (const v of CLIENTE_VENCIMIENTOS) {
-        const fin = g.vencimientos[v.id]?.fin;
-        if (!fin || fin > hasta || (f.tipo && f.tipo !== 'cli:' + v.id)) continue;
-        out.push({ g, tipo: 'cli:' + v.id, nombre: v.icono + ' ' + v.label, detalle: '', fecha: fin, dias: Util.diasEntre(hoy, fin), dian: false });
+        const pres = Clientes.presentada(g, x.ob.id, x.periodo);
+        out.push({ g, ob: x.ob, tipo: 'dian:' + x.ob.id, nombre: '🏛 ' + x.ob.label, detalle: x.periodo, periodo: x.periodo, fecha: x.fecha,
+          dias: Util.diasEntre(hoy, x.fecha), dian: true, pres, estado: this.estadoPres(pres, x.fecha, hoy) });
       }
     }
-    return out.sort((a, b) => a.fecha.localeCompare(b.fecha) || a.g.nombre.localeCompare(b.g.nombre, 'es'));
+    return out;
+  },
+
+  // [{ g, tipo, nombre, detalle, fecha, dias, dian, pres?, estado? }] ordenadas por grupo y fecha.
+  // DIAN: las que vencieron sin presentar siguen saliendo; las ya presentadas que pasaron solo con
+  // "Todo el calendario", con el filtro "Presentadas" o al elegir un periodo.
+  filas(hoy = Util.hoyISO()) {
+    const f = this.filtro;
+    const hasta = f.dias === 'todo' ? '9999-12-31' : Util.sumarDias(hoy, Number(f.dias));
+    const q = Util.normalizar(f.texto);
+    const out = [];
+    for (const x of this._dian(hoy)) {
+      if (f.tipo && f.tipo !== x.tipo) continue;
+      if (f.periodo) { if (x.periodo !== f.periodo) continue; }
+      else if (x.fecha > hasta || (x.estado === 'presentada' && x.fecha < hoy && f.dias !== 'todo' && f.estado !== 'presentada')) continue;
+      if (f.estado === 'sin' && x.pres) continue;
+      if (f.estado && f.estado !== 'sin' && f.estado !== x.estado) continue;
+      out.push(x);
+    }
+    // Firma, resolución y soporte: no son declaraciones; con un filtro de estado o periodo no salen.
+    if (!f.estado && !f.periodo) {
+      for (const g of Clientes.lista) {
+        if (f.digito && Clientes.nitBase(g).slice(-1) !== f.digito) continue;
+        if (q && !Util.normalizar(`${g.nombre} ${g.nit}`).includes(q)) continue;
+        for (const v of CLIENTE_VENCIMIENTOS) {
+          const fin = g.vencimientos[v.id]?.fin;
+          if (!fin || fin > hasta || (f.tipo && f.tipo !== 'cli:' + v.id)) continue;
+          out.push({ g, tipo: 'cli:' + v.id, nombre: v.icono + ' ' + v.label, detalle: '', fecha: fin, dias: Util.diasEntre(hoy, fin), dian: false });
+        }
+      }
+    }
+    const orden = Object.fromEntries(this.GRUPOS.map((x, i) => [x, i]));
+    return out.sort((a, b) => orden[this.grupo(a)] - orden[this.grupo(b)] || a.fecha.localeCompare(b.fecha) || a.g.nombre.localeCompare(b.g.nombre, 'es'));
+  },
+
+  GRUPOS: ['Vencidos sin presentar', 'Vencidos', 'Hoy', 'Próximos 7 días', 'Próximos 30 días', 'Más adelante', 'Presentadas'],
+  grupo(x) {
+    if (x.dian && x.pres) return 'Presentadas';
+    const d = x.dias;
+    if (d < 0) return x.dian ? 'Vencidos sin presentar' : 'Vencidos';
+    return d === 0 ? 'Hoy' : d <= 7 ? 'Próximos 7 días' : d <= 30 ? 'Próximos 30 días' : 'Más adelante';
   },
 
   chip(x) {
-    if (x.dian) return Clientes.chip(Clientes.estadoDian(x.dias), Clientes.textoDias(x.dias));
+    if (x.dian) {
+      if (x.pres) return Clientes.chip('ok', 'Presentada ' + Util.fmtFecha(x.pres.fecha_presentacion));
+      if (x.dias < 0) return Clientes.chip('vencido', `sin presentar · hace ${-x.dias} día${x.dias === -1 ? '' : 's'}`);
+      return Clientes.chip(Clientes.estadoDian(x.dias), Clientes.textoDias(x.dias));
+    }
     if (x.dias < 0) return Clientes.chip('vencido', `venció hace ${-x.dias} día${x.dias === -1 ? '' : 's'}`);
     return Clientes.chip(x.dias <= CLIENTE_DIAS_ALERTA ? 'pronto' : 'ok', Clientes.textoDias(x.dias));
   },
 
-  grupo(d) { return d < 0 ? 'Vencidos' : d === 0 ? 'Hoy' : d <= 7 ? 'Próximos 7 días' : d <= 30 ? 'Próximos 30 días' : 'Más adelante'; },
+  // Resumen de un periodo: cuántos presentaron, cuántos faltan y quiénes.
+  _resumenHtml(hoy) {
+    const f = this.filtro;
+    if (!f.periodo || !f.tipo.startsWith('dian:')) return '';
+    const todas = this._dian(hoy).filter(x => x.tipo === f.tipo && x.periodo === f.periodo);
+    if (!todas.length) return '';
+    const n = e => todas.filter(x => x.estado === e).length;
+    const faltan = todas.filter(x => !x.pres);
+    const ob = DIAN_OBLIGACIONES.find(o => 'dian:' + o.id === f.tipo);
+    return `<div class="venc-resumen">
+      <b>${Util.esc(ob?.label || '')} · ${Util.esc(f.periodo)} ${CALENDARIO_DIAN.anio}</b>
+      <span class="chip est-completada">✓ ${n('presentada')} presentada${n('presentada') === 1 ? '' : 's'}</span>
+      ${n('falta') ? `<span class="chip est-vencida">⚠ ${n('falta')} vencida${n('falta') === 1 ? '' : 's'} sin presentar</span>` : ''}
+      ${n('pendiente') ? `<span class="chip est-en_revision">◷ ${n('pendiente')} pendiente${n('pendiente') === 1 ? '' : 's'}</span>` : ''}
+      <span class="muted mini">de ${todas.length} cliente${todas.length === 1 ? '' : 's'}</span>
+      <span class="separador"></span>
+      ${faltan.length ? `<button class="btn btn-sm" data-accion="pres-lote">✓ Marcar las ${faltan.length} que faltan…</button>` : ''}
+    </div>`;
+  },
 
   render() {
     if (!Clientes.cargada) { Clientes.cargarParaTareas().then(() => App.render()); return '<div class="cargando">Cargando vencimientos…</div>'; }
@@ -5024,28 +5200,38 @@ Vistas.vencimientos = {
     const f = this.filtro;
     const hoy = Util.hoyISO();
     const filas = this.filas(hoy);
+    this._filas = filas;
     const cuenta = cond => filas.filter(cond).length;
     const opt = (v, l, actual) => `<option value="${v}" ${actual === v ? 'selected' : ''}>${Util.esc(l)}</option>`;
     let actual = '', cuerpo = '';
-    for (const x of filas) {
-      const gr = this.grupo(x.dias);
+    filas.forEach((x, i) => {
+      const gr = this.grupo(x);
       if (gr !== actual) { actual = gr; cuerpo += `<h5 class="cli-dian-grupo">${gr}</h5>`; }
-      cuerpo += `<button class="cli-dian-fila" data-accion="venc-abrir" data-id="${Util.esc(x.g.id)}">
+      const accion = !x.dian ? '<span></span>'
+        : x.pres ? `<button class="btn btn-sm" data-accion="pres-fila" data-i="${i}" title="Cambiar la fecha o quitar la marca">✎</button>`
+        : `<button class="btn btn-sm btn-primario" data-accion="pres-fila" data-i="${i}">✓ Presentada</button>`;
+      cuerpo += `<div class="cli-dian-fila ${x.dian ? 'pres-' + x.estado : ''}" role="button" tabindex="0" data-accion="venc-abrir" data-id="${Util.esc(x.g.id)}">
         <span class="f">${Util.fmtFecha(x.fecha)}</span><span>${Util.esc(x.nombre)}${x.detalle ? ` <span class="muted mini">· ${Util.esc(x.detalle)}</span>` : ''}</span>
-        <span><b>${Util.esc(x.g.nombre)}</b> <span class="muted mini">${x.g.nit ? 'NIT ' + Util.esc(x.g.nit) : 'Sin NIT'}</span></span>
-        ${this.chip(x)}</button>`;
-    }
-    const hayFiltro = f.tipo || f.digito || f.texto || f.dias !== '30';
+        <span><b>${Util.esc(x.g.nombre)}</b> <span class="muted mini">${x.g.nit ? 'NIT ' + Util.esc(x.g.nit) : 'Sin NIT'}</span>${x.pres?.presentada_nombre ? ` <span class="muted mini">· marcó ${Util.esc(x.pres.presentada_nombre)}</span>` : ''}</span>
+        ${this.chip(x)}${accion}</div>`;
+    });
+    const hayFiltro = f.tipo || f.digito || f.texto || f.estado || f.periodo || f.dias !== '30';
+    const periodos = this.periodos();
+    const aviso = Clientes.presentacionesActivas === false
+      ? '<div class="venc-aviso">Para marcar las declaraciones presentadas, un administrador debe ejecutar una vez <code>supabase/presentaciones.sql</code> en el SQL Editor de Supabase.</div>' : '';
     return `
+      ${aviso}
       <div class="kpis">
-        ${Vistas.inicio.kpi('Vencidos (firma, resolución, soporte)', cuenta(x => x.dias < 0), 'rojo', '⚠')}
-        ${Vistas.inicio.kpi('Vencen hoy', cuenta(x => x.dias === 0), 'ambar', '◷')}
-        ${Vistas.inicio.kpi('Próximos 7 días', cuenta(x => x.dias > 0 && x.dias <= 7), 'azul', '▦')}
-        ${Vistas.inicio.kpi('En el periodo', filas.length, 'violeta', '📆')}
+        ${Vistas.inicio.kpi('Vencidos sin presentar', cuenta(x => x.dias < 0 && !x.pres), 'rojo', '⚠')}
+        ${Vistas.inicio.kpi('Vencen hoy', cuenta(x => x.dias === 0 && !x.pres), 'ambar', '◷')}
+        ${Vistas.inicio.kpi('Próximos 7 días', cuenta(x => x.dias > 0 && x.dias <= 7 && !x.pres), 'azul', '▦')}
+        ${Vistas.inicio.kpi('Presentadas', cuenta(x => x.pres), 'verde', '✓')}
       </div>
       <div class="barra-filtros">
         <input type="search" class="venc-buscar" placeholder="🔍 Cliente o NIT…" value="${Util.esc(f.texto)}" aria-label="Buscar cliente">
-        <select data-vf="dias" aria-label="Periodo">${opt('7', 'Próximos 7 días', f.dias)}${opt('30', 'Próximos 30 días', f.dias)}${opt('90', 'Próximos 90 días', f.dias)}${opt('todo', 'Todo el calendario', f.dias)}</select>
+        <select data-vf="estado" aria-label="Estado de la declaración">${opt('', 'Todos los estados', f.estado)}${opt('sin', 'Sin presentar', f.estado)}${opt('falta', 'Vencidas sin presentar', f.estado)}${opt('pendiente', 'Pendientes (aún no vencen)', f.estado)}${opt('presentada', 'Presentadas', f.estado)}</select>
+        ${periodos.length ? `<select data-vf="periodo" aria-label="Periodo de la declaración"><option value="">Todos los periodos</option>${periodos.map(p => opt(p, p, f.periodo)).join('')}</select>` : ''}
+        ${f.periodo ? '' : `<select data-vf="dias" aria-label="Hasta">${opt('7', 'Próximos 7 días', f.dias)}${opt('30', 'Próximos 30 días', f.dias)}${opt('90', 'Próximos 90 días', f.dias)}${opt('todo', 'Todo el calendario', f.dias)}</select>`}
         <select data-vf="digito" aria-label="Último dígito del NIT"><option value="">Último dígito del NIT</option>${['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map(d => opt(d, 'NIT terminado en ' + d, f.digito)).join('')}</select>
         ${hayFiltro ? '<button class="btn btn-sm" data-accion="venc-limpiar">✕ Limpiar</button>' : ''}
       </div>
@@ -5053,14 +5239,19 @@ Vistas.vencimientos = {
         <button class="${f.tipo ? '' : 'on'}" data-accion="venc-tipo" data-tipo="">Todos</button>
         ${this.tipos().map(t => `<button class="${f.tipo === t.id ? 'on' : ''}" data-accion="venc-tipo" data-tipo="${t.id}">${Util.esc(t.label)}</button>`).join('')}
       </div>
+      ${this._resumenHtml(hoy)}
       <div class="barra-vista"><span class="muted">${filas.length} vencimiento(s) de ${Clientes.lista.length} clientes · toca uno para abrir el cliente</span><span class="separador"></span>
+        <button class="btn btn-sm" data-accion="venc-exportar" ${filas.length ? '' : 'disabled'}>⬇ Exportar a Excel</button>
         <a class="btn btn-sm" href="${Util.esc(CALENDARIO_DIAN.fuente)}" target="_blank" rel="noopener">📄 Calendario DIAN ${CALENDARIO_DIAN.anio} (PDF)</a></div>
       <div class="cli-dian-lista">${cuerpo || '<p class="muted pad centrado">No hay vencimientos con estos filtros.</p>'}</div>
-      <p class="muted mini">Impuestos DIAN según el último dígito del NIT y los impuestos asociados en la ficha de cada cliente (persona natural: IVA bimestral; empresa: IVA bimestral y retención, si no se cambian). Las fechas DIAN que ya pasaron no se muestran.</p>`;
+      <p class="muted mini">Impuestos DIAN según el último dígito del NIT y los impuestos asociados en la ficha de cada cliente (persona natural: IVA bimestral; empresa: IVA bimestral y retención, si no se cambian). Las declaraciones que vencieron sin marcarse como presentadas siguen saliendo hasta que se marquen; las ya presentadas se ven con <b>Todo el calendario</b>, el estado <b>Presentadas</b> o eligiendo un periodo.</p>`;
   },
 
   montar(main) {
     main.querySelectorAll('[data-vf]').forEach(el => el.addEventListener('change', () => { this.filtro[el.dataset.vf] = el.value; App.render(); }));
+    main.querySelectorAll('.cli-dian-fila[role="button"]').forEach(el => el.addEventListener('keydown', e => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target === el) { e.preventDefault(); Clientes.abrirCliente(el.dataset.id); }
+    }));
     const b = main.querySelector('.venc-buscar');
     if (b) {
       b.addEventListener('input', () => { this.filtro.texto = b.value; this._foco = b.selectionStart; App.render(); });
@@ -5068,10 +5259,125 @@ Vistas.vencimientos = {
     }
   },
 
+  async exportar() {
+    const filas = this._filas || [];
+    const hoy = Util.hoyISO();
+    const est = { presentada: 'Presentada', falta: 'Vencida sin presentar', pendiente: 'Pendiente' };
+    const cab = ['Cliente', 'NIT', 'Vencimiento', 'Periodo', 'Fecha límite', 'Estado', 'Fecha de presentación', 'Marcó'];
+    const datos = filas.map(x => [x.g.nombre, x.g.nit || '', x.nombre.replace(/^\S+\s/, ''), x.detalle || '', x.fecha,
+      x.dian ? est[x.estado] : x.dias < 0 ? 'Vencido' : 'Vigente', x.pres?.fecha_presentacion || '', x.pres?.presentada_nombre || '']);
+    const nombre = 'vencimientos_' + hoy;
+    try {
+      await Importador.cargarXLSX();
+      const ws = XLSX.utils.aoa_to_sheet([cab, ...datos]);
+      ws['!cols'] = cab.map((h, i) => ({ wch: i === 0 ? 38 : i === 2 ? 26 : 16 }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Vencimientos');
+      XLSX.writeFile(wb, nombre + '.xlsx');
+    } catch {
+      const csv = [cab, ...datos].map(f => f.map(v => /[",\n;]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v).join(',')).join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = nombre + '.csv';
+      a.click();
+    }
+  },
+
   acciones: {
-    'venc-tipo': el => { Vistas.vencimientos.filtro.tipo = el.dataset.tipo; App.render(); },
-    'venc-limpiar': () => { Vistas.vencimientos.filtro = { tipo: '', dias: '30', digito: '', texto: '' }; App.render(); },
+    'venc-tipo': el => { Object.assign(Vistas.vencimientos.filtro, { tipo: el.dataset.tipo, periodo: '' }); App.render(); },
+    'venc-limpiar': () => { Vistas.vencimientos.filtro = { ...Vistas.vencimientos.FILTRO_INICIAL }; App.render(); },
     'venc-abrir': el => Clientes.abrirCliente(el.dataset.id),
+    'venc-exportar': () => Vistas.vencimientos.exportar(),
+    'pres-fila': el => {
+      const x = Vistas.vencimientos._filas?.[Number(el.dataset.i)];
+      if (x) Presentaciones.abrir(x.g, x.ob.id, x.periodo, x.fecha);
+    },
+    'pres-lote': () => {
+      const v = Vistas.vencimientos, f = v.filtro;
+      const faltan = v._dian(Util.hoyISO()).filter(x => x.tipo === f.tipo && x.periodo === f.periodo && !x.pres);
+      Presentaciones.abrirLote(faltan);
+    },
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// PRESENTACIONES — marcar una declaración DIAN como presentada (con su fecha),
+// cambiar la fecha o quitar la marca. Se usa desde Vencimientos y la ficha del cliente.
+// ═══════════════════════════════════════════════════════════════════
+const Presentaciones = {
+  _actual: null,   // { g, obId, periodo } o { lote: [...] }
+
+  _repintar() {
+    if (App.estado.vista === 'clientes') Clientes.pintar(); else App.render();
+  },
+
+  abrir(g, obId, periodo, fechaLimite) {
+    const ob = DIAN_OBLIGACIONES.find(o => o.id === obId);
+    const p = Clientes.presentada(g, obId, periodo);
+    const hoy = Util.hoyISO();
+    this._actual = { g, obId, periodo };
+    UI.abrirModal(`<header class="modal-cab"><h3>${p ? 'Declaración presentada' : 'Marcar como presentada'}</h3><button class="btn-icono" data-accion="cerrar-modal" aria-label="Cerrar">✕</button></header>
+      <p><b>${Util.esc(g.nombre)}</b> <span class="muted">${g.nit ? 'NIT ' + Util.esc(g.nit) : ''}</span><br>
+        ${Util.esc(ob?.label || obId)} · ${Util.esc(periodo)} ${CALENDARIO_DIAN.anio}${fechaLimite ? ` · vence ${Util.fmtFecha(fechaLimite)}` : ''}</p>
+      ${p ? `<p class="muted mini">Marcada${p.presentada_nombre ? ' por ' + Util.esc(p.presentada_nombre) : ''}${p.updated_at ? ' el ' + Util.esc(Util.fmtFechaHora(p.updated_at)) : ''}.</p>` : ''}
+      <label class="campo"><span>Fecha de presentación</span><input type="date" id="pres-fecha" value="${Util.esc(p?.fecha_presentacion || hoy)}" max="${hoy}" autofocus></label>
+      <div class="modal-pie">
+        <button class="btn btn-primario" data-accion="pres-guardar">✓ ${p ? 'Guardar fecha' : 'Marcar presentada'}</button>
+        ${p ? '<button class="btn" data-accion="pres-quitar">Quitar la marca (no se ha presentado)</button>' : ''}
+        <span class="separador"></span><button class="btn" data-accion="cerrar-modal">Cancelar</button>
+      </div>`, { ancho: 460 });
+  },
+
+  abrirLote(items) {
+    if (!items.length) return;
+    const x = items[0];
+    this._actual = { lote: items };
+    const hoy = Util.hoyISO();
+    UI.abrirModal(`<header class="modal-cab"><h3>Marcar ${items.length} como presentadas</h3><button class="btn-icono" data-accion="cerrar-modal" aria-label="Cerrar">✕</button></header>
+      <p>${Util.esc(x.ob.label)} · ${Util.esc(x.periodo)} ${CALENDARIO_DIAN.anio}</p>
+      <details><summary class="mini">Ver los ${items.length} clientes</summary><ul class="pres-lista mini">${items.map(i => `<li>${Util.esc(i.g.nombre)} <span class="muted">· vence ${Util.fmtFecha(i.fecha)}</span></li>`).join('')}</ul></details>
+      <label class="campo"><span>Fecha de presentación</span>
+        <select id="pres-modo"><option value="limite">La fecha límite de cada cliente</option><option value="fija">Una misma fecha para todos</option></select></label>
+      <label class="campo" id="pres-fija" hidden><span>Fecha</span><input type="date" id="pres-fecha" value="${hoy}" max="${hoy}"></label>
+      <p class="muted mini">Sirve para poner al día las declaraciones que ya se presentaron antes de usar esta marca. Las fechas límite que aún no llegan se marcan con la fecha de hoy.</p>
+      <div class="modal-pie"><button class="btn btn-primario" data-accion="pres-guardar">✓ Marcar ${items.length}</button><span class="separador"></span><button class="btn" data-accion="cerrar-modal">Cancelar</button></div>`, { ancho: 480 });
+    const modo = document.getElementById('pres-modo');
+    modo.addEventListener('change', () => { document.getElementById('pres-fija').hidden = modo.value !== 'fija'; });
+  },
+
+  async guardar() {
+    const a = this._actual;
+    if (!a) return;
+    const hoy = Util.hoyISO();
+    const fechaEl = document.getElementById('pres-fecha');
+    const fecha = fechaEl?.value;
+    let items;
+    if (a.lote) {
+      const fija = document.getElementById('pres-modo')?.value === 'fija';
+      if (fija && !fecha) { UI.toast('Escribe la fecha de presentación', { tipo: 'error' }); return; }
+      items = a.lote.map(x => ({ g: x.g, obId: x.ob.id, periodo: x.periodo, fecha: fija ? fecha : x.fecha > hoy ? hoy : x.fecha }));
+    } else {
+      if (!fecha) { UI.toast('Escribe la fecha de presentación', { tipo: 'error' }); return; }
+      items = [{ g: a.g, obId: a.obId, periodo: a.periodo, fecha }];
+    }
+    if (items.some(x => x.fecha > hoy)) { UI.toast('La fecha de presentación no puede ser futura', { tipo: 'error' }); return; }
+    try {
+      await Clientes.marcarPresentadas(items);
+      UI.cerrarModal();
+      this._repintar();
+      UI.toast(items.length === 1 ? `${items[0].g.nombre}: presentada el ${Util.fmtFecha(items[0].fecha)}` : `${items.length} declaraciones marcadas como presentadas`);
+    } catch (e) { UI.toast(e.message, { tipo: 'error', ms: 9000 }); }
+  },
+
+  async quitar() {
+    const a = this._actual;
+    if (!a || a.lote) return;
+    try {
+      await Clientes.quitarPresentada(a.g, a.obId, a.periodo);
+      UI.cerrarModal();
+      this._repintar();
+      UI.toast(`${a.g.nombre}: se quitó la marca de presentada`);
+    } catch (e) { UI.toast(e.message, { tipo: 'error', ms: 9000 }); }
   },
 };
 
@@ -7316,6 +7622,13 @@ const Acciones = {
   'salir': () => App.salir(),
   'sincronizar': () => App.sincronizar(),
   'cerrar-modal': () => UI.cerrarModal(),
+  'pres-guardar': () => Presentaciones.guardar(),
+  'pres-quitar': () => Presentaciones.quitar(),
+  'pres-abrir': el => {
+    const g = Clientes.cliente(el.dataset.id);
+    const f = g && Clientes.fechasDian(g).find(x => x.ob.id === el.dataset.ob && x.periodo === el.dataset.periodo);
+    if (f) Presentaciones.abrir(g, f.ob.id, f.periodo, f.fecha);
+  },
   'menu': () => document.body.classList.toggle('menu-abierto'),
 };
 
