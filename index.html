@@ -766,6 +766,15 @@ body.nav-compacta .lateral-pie { display: block; margin-top: auto; padding: 0 6p
 .cli-dian-fechas li > span:first-child { flex: 1; }
 .campo { display: flex; flex-direction: column; gap: 5px; font-size: 12px; font-weight: 600; color: var(--text2); margin-top: 12px; }
 .campo input, .campo select { font: inherit; font-size: 14px; font-weight: 400; }
+.panel-ancho { grid-column: 1 / -1; }
+.cc-filtros { margin: 10px 0 6px; }
+.cc-fila { background: var(--bg); border: 1px solid var(--borde); border-radius: 12px; padding: 9px 13px; margin-bottom: 6px; font-size: 13px; }
+.cc-cab { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.cc-hora { color: var(--text2); font-variant-numeric: tabular-nums; min-width: 64px; }
+.cc-cambios { margin: 6px 0 0 72px; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 12.5px; }
+.cc-antes { color: var(--text2); text-decoration: line-through; }
+.cc-despues { font-weight: 600; }
+@media (max-width: 720px) { .cc-cambios { margin-left: 0; } }
 .pres-lista { max-height: 200px; overflow: auto; margin: 6px 0; padding-left: 18px; }
 @media (max-width: 720px) { .cli-dian-fila > .btn { grid-column: 1 / -1; justify-self: stretch; } }
 .cli-venc-cab { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; flex-wrap: wrap; }
@@ -1051,6 +1060,7 @@ const CONFIG = {
     respaldos: 'respaldos',
     calendarioDian: 'calendario_dian',
     presentaciones: 'presentaciones',
+    clientesCambios: 'clientes_cambios',
     chatConv: 'chat_conversaciones',
     chatMiem: 'chat_miembros',
     chatMsj: 'chat_mensajes',
@@ -1068,6 +1078,7 @@ const CONFIG = {
   ROLES_ADMIN: ['admin', 'lider', 'supervisor'],
   COLABORADORES_VEN_EQUIPO: false,         // un colaborador puede ver las tareas del equipo
   COLABORADORES_ASIGNAN_A_OTROS: false,    // un colaborador puede asignar tareas a otros
+  DIAS_CAMBIOS_CLIENTES: 7, // Administración → Cambios en clientes: días que se muestran al abrir
 
   DIAS_ALERTA: 3,          // "por vencer" = vence dentro de N días
   MINUTOS_AVISOS: 30,      // cada cuánto se revisan los vencimientos para los avisos de escritorio
@@ -1913,6 +1924,29 @@ class SupabaseStore {
     return data;
   }
 
+  // ── Registro de cambios en clientes (supabase/clientes_cambios.sql; solo administradores) ──
+  // f: { desde, hasta (AAAA-MM-DD, incluidos), usuario, accion, limite }. null si la tabla no existe.
+  async clientesCambios(f = {}) {
+    let q = this.sb.from(CONFIG.TABLAS.clientesCambios).select('*').order('created_at', { ascending: false }).limit(f.limite || 500);
+    if (f.desde) q = q.gte('created_at', new Date(f.desde + 'T00:00:00').toISOString());
+    if (f.hasta) q = q.lt('created_at', new Date(Util.sumarDias(f.hasta, 1) + 'T00:00:00').toISOString());
+    if (f.usuario) q = q.eq('usuario_id', f.usuario);
+    if (f.accion) q = q.eq('accion', f.accion);
+    if (f.despuesDe) q = q.gt('created_at', f.despuesDe);
+    const { data, error } = await q;
+    if (error) { if (this._error(error, '').faltaEsquema) return null; throw this._error(error, 'leer los cambios en clientes'); }
+    return data || [];
+  }
+
+  suscribirClientesCambios(cb) {
+    this.detenerClientesCambios();
+    this.canalCambios = this.sb.channel('clientes-cambios-rt')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: CONFIG.TABLAS.clientesCambios }, p => cb(p.new))
+      .subscribe();
+  }
+
+  detenerClientesCambios() { if (this.canalCambios) { this.sb.removeChannel(this.canalCambios); this.canalCambios = null; } }
+
   async borrarCliente(id) {
     const { data, error } = await this.sb.from(CONFIG.TABLAS.clientes).delete().eq('id', id).select('id');
     if (error) throw this._error(error, 'eliminar el cliente');
@@ -2259,22 +2293,63 @@ class LocalStore {
       fila.historial = [v, ...(ant.historial || [])].slice(0, CLIENTE_VERSIONES);
     }
     if (i >= 0) this.db.clientes[i] = fila; else this.db.clientes.push(fila);
+    this._registrarCambio(ant ? 'modificado' : 'creado', ant || null, fila);
     this._guardar();
     return structuredClone(fila);
   }
 
   async borrarCliente(id) {
     if (!Permisos.esAdmin()) throw new ErrorDatos('Solo un administrador puede eliminar clientes.');
+    const g = (this.db.clientes || []).find(x => x.id === id);
     this.db.clientes = (this.db.clientes || []).filter(g => g.id !== id);
+    if (g) this._registrarCambio('eliminado', g, g);
     this._guardar();
   }
 
   async importarClientes(lista) {
     this.db.clientes ||= [];
     const ids = new Set(this.db.clientes.map(g => g.id));
-    for (const g of lista) if (!ids.has(g.id)) this.db.clientes.push(structuredClone(g));
+    for (const g of lista) if (!ids.has(g.id)) { this.db.clientes.push(structuredClone(g)); this._registrarCambio('creado', null, g); }
     this._guardar();
   }
+
+  // Igual que el trigger de supabase/clientes_cambios.sql
+  _registrarCambio(accion, antes, despues) {
+    const cambios = accion === 'eliminado' ? [] : ClientesCambios.diferencias(antes, despues);
+    if (accion === 'modificado' && !cambios.length) return;
+    this.db.clientesCambios ||= [];
+    this.db._idCambio = (this.db._idCambio || 0) + 1;
+    this.db.clientesCambios.unshift({ id: this.db._idCambio, cliente_id: despues.id, cliente_nombre: despues.nombre, nit: despues.nit || null, accion, cambios,
+      usuario_id: this.perfil?.id || null, usuario_nombre: this.perfil?.nombre || null, created_at: new Date().toISOString() });
+    this.db.clientesCambios.length = Math.min(this.db.clientesCambios.length, 2000);
+  }
+
+  async clientesCambios(f = {}) {
+    if (!Permisos.esAdmin()) return [];
+    const desde = f.desde ? new Date(f.desde + 'T00:00:00').toISOString() : '';
+    const hasta = f.hasta ? new Date(Util.sumarDias(f.hasta, 1) + 'T00:00:00').toISOString() : '';
+    return structuredClone((this.db.clientesCambios || []).filter(c => (!desde || c.created_at >= desde) && (!hasta || c.created_at < hasta)
+      && (!f.usuario || c.usuario_id === f.usuario) && (!f.accion || c.accion === f.accion) && (!f.despuesDe || c.created_at > f.despuesDe)).slice(0, f.limite || 500));
+  }
+
+  suscribirClientesCambios(cb) {
+    // Entre pestañas del mismo navegador (otra sesión demo): los cambios nuevos llegan con el evento storage.
+    this.detenerClientesCambios();
+    let ultimo = this.db.clientesCambios?.[0]?.id || 0;
+    this._oyenteCambios = e => {
+      if (e.key !== this.CLAVE) return;
+      try {
+        const db = JSON.parse(e.newValue);
+        const nuevos = (db.clientesCambios || []).filter(c => c.id > ultimo).reverse();
+        this.db = db;
+        if (nuevos.length) ultimo = nuevos[nuevos.length - 1].id;
+        nuevos.forEach(cb);
+      } catch { /* ignorar */ }
+    };
+    addEventListener('storage', this._oyenteCambios);
+  }
+
+  detenerClientesCambios() { if (this._oyenteCambios) removeEventListener('storage', this._oyenteCambios); this._oyenteCambios = null; }
 
   async importarTareas(lista, alAvanzar, ids) {
     const refs = new Set(this.db.tareas.map(t => t.origen_ref).filter(Boolean));
@@ -3508,6 +3583,7 @@ Vistas.admin = {
     const demo = Datos.modo === 'demo';
     return `
       <div class="rejilla-2">
+        ${ClientesCambios.html()}
         <section class="panel">
           <header class="panel-cab"><h3>📥 Importar tareas desde Excel</h3></header>
           <p class="muted">Acepta tres formatos:</p>
@@ -3544,6 +3620,7 @@ Vistas.admin = {
             <dt>Cronómetro</dt><dd>${demo || (!Datos.sinCronometro && (!App.estado.tareas.length || 'iniciada_at' in App.estado.tareas[0])) ? 'Activo' : 'Falta ejecutar <code>supabase/cronometro.sql</code> en el SQL Editor de Supabase'}</dd>
             <dt>Pausa del cronómetro</dt><dd>${Datos.conPausa !== false ? 'Activa' : 'Falta ejecutar <code>supabase/pausa.sql</code> en el SQL Editor de Supabase'}</dd>
             <dt>Vencimientos DIAN</dt><dd>${Clientes.origenCalendario === 'supabase' ? `Calendario ${CALENDARIO_DIAN.anio} desde Supabase (tabla <code>vencimientos</code> activa)` : demo ? 'Calendario de la página' : 'Calendario de la página · falta ejecutar <code>supabase/vencimientos.sql</code> para la tabla de vencimientos'}</dd>
+            <dt>Cambios en clientes</dt><dd>${ClientesCambios.error?.faltaEsquema ? 'Falta ejecutar <code>supabase/clientes_cambios.sql</code> en el SQL Editor de Supabase' : ClientesCambios.lista === null ? '…' : 'Activo'}</dd>
             <dt>Copias de seguridad</dt><dd>${Respaldos.error?.faltaEsquema ? 'Falta ejecutar <code>supabase/respaldos.sql</code> en el SQL Editor de Supabase' : Respaldos.lista === null ? '…' : 'Activas'}</dd>
             <dt>Teams</dt><dd>${CONFIG.TEAMS_WEBHOOK_URL || Object.keys(CONFIG.TEAMS_WEBHOOKS_POR_COLABORADOR).length ? 'Configurado' : 'No configurado (js/config.js)'}</dd>
           </dl>
@@ -3570,6 +3647,7 @@ Vistas.admin = {
       if (f) Importador.importarArchivo(f);
     });
     if (Respaldos.lista === null) this.pintarRespaldos();
+    ClientesCambios.montar(main);
   },
 
   async pintarRespaldos() {
@@ -3583,6 +3661,10 @@ Vistas.admin = {
     'exportar-todo': () => Importador.exportar(App.estado.tareas),
     'crear-copia': () => Respaldos.crearAhora(),
     'restaurar-copia': el => Respaldos.abrirRestaurar(Number(el.dataset.id)),
+    'cc-abrir': el => Clientes.abrirCliente(el.dataset.id),
+    'cc-exportar': () => ClientesCambios.exportar(),
+    'cc-recargar': () => { ClientesCambios.lista = null; ClientesCambios.cargar(); },
+    'cc-limpiar': () => { ClientesCambios.filtro = ClientesCambios._filtroInicial(); ClientesCambios.lista = null; App.render(); },
     'reiniciar-demo': async () => {
       if (!confirm('¿Borrar los cambios del modo demo y volver a los datos de ejemplo?')) return;
       Datos.reiniciar();
@@ -5410,6 +5492,266 @@ const Presentaciones = {
       this._repintar();
       UI.toast(`${a.g.nombre}: se quitó la marca de presentada`);
     } catch (e) { UI.toast(e.message, { tipo: 'error', ms: 9000 }); }
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// CAMBIOS EN CLIENTES — registro de quién creó, modificó o eliminó un cliente
+// (supabase/clientes_cambios.sql; lo escribe un trigger). Los administradores
+// reciben un aviso cuando otra persona hace un cambio y lo consultan en
+// Administración, filtrando por colaborador y por fechas.
+// ═══════════════════════════════════════════════════════════════════
+const ClientesCambios = {
+  CLAVE_VISTO: 'planner_cambios_clientes_visto_',
+  filtro: null,
+  lista: null,        // null = sin cargar
+  error: null,
+  cargando: false,
+
+  _filtroInicial() {
+    const hoy = Util.hoyISO();
+    return { usuario: '', desde: Util.sumarDias(hoy, -(CONFIG.DIAS_CAMBIOS_CLIENTES - 1)), hasta: hoy, accion: '', texto: '' };
+  },
+
+  // ── Qué cambió (igual que clientes_diferencias en el SQL; se usa en el modo demo) ──
+  diferencias(o, n) {
+    o ||= {}; n ||= {};
+    const out = [];
+    const vacio = v => v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length);
+    const igual = (a, b) => (vacio(a) && vacio(b)) || JSON.stringify(a) === JSON.stringify(b);
+    if ((o.nombre || '') !== (n.nombre || '')) out.push({ campo: 'nombre', antes: o.nombre || null, despues: n.nombre || null });
+    if ((o.nit || '') !== (n.nit || '')) out.push({ campo: 'nit', antes: o.nit || null, despues: n.nit || null });
+    for (const k of new Set([...Object.keys(o.datos || {}), ...Object.keys(n.datos || {})])) {
+      const a = o.datos?.[k], b = n.datos?.[k];
+      if (igual(a, b)) continue;
+      if (k.startsWith('clave')) out.push({ campo: k, antes: vacio(a) ? null : '••••', despues: vacio(b) ? null : '••••', oculto: true });
+      else out.push({ campo: k, antes: a ?? null, despues: b ?? null });
+    }
+    for (const k of new Set([...Object.keys(o.vencimientos || {}), ...Object.keys(n.vencimientos || {})])) {
+      const a = o.vencimientos?.[k], b = n.vencimientos?.[k];
+      if (JSON.stringify(a ?? null) !== JSON.stringify(b ?? null)) out.push({ campo: 'venc:' + k, antes: a ?? null, despues: b ?? null });
+    }
+    return out;
+  },
+
+  etiqueta(campo) {
+    const fijos = { nombre: 'Nombre', nit: 'NIT', alias: 'Otros nombres', obligaciones: 'Impuestos asociados' };
+    if (fijos[campo]) return fijos[campo];
+    if (campo.startsWith('venc:')) return CLIENTE_VENCIMIENTOS.find(v => v.id === campo.slice(5))?.label || campo.slice(5);
+    return CLIENTE_CAMPOS.find(c => c.id === campo)?.label || campo;
+  },
+
+  valor(campo, v) {
+    if (campo === 'obligaciones' && (v === null || v === undefined)) return '(predeterminado)';
+    if (v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length)) return '(vacío)';
+    if (campo === 'obligaciones' && Array.isArray(v)) return v.map(id => DIAN_OBLIGACIONES.find(o => o.id === id)?.label || id).join(', ');
+    if (Array.isArray(v)) return v.join('; ');
+    if (campo.startsWith('venc:') && typeof v === 'object') return `${v.inicio ? Util.fmtFecha(v.inicio) : '—'} → vence ${v.fin ? Util.fmtFecha(v.fin) : '—'}`;
+    if (typeof v === 'object') return JSON.stringify(v);
+    return String(v);
+  },
+
+  // "Correo, Clave DIAN y NIT"
+  resumen(c) {
+    const l = (c.cambios || []).map(x => this.etiqueta(x.campo));
+    if (!l.length) return '';
+    return l.length === 1 ? l[0] : l.slice(0, -1).join(', ') + ' y ' + l[l.length - 1];
+  },
+
+  verbo(accion) { return { creado: 'creó', modificado: 'modificó', eliminado: 'eliminó' }[accion] || accion; },
+  quien(c) { return c.usuario_nombre || (c.usuario_id ? 'Alguien' : 'Supabase (SQL o sistema)'); },
+
+  // ── Avisos ────────────────────────────────────────────────────────
+  iniciar() {
+    this.detener();
+    this.filtro = this._filtroInicial();
+    this.lista = null;
+    this.error = null;
+    if (!Permisos.esAdmin()) return;
+    Datos.suscribirClientesCambios(c => this.alLlegar(c));
+    this.revisarPendientes();
+  },
+
+  detener() { Datos.detenerClientesCambios?.(); },
+
+  _claveVisto() { return this.CLAVE_VISTO + (Permisos.uid || ''); },
+  _visto() { try { return localStorage.getItem(this._claveVisto()); } catch { return null; } },
+  marcarVisto(ts = new Date().toISOString()) { try { localStorage.setItem(this._claveVisto(), ts); } catch { /* sin almacenamiento */ } },
+
+  async alLlegar(c) {
+    if (!c || c.usuario_id === Permisos.uid) return;
+    const nombre = c.cliente_nombre || 'un cliente';
+    const msg = `${this.quien(c)} ${this.verbo(c.accion)} ${c.accion === 'creado' ? 'el cliente' : 'a'} ${nombre}`;
+    const detalle = c.accion === 'modificado' ? 'Cambió: ' + this.resumen(c) : c.accion === 'creado' ? 'Cliente nuevo' : 'Cliente eliminado';
+    const ver = () => (c.accion === 'eliminado' ? this.verEnAdmin() : Clientes.abrirCliente(c.cliente_id));
+    UI.toast(`👤 ${msg} · ${detalle}`, { ms: 12000, accion: { texto: 'Ver', fn: ver } });
+    Avisos.mostrar('👤 Cambio en clientes', `${msg}\n${detalle}`, { tag: 'cliente-cambio-' + c.id, alClic: ver });
+    this.marcarVisto(c.created_at);
+    // La lista del panel, si está abierta y el cambio entra en los filtros
+    if (this.lista && this._entra(c)) { this.lista.unshift(c); this.pintar(); }
+    // El directorio de clientes se pone al día (si nadie está editando una ficha)
+    if (Clientes.cargada && !Clientes.editando) { await Clientes.cargar(); if (App.estado.vista !== 'clientes') App.render(); }
+  },
+
+  _entra(c) {
+    const f = this.filtro, dia = Util.aISO(new Date(c.created_at));
+    return (!f.usuario || f.usuario === c.usuario_id) && (!f.accion || f.accion === c.accion) && (!f.desde || dia >= f.desde) && (!f.hasta || dia <= f.hasta);
+  },
+
+  // Al entrar: lo que otras personas cambiaron desde la última vez.
+  async revisarPendientes() {
+    const visto = this._visto();
+    if (!visto) { this.marcarVisto(); return; }
+    try {
+      const nuevos = (await Datos.clientesCambios({ despuesDe: visto, limite: 500 }) || []).filter(c => c.usuario_id !== Permisos.uid);
+      if (!nuevos.length) return;
+      const porPersona = {};
+      for (const c of nuevos) porPersona[this.quien(c)] = (porPersona[this.quien(c)] || 0) + 1;
+      const quienes = Object.entries(porPersona).map(([q, n]) => `${q} (${n})`).join(', ');
+      const desde = Util.aISO(new Date(visto));
+      UI.toast(`👤 Desde tu última visita hubo ${nuevos.length} cambio${nuevos.length === 1 ? '' : 's'} en clientes: ${quienes}`,
+        { ms: 15000, accion: { texto: 'Ver', fn: () => this.verEnAdmin({ desde }) } });
+      Avisos.mostrar('👤 Cambios en clientes', `${nuevos.length} cambio${nuevos.length === 1 ? '' : 's'} desde tu última visita\n${quienes}`, { tag: 'cliente-cambios-pendientes', alClic: () => this.verEnAdmin({ desde }) });
+      this.marcarVisto(nuevos[0].created_at);
+    } catch (e) { console.warn('[cambios en clientes]', e.message); }
+  },
+
+  verEnAdmin(f = {}) {
+    this.filtro = { ...this._filtroInicial(), ...f };
+    this.lista = null;
+    App.ir('admin');
+    requestAnimationFrame(() => document.getElementById('panel-cambios-clientes')?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+  },
+
+  // ── Panel de Administración ───────────────────────────────────────
+  async cargar() {
+    this.cargando = true;
+    this.pintar();
+    try {
+      const filas = await Datos.clientesCambios({ ...this.filtro, limite: 1000 });
+      this.error = filas === null ? { faltaEsquema: true } : null;
+      this.lista = filas || [];
+      if (this.lista[0]) this.marcarVisto(this.lista[0].created_at > (this._visto() || '') ? this.lista[0].created_at : this._visto());
+    } catch (e) { this.error = e; this.lista = []; }
+    this.cargando = false;
+    this.pintar();
+  },
+
+  visibles() {
+    const q = Util.normalizar(this.filtro.texto);
+    return (this.lista || []).filter(c => !q || Util.normalizar(`${c.cliente_nombre || ''} ${c.nit || ''}`).includes(q));
+  },
+
+  html() {
+    const f = this.filtro || (this.filtro = this._filtroInicial());
+    const opt = (v, l, actual) => `<option value="${Util.esc(v)}" ${actual === v ? 'selected' : ''}>${Util.esc(l)}</option>`;
+    const colabs = App.estado.colaboradores;
+    const hay = f.usuario || f.accion || f.texto || f.desde !== this._filtroInicial().desde || f.hasta !== this._filtroInicial().hasta;
+    return `<section class="panel panel-ancho" id="panel-cambios-clientes">
+      <header class="panel-cab"><h3>👤 Cambios en clientes</h3><span class="separador"></span>
+        <button class="btn btn-sm" data-accion="cc-recargar" title="Volver a cargar">🔄</button>
+        <button class="btn btn-sm" data-accion="cc-exportar">⬇ Exportar a Excel</button></header>
+      <p class="muted mini">Quién creó, modificó o eliminó un cliente y qué cambió. De las claves se registra que cambiaron, no su valor. Cuando otra persona hace un cambio te llega un aviso.</p>
+      <div class="barra-filtros cc-filtros">
+        <select data-cc="usuario" aria-label="Colaborador"><option value="">Todos los colaboradores</option>${colabs.map(c => opt(c.id, c.nombre, f.usuario)).join('')}</select>
+        <select data-cc="accion" aria-label="Acción">${opt('', 'Todas las acciones', f.accion)}${opt('creado', 'Clientes nuevos', f.accion)}${opt('modificado', 'Modificaciones', f.accion)}${opt('eliminado', 'Eliminados', f.accion)}</select>
+        <select data-cc="rango" aria-label="Rango rápido"><option value="">Fechas…</option>${opt('hoy', 'Hoy', '')}${opt('ayer', 'Ayer', '')}${opt('7', 'Últimos 7 días', '')}${opt('30', 'Últimos 30 días', '')}${opt('mes', 'Este mes', '')}${opt('todo', 'Todo', '')}</select>
+        <label class="filtro-fecha"><span>Desde</span><input type="date" data-cc="desde" value="${Util.esc(f.desde)}" aria-label="Desde"></label>
+        <label class="filtro-fecha"><span>Hasta</span><input type="date" data-cc="hasta" value="${Util.esc(f.hasta)}" ${f.desde ? `min="${Util.esc(f.desde)}"` : ''} aria-label="Hasta"></label>
+        <input type="search" class="cc-buscar" placeholder="🔍 Cliente o NIT…" value="${Util.esc(f.texto)}" aria-label="Buscar cliente">
+        ${hay ? '<button class="btn btn-sm" data-accion="cc-limpiar">✕ Limpiar</button>' : ''}
+      </div>
+      <div id="cambios-clientes">${this._listaHtml()}</div>
+    </section>`;
+  },
+
+  _listaHtml() {
+    if (this.cargando && !this.lista) return '<p class="muted pad">Cargando cambios…</p>';
+    if (this.error?.faltaEsquema) return '<div class="venc-aviso">Para registrar los cambios en clientes, ejecuta una vez <code>supabase/clientes_cambios.sql</code> en el SQL Editor de Supabase. Los cambios se registran desde ese momento.</div>';
+    if (this.error) return `<p class="muted pad">${Util.esc(this.error.message || 'No se pudieron cargar los cambios')}</p>`;
+    if (!this.lista) return '<p class="muted pad">Cargando cambios…</p>';
+    const filas = this.visibles();
+    if (!filas.length) return '<p class="muted pad centrado">No hay cambios con estos filtros.</p>';
+    const chip = { creado: 'est-completada', modificado: 'est-en_revision', eliminado: 'est-vencida' };
+    const verbo = { creado: 'Nuevo', modificado: 'Modificado', eliminado: 'Eliminado' };
+    let dia = '';
+    const html = filas.map(c => {
+      const d = Util.aISO(new Date(c.created_at));
+      const cab = d !== dia ? `<h5 class="cli-dian-grupo">${Util.esc(new Date(c.created_at).toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))}</h5>` : '';
+      dia = d;
+      const hora = new Date(c.created_at).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' });
+      const cambios = (c.cambios || []).filter(x => c.accion !== 'creado' || x.despues !== null).map(x => {
+        const et = Util.esc(this.etiqueta(x.campo));
+        if (x.oculto) return `<li><b>${et}:</b> ${x.antes === null ? 'se agregó' : x.despues === null ? 'se borró' : 'cambió'} <span class="muted">(no se registra la clave)</span></li>`;
+        if (c.accion === 'creado') return `<li><b>${et}:</b> ${Util.esc(this.valor(x.campo, x.despues))}</li>`;
+        return `<li><b>${et}:</b> <span class="cc-antes">${Util.esc(this.valor(x.campo, x.antes))}</span> → <span class="cc-despues">${Util.esc(this.valor(x.campo, x.despues))}</span></li>`;
+      }).join('');
+      const nombre = Util.esc(c.cliente_nombre || '(sin nombre)');
+      return `${cab}<div class="cc-fila">
+        <div class="cc-cab"><span class="cc-hora">${Util.esc(hora)}</span> <b>${Util.esc(this.quien(c))}</b>
+          <span class="chip ${chip[c.accion] || 'chip-suave'}">${verbo[c.accion] || Util.esc(c.accion)}</span>
+          ${c.accion === 'eliminado' ? `<span>${nombre}</span>` : `<button class="enlace" data-accion="cc-abrir" data-id="${Util.esc(c.cliente_id)}">${nombre}</button>`}
+          <span class="muted mini">${c.nit ? 'NIT ' + Util.esc(c.nit) : ''}</span></div>
+        ${cambios ? `<ul class="cc-cambios">${cambios}</ul>` : ''}</div>`;
+    }).join('');
+    const tope = this.lista.length >= 1000 ? '<p class="muted mini">Se muestran los 1.000 cambios más recientes; acota las fechas para ver más atrás.</p>' : '';
+    return `<p class="muted mini">${filas.length} cambio${filas.length === 1 ? '' : 's'}</p>${html}${tope}`;
+  },
+
+  pintar() {
+    const el = document.getElementById('cambios-clientes');
+    if (el) el.innerHTML = this._listaHtml();
+  },
+
+  montar(main) {
+    const panel = main.querySelector('#panel-cambios-clientes');
+    if (!panel) return;
+    panel.querySelectorAll('[data-cc]').forEach(el => el.addEventListener('change', () => {
+      const f = this.filtro, hoy = Util.hoyISO();
+      if (el.dataset.cc === 'rango') {
+        const r = { hoy: [hoy, hoy], ayer: [Util.sumarDias(hoy, -1), Util.sumarDias(hoy, -1)], 7: [Util.sumarDias(hoy, -6), hoy], 30: [Util.sumarDias(hoy, -29), hoy],
+          mes: [hoy.slice(0, 8) + '01', hoy], todo: ['', ''] }[el.value];
+        if (r) [f.desde, f.hasta] = r;
+      } else {
+        f[el.dataset.cc] = el.value;
+        if (el.dataset.cc === 'desde' && f.hasta && f.desde > f.hasta) f.hasta = f.desde;
+      }
+      this.lista = null;
+      App.render();
+    }));
+    const b = panel.querySelector('.cc-buscar');
+    b?.addEventListener('input', () => { this.filtro.texto = b.value; this.pintar(); });
+    if (this.lista === null && !this.cargando) this.cargar();
+  },
+
+  async exportar() {
+    const filas = this.visibles();
+    const cab = ['Fecha', 'Hora', 'Colaborador', 'Acción', 'Cliente', 'NIT', 'Dato', 'Antes', 'Después'];
+    const datos = [];
+    for (const c of filas) {
+      const d = new Date(c.created_at);
+      const base = [Util.aISO(d), d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }), this.quien(c), c.accion, c.cliente_nombre || '', c.nit || ''];
+      const cambios = (c.cambios || []).filter(x => c.accion !== 'creado' || x.despues !== null);
+      if (!cambios.length) datos.push([...base, '', '', '']);
+      for (const x of cambios) datos.push([...base, this.etiqueta(x.campo),
+        x.oculto ? (x.antes === null ? '' : '(clave)') : c.accion === 'creado' ? '' : this.valor(x.campo, x.antes),
+        x.oculto ? (x.despues === null ? '(borrada)' : '(clave nueva)') : this.valor(x.campo, x.despues)]);
+    }
+    const nombre = 'cambios_clientes_' + Util.hoyISO();
+    try {
+      await Importador.cargarXLSX();
+      const ws = XLSX.utils.aoa_to_sheet([cab, ...datos]);
+      ws['!cols'] = cab.map((h, i) => ({ wch: [12, 8, 20, 12, 36, 14, 24, 30, 30][i] }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Cambios');
+      XLSX.writeFile(wb, nombre + '.xlsx');
+    } catch {
+      const csv = [cab, ...datos].map(f => f.map(v => /[",\n;]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v).join(',')).join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = nombre + '.csv';
+      a.click();
+    }
   },
 };
 
@@ -7491,6 +7833,7 @@ const App = {
     const desdeHash = location.hash.replace('#/', '');
     this.ir(Vistas[desdeHash] ? desdeHash : 'inicio');
     Avisos.iniciar();
+    ClientesCambios.iniciar();
   },
 
   async cargar() {
@@ -7571,6 +7914,7 @@ const App = {
 
   async salir() {
     Avisos.detener();
+    ClientesCambios.detener();
     clearInterval(this._temporizadorRefresco);
     clearInterval(this._temporizadorCrono);
     Notas.reiniciar();

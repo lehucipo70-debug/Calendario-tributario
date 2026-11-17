@@ -186,6 +186,16 @@ En `index.html`, la lista `CLIENTE_CAMPOS` define los datos de la ficha y `CLIEN
 
 No hace falta cambiar Supabase: los campos se guardan en la columna `datos` (jsonb) y los vencimientos en `vencimientos`. Tipos disponibles: `texto`, `correo`, `clave` (oculta, con botones para ver y copiar), `telefono` y `codigo`. Las secciones de la ficha están en `CLIENTE_SECCIONES`.
 
+## Cambios en clientes (registro y avisos)
+
+Cada vez que alguien **crea, modifica o elimina un cliente** (a mano, al importar un Excel o al vincular un NIT) queda registrado quién lo hizo, cuándo y qué cambió (dato, valor anterior y valor nuevo).
+
+- **Activarlo en Supabase (una vez):** ejecuta [`supabase/clientes_cambios.sql`](supabase/clientes_cambios.sql) en el **SQL Editor**, después de `clientes.sql`. Los cambios se registran desde ese momento (lo anterior no).
+- **Avisos**: cuando otra persona cambia un cliente, a los administradores les aparece una notificación en la página ("Ana Gómez modificó a Pepito · Cambió: Correo y Clave DIAN", con el botón **Ver** que abre la ficha) y, si están activados, un aviso de escritorio. Los cambios propios no avisan. Al entrar, si hubo cambios mientras no estabas, sale un resumen ("Desde tu última visita hubo 5 cambios en clientes: Ana (3), Carlos (2)").
+- **Administración → 👤 Cambios en clientes**: la lista de cambios agrupada por día, con filtros por **colaborador**, **acción** (nuevos, modificaciones, eliminados), **fechas** (Desde/Hasta o atajos: hoy, ayer, últimos 7 o 30 días, este mes, todo) y buscador por cliente o NIT. Al abrir muestra los últimos 7 días (`DIAS_CAMBIOS_CLIENTES`). **Exportar a Excel** baja una fila por dato cambiado.
+- **Claves**: se registra que se agregaron, cambiaron o borraron, pero **no su valor**, para que el registro no sea otra copia de las contraseñas.
+- Solo los administradores leen el registro y reciben los avisos. Nadie puede editarlo ni borrarlo desde la página: lo escribe un trigger de la base de datos.
+
 ## Modo demo
 
 Abre la página con `?demo` al final de la dirección para probarla con datos de ejemplo guardados solo en el navegador.
