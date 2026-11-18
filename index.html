@@ -1078,6 +1078,7 @@ const CONFIG = {
   ROLES_ADMIN: ['admin', 'lider', 'supervisor'],
   COLABORADORES_VEN_EQUIPO: false,         // un colaborador puede ver las tareas del equipo
   COLABORADORES_ASIGNAN_A_OTROS: false,    // un colaborador puede asignar tareas a otros
+  SEGUNDOS_CAMBIOS_CLIENTES: 30, // respaldo del tiempo real: cada cuánto se buscan cambios nuevos
   DIAS_CAMBIOS_CLIENTES: 7, // Administración → Cambios en clientes: días que se muestran al abrir
 
   DIAS_ALERTA: 3,          // "por vencer" = vence dentro de N días
@@ -1938,14 +1939,28 @@ class SupabaseStore {
     return data || [];
   }
 
-  suscribirClientesCambios(cb) {
+  // alEstado(true|false): si el canal quedó conectado. Si se cae, se vuelve a conectar solo.
+  suscribirClientesCambios(cb, alEstado = () => {}) {
     this.detenerClientesCambios();
-    this.canalCambios = this.sb.channel('clientes-cambios-rt')
+    const canal = this.sb.channel('clientes-cambios-rt-' + Date.now())
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: CONFIG.TABLAS.clientesCambios }, p => cb(p.new))
-      .subscribe();
+      .subscribe(estado => {
+        if (this.canalCambios !== canal) return;
+        alEstado(estado === 'SUBSCRIBED');
+        if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(estado)) {
+          clearTimeout(this._reintentoCambios);
+          this._reintentoCambios = setTimeout(() => { if (this.canalCambios === canal) this.suscribirClientesCambios(cb, alEstado); }, 15000);
+        }
+      });
+    this.canalCambios = canal;
   }
 
-  detenerClientesCambios() { if (this.canalCambios) { this.sb.removeChannel(this.canalCambios); this.canalCambios = null; } }
+  detenerClientesCambios() {
+    clearTimeout(this._reintentoCambios);
+    const c = this.canalCambios;
+    this.canalCambios = null;
+    if (c) this.sb.removeChannel(c);
+  }
 
   async borrarCliente(id) {
     const { data, error } = await this.sb.from(CONFIG.TABLAS.clientes).delete().eq('id', id).select('id');
@@ -5567,19 +5582,48 @@ const ClientesCambios = {
     this.filtro = this._filtroInicial();
     this.lista = null;
     this.error = null;
+    this._ids = new Set();
+    this._ultimo = new Date().toISOString();
     if (!Permisos.esAdmin()) return;
-    Datos.suscribirClientesCambios(c => this.alLlegar(c));
+    Datos.suscribirClientesCambios(c => this.alLlegar(c), ok => { this.conectado = ok; });
     this.revisarPendientes();
+    // Respaldo del tiempo real: cada 30 s (y al volver a la pestaña) se buscan los cambios
+    // nuevos, por si el canal en tiempo real se cayó o no está habilitado en Supabase.
+    this._temporizador = setInterval(() => this.refrescar(), CONFIG.SEGUNDOS_CAMBIOS_CLIENTES * 1000);
+    this._alVolver = () => { if (document.visibilityState === 'visible') this.refrescar(); };
+    document.addEventListener('visibilitychange', this._alVolver);
+    addEventListener('focus', this._alVolver);
   },
 
-  detener() { Datos.detenerClientesCambios?.(); },
+  detener() {
+    Datos.detenerClientesCambios?.();
+    clearInterval(this._temporizador);
+    if (this._alVolver) { document.removeEventListener('visibilitychange', this._alVolver); removeEventListener('focus', this._alVolver); }
+    this._alVolver = null;
+  },
+
+  // Trae lo registrado después del último cambio conocido y lo procesa como si llegara en tiempo real.
+  async refrescar() {
+    if (!Permisos.esAdmin() || this._refrescando || document.visibilityState === 'hidden') return;
+    this._refrescando = true;
+    try {
+      const nuevos = await Datos.clientesCambios({ despuesDe: this._ultimo, limite: 200 }) || [];
+      for (const c of nuevos.reverse()) await this.alLlegar(c);
+    } catch (e) { console.warn('[cambios en clientes]', e.message); }
+    this._refrescando = false;
+  },
 
   _claveVisto() { return this.CLAVE_VISTO + (Permisos.uid || ''); },
   _visto() { try { return localStorage.getItem(this._claveVisto()); } catch { return null; } },
   marcarVisto(ts = new Date().toISOString()) { try { localStorage.setItem(this._claveVisto(), ts); } catch { /* sin almacenamiento */ } },
 
   async alLlegar(c) {
-    if (!c || c.usuario_id === Permisos.uid) return;
+    if (!c || (c.id != null && this._ids?.has(c.id))) return;   // ya llegó (tiempo real + respaldo)
+    if (c.id != null) this._ids?.add(c.id);
+    if (c.created_at && c.created_at > (this._ultimo || '')) this._ultimo = c.created_at;
+    // La lista del panel, si está abierta y el cambio entra en los filtros (también los cambios propios)
+    if (this.lista && this._entra(c) && !this.lista.some(x => x.id === c.id)) { this.lista.unshift(c); this.pintar(); }
+    if (c.usuario_id === Permisos.uid) return;   // los cambios propios no avisan
     const nombre = c.cliente_nombre || 'un cliente';
     const msg = `${this.quien(c)} ${this.verbo(c.accion)} ${c.accion === 'creado' ? 'el cliente' : 'a'} ${nombre}`;
     const detalle = c.accion === 'modificado' ? 'Cambió: ' + this.resumen(c) : c.accion === 'creado' ? 'Cliente nuevo' : 'Cliente eliminado';
@@ -5587,15 +5631,14 @@ const ClientesCambios = {
     UI.toast(`👤 ${msg} · ${detalle}`, { ms: 12000, accion: { texto: 'Ver', fn: ver } });
     Avisos.mostrar('👤 Cambio en clientes', `${msg}\n${detalle}`, { tag: 'cliente-cambio-' + c.id, alClic: ver });
     this.marcarVisto(c.created_at);
-    // La lista del panel, si está abierta y el cambio entra en los filtros
-    if (this.lista && this._entra(c)) { this.lista.unshift(c); this.pintar(); }
     // El directorio de clientes se pone al día (si nadie está editando una ficha)
     if (Clientes.cargada && !Clientes.editando) { await Clientes.cargar(); if (App.estado.vista !== 'clientes') App.render(); }
   },
 
   _entra(c) {
     const f = this.filtro, dia = Util.aISO(new Date(c.created_at));
-    return (!f.usuario || f.usuario === c.usuario_id) && (!f.accion || f.accion === c.accion) && (!f.desde || dia >= f.desde) && (!f.hasta || dia <= f.hasta);
+    const hastaHoy = f.hasta && f.hasta >= this._hastaAbierto;   // "hasta hoy" sigue valiendo pasada la medianoche
+    return (!f.usuario || f.usuario === c.usuario_id) && (!f.accion || f.accion === c.accion) && (!f.desde || dia >= f.desde) && (!f.hasta || hastaHoy || dia <= f.hasta);
   },
 
   // Al entrar: lo que otras personas cambiaron desde la última vez.
@@ -5629,8 +5672,11 @@ const ClientesCambios = {
     this.pintar();
     try {
       const filas = await Datos.clientesCambios({ ...this.filtro, limite: 1000 });
+      this._hastaAbierto = Util.hoyISO();   // el día en que se abrió la lista: si el filtro llega hasta ahí, entran los cambios nuevos
       this.error = filas === null ? { faltaEsquema: true } : null;
       this.lista = filas || [];
+      for (const c of this.lista) this._ids?.add(c.id);
+      if (this.lista[0]?.created_at > (this._ultimo || '')) this._ultimo = this.lista[0].created_at;
       if (this.lista[0]) this.marcarVisto(this.lista[0].created_at > (this._visto() || '') ? this.lista[0].created_at : this._visto());
     } catch (e) { this.error = e; this.lista = []; }
     this.cargando = false;
