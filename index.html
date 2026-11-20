@@ -1655,18 +1655,26 @@ class SupabaseStore {
   }
 
   async tareas() {
-    // PostgREST devuelve como máximo 1000 filas por consulta: se pagina.
-    const todas = [];
+    // PostgREST devuelve como máximo 1000 filas por consulta: se pagina por id (keyset).
+    // No se pagina por posición (range) ordenando por fecha: si alguien crea, borra o
+    // reprograma una tarea mientras se leen las páginas, las filas se corren y una misma
+    // tarea llega en dos páginas (aparece duplicada en la pantalla) y otra se pierde.
+    const porId = new Map();
     const PAGINA = 1000;
-    for (let desde = 0; ; desde += PAGINA) {
-      const { data, error } = await this.sb.from(CONFIG.TABLAS.tareas).select('*')
-        .order('fecha_vencimiento', { ascending: true, nullsFirst: false })
-        .order('id')
-        .range(desde, desde + PAGINA - 1);
+    let ultimo = null;
+    for (;;) {
+      let q = this.sb.from(CONFIG.TABLAS.tareas).select('*').order('id').limit(PAGINA);
+      if (ultimo !== null) q = q.gt('id', ultimo);
+      const { data, error } = await q;
       if (error) throw this._error(error, 'leer las tareas');
-      todas.push(...data);
+      for (const t of data) porId.set(String(t.id), t);
       if (data.length < PAGINA) break;
+      ultimo = data[data.length - 1].id;
     }
+    // Mismo orden de antes: por fecha límite (sin fecha al final) y luego por id.
+    const todas = [...porId.values()].sort((a, b) =>
+      (a.fecha_vencimiento || '9999').localeCompare(b.fecha_vencimiento || '9999') ||
+      (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     // Pausa del cronómetro: disponible si ya se ejecutó supabase/pausa.sql
     if (todas.length) this.conPausa = 'pausada_at' in todas[0];
     return todas.map(normalizarTarea);
