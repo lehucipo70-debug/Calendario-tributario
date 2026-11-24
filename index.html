@@ -4227,13 +4227,14 @@ const Clientes = {
   abiertoId: null,
   editando: null,      // { id, que: 'datos' | <id de vencimiento> }
   dianAbierto: null,   // cliente con el apartado de impuestos desplegado
+  borrador: null,      // { id, valores } lo escrito en el formulario de datos sin guardar aún
   presentaciones: new Map(),     // declaraciones DIAN presentadas, por clavePres()
   presentacionesActivas: null,   // false si falta supabase/presentaciones.sql
 
   // ── Ciclo de vida ─────────────────────────────────────────────────
   reiniciar() {
     this.raiz?.remove();
-    Object.assign(this, { presentaciones: new Map(), presentacionesActivas: null, _indiceNit: null, raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '', digito: '' }, abiertoId: null, editando: null, dianAbierto: null });
+    Object.assign(this, { presentaciones: new Map(), presentacionesActivas: null, _indiceNit: null, raiz: null, lista: [], cargada: false, error: null, filtro: { texto: '', lechera: '', venc: '', letra: '', digito: '' }, abiertoId: null, editando: null, dianAbierto: null, borrador: null });
   },
 
   montar(main) {
@@ -4529,6 +4530,7 @@ const Clientes = {
     g.updated_at = new Date().toISOString();
     if (antes) { Object.assign(antes, g); delete antes._nuevo; } else this.lista.push(g);
     this.editando = null;
+    this.borrador = null;
     this.pintar();
     try {
       const fila = await Datos.guardarCliente(g);
@@ -4628,7 +4630,19 @@ const Clientes = {
     const g = this.cliente(this.editando?.id);
     if (g?._nuevo) { this.lista = this.lista.filter(x => x !== g); this.abiertoId = null; }
     this.editando = null;
+    this.borrador = null;
     this.pintar();
+  },
+
+  // Guarda lo escrito en el formulario de datos abierto para no perderlo al volver a pintar.
+  _conservarBorrador() {
+    const form = this.raiz?.querySelector('form[data-g="form-datos"]');
+    if (!form) return;
+    const valores = Object.fromEntries(new FormData(form));
+    this.borrador = { id: form.dataset.id, valores };
+    // Un cliente nuevo aún no existe en la base: su NIT define el tipo (persona o empresa) de los impuestos.
+    const g = this.cliente(form.dataset.id);
+    if (g?._nuevo) { g.nombre = String(valores.nombre || '').trim(); g.nit = String(valores.nit || '').trim(); }
   },
 
   async copiar(texto) {
@@ -4742,7 +4756,8 @@ const Clientes = {
     const editando = this.editando?.id === g.id && this.editando.que === 'datos';
     const fila = (label, valor) => `<div class="cli-dato"><span>${Util.esc(label)}</span><span class="cli-valor">${valor}</span></div>`;
     if (editando) {
-      const input = (name, label, valor, tipo = 'text') => `<label>${Util.esc(label)}<input name="${name}" type="${tipo}" value="${Util.esc(valor || '')}" ${name === 'nombre' ? 'required' : ''}></label>`;
+      const b = this.borrador?.id === g.id ? this.borrador.valores : null;
+      const input = (name, label, valor, tipo = 'text') => `<label>${Util.esc(label)}<input name="${name}" type="${tipo}" value="${Util.esc((b && name in b ? b[name] : valor) || '')}" ${name === 'nombre' ? 'required' : ''}></label>`;
       return `<form class="cli-form" data-g="form-datos" data-id="${Util.esc(g.id)}"><h5>${g._nuevo ? 'Nuevo cliente' : 'Editar datos'}</h5>
         ${input('nombre', 'Nombre o razón social', g.nombre)}${input('d_cedula', 'Cédula (empresa: la del representante legal)', g.datos.cedula)}${input('nit', 'NIT', g.nit)}
         ${input('alias', 'Otros nombres en las tareas (separados por ;)', this.alias(g).join('; '))}
@@ -4825,7 +4840,12 @@ const Clientes = {
     if (nuevas.length === pred.length && pred.every(x => nuevas.includes(x))) delete copia.datos.obligaciones;
     else copia.datos.obligaciones = nuevas;
     const ob = DIAN_OBLIGACIONES.find(o => o.id === obId);
+    // Cliente nuevo sin guardar: los impuestos se guardan junto con sus datos al tocar «Guardar».
+    if (g._nuevo) { g.datos = copia.datos; this.pintar(); return; }
+    const editando = this.editando, borrador = this.borrador;
     await this.guardar(copia, `${ob.label}: ${nuevas.includes(obId) ? 'asociado' : 'quitado'}`);
+    // Si se estaban editando los datos, el formulario sigue abierto con lo escrito.
+    if (editando && !this.editando && this.cliente(editando.id)) { this.editando = editando; this.borrador = borrador; this.pintar(); }
   },
 
   _vencHtml(g, v) {
@@ -4870,14 +4890,14 @@ const Clientes = {
         this.abiertoId = this.abiertoId === b.dataset.id ? null : b.dataset.id;
         this.pintar();
         break;
-      case 'editar': if (this.editando) this.cancelarEdicion(); this.editando = { id: b.dataset.id, que: b.dataset.que }; this.pintar(); break;
+      case 'editar': if (this.editando) this.cancelarEdicion(); this.borrador = null; this.editando = { id: b.dataset.id, que: b.dataset.que }; this.pintar(); break;
       case 'cancelar': this.cancelarEdicion(); break;
       case 'eliminar': this.eliminar(b.dataset.id); break;
       case 'versiones': this.verVersiones(b.dataset.id); break;
       case 'copiar': if (g) this.copiar(b.dataset.campo === 'nit' ? g.nit : g.datos[b.dataset.campo] || ''); break;
-      case 'dian-abrir': this.dianAbierto = this.dianAbierto === b.dataset.id ? null : b.dataset.id; this.pintar(); break;
-      case 'dian-ob': if (g) this.cambiarObligacion(g, b.dataset.ob); break;
-      case 'dian-reset': if (g) { const c = structuredClone({ ...g }); delete c.datos.obligaciones; this.guardar(c, 'Impuestos predeterminados'); } break;
+      case 'dian-abrir': this._conservarBorrador(); this.dianAbierto = this.dianAbierto === b.dataset.id ? null : b.dataset.id; this.pintar(); break;
+      case 'dian-ob': this._conservarBorrador(); if (g) this.cambiarObligacion(g, b.dataset.ob); break;
+      case 'dian-reset': this._conservarBorrador(); if (g && g._nuevo) { delete g.datos.obligaciones; this.pintar(); } else if (g) { const c = structuredClone({ ...g }); delete c.datos.obligaciones; this.guardar(c, 'Impuestos predeterminados'); } break;
       case 'ir-vencimientos': if (this.editando) this.cancelarEdicion(); App.ir('vencimientos'); break;
     }
   },
