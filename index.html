@@ -4525,6 +4525,7 @@ const Clientes = {
 
   // ── Cambios ───────────────────────────────────────────────────────
   async guardar(g, mensaje = 'Guardado') {
+    if (!String(g.nombre || '').trim()) { UI.toast('Escribe el nombre del cliente antes de guardar.', { tipo: 'error' }); return; }
     const antes = this.cliente(g.id);
     const copia = antes && structuredClone(antes);
     g.updated_at = new Date().toISOString();
@@ -4637,7 +4638,7 @@ const Clientes = {
   // Guarda lo escrito en el formulario de datos abierto para no perderlo al volver a pintar.
   _conservarBorrador() {
     const form = this.raiz?.querySelector('form[data-g="form-datos"]');
-    if (!form) return;
+    if (!form || this.editando?.que !== 'datos' || this.editando.id !== form.dataset.id) return;
     const valores = Object.fromEntries(new FormData(form));
     this.borrador = { id: form.dataset.id, valores };
     // Un cliente nuevo aún no existe en la base: su NIT define el tipo (persona o empresa) de los impuestos.
@@ -4673,6 +4674,10 @@ const Clientes = {
     const enfocado = document.activeElement;
     const buscando = enfocado?.classList?.contains('cli-buscar');
     const cursor = buscando ? enfocado.selectionStart : null;
+    // Lo escrito en el formulario de datos no se pierde aunque se vuelva a pintar (refrescos, impuestos…).
+    this._conservarBorrador();
+    const campoForm = enfocado?.form?.dataset?.g === 'form-datos' && this.raiz.contains(enfocado) ? enfocado.name : null;
+    const cursorForm = campoForm ? enfocado.selectionStart : null;
 
     if (this.error) {
       const falta = this.error.faltaEsquema;
@@ -4722,6 +4727,9 @@ const Clientes = {
     if (buscando) {
       const b = this.raiz.querySelector('.cli-buscar');
       b.focus(); b.setSelectionRange(cursor, cursor);
+    } else if (campoForm) {
+      const c = this.raiz.querySelector(`form[data-g="form-datos"] [name="${campoForm}"]`);
+      if (c) { c.focus(); try { c.setSelectionRange(cursorForm, cursorForm); } catch {} }
     }
   },
 
