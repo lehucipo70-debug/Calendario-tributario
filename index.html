@@ -4367,9 +4367,10 @@ const Clientes = {
   // Asocia a mano el NIT a una empresa (desde la ventana de la tarea):
   //   - si hay un cliente con ese nombre, se le pone o cambia el NIT (pregunta si ya tenía otro);
   //   - si no, y hay un cliente con ese NIT, el nombre queda como "otro nombre" de ese cliente;
-  //   - si no hay ninguno, se crea el cliente con nombre y NIT.
+  //   - si no hay ninguno, se crea el cliente con nombre y NIT, salvo con { crear: false }
+  //     (desde una tarea): entonces no se toca nada y devuelve 'sin-cliente'.
   // Devuelve false si se canceló o falló.
-  async vincularNit(nombre, nit) {
+  async vincularNit(nombre, nit, { crear = true } = {}) {
     if (!this.cargada) await this.cargar();
     if (this.error) { UI.toast(this.error.faltaEsquema ? 'Para guardar el NIT falta activar Clientes en Supabase (supabase/clientes.sql).' : this.error.message, { tipo: 'error' }); return false; }
     const k = this.claveNombre(nombre);
@@ -4386,6 +4387,8 @@ const Clientes = {
         if (propio.nit && !confirm(`El cliente "${propio.nombre}" tiene el NIT ${propio.nit}.\n\n¿Cambiarlo por ${nit}? Cambia en todas sus tareas.`)) return false;
         await guardar({ ...structuredClone(propio), nit });
       } else {
+        // Desde una tarea no se crean clientes: puede ser una tarea de única vez.
+        if (!crear && !this.clientePorNit(nit)) return 'sin-cliente';
         // Si el nombre estaba como "otro nombre" de un cliente con otro NIT, se le quita.
         for (const g of this.lista.filter(g => g.nit !== nit && this.alias(g).some(a => this.claveNombre(a) === k))) {
           const c = structuredClone(g);
@@ -6650,9 +6653,15 @@ const TareaModal = {
     const btn = document.getElementById('btn-guardar');
     btn.disabled = true;
     // Solo si la persona escribió el NIT (el que se muestra por defecto ya viene del directorio o de la descripción).
+    // Nunca se crea un cliente desde la tarea: si la empresa no está en Clientes, el NIT queda en la descripción.
     if (this._nitTocado && nitSinDv && nitSinDv !== Clientes.nitDeEmpresa(datos.empresa)) {
-      if (!(await Clientes.vincularNit(datos.empresa, nitSinDv))) { btn.disabled = false; return; }
-      App.render();
+      const r = await Clientes.vincularNit(datos.empresa, nitSinDv, { crear: false });
+      if (!r) { btn.disabled = false; return; }
+      if (r === 'sin-cliente') {
+        const desc = datos.descripcion || '';
+        const re = /\bNIT\.?:?\s*\d[\d.]{4,}(?:-\d)?/i;
+        datos.descripcion = re.test(desc) ? desc.replace(re, 'NIT: ' + nit) : (desc ? desc + '\n' : '') + 'NIT: ' + nit;
+      } else App.render();
     }
     try {
       if (!this.id) {
