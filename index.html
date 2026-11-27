@@ -5263,16 +5263,18 @@ Vistas.vencimientos = {
 
   // [{ g, tipo, nombre, detalle, fecha, dias, dian, pres?, estado? }] ordenadas por grupo y fecha.
   // DIAN: las que vencieron sin presentar siguen saliendo; las ya presentadas que pasaron solo con
-  // "Todo el calendario", con el filtro "Presentadas" o al elegir un periodo.
+  // "Todo el calendario", con el filtro "Presentadas", al elegir un periodo o al buscar un cliente.
+  // Al buscar un cliente se ve todo su calendario: pendientes, presentadas y vencidas, sin límite de días.
   filas(hoy = Util.hoyISO()) {
     const f = this.filtro;
-    const hasta = f.dias === 'todo' ? '9999-12-31' : Util.sumarDias(hoy, Number(f.dias));
     const q = Util.normalizar(f.texto);
+    const todo = f.dias === 'todo' || !!q;
+    const hasta = todo ? '9999-12-31' : Util.sumarDias(hoy, Number(f.dias));
     const out = [];
     for (const x of this._dian(hoy)) {
       if (f.tipo && f.tipo !== x.tipo) continue;
       if (f.periodo) { if (x.periodo !== f.periodo) continue; }
-      else if (x.fecha > hasta || (x.estado === 'presentada' && x.fecha < hoy && f.dias !== 'todo' && f.estado !== 'presentada')) continue;
+      else if (x.fecha > hasta || (x.estado === 'presentada' && x.fecha < hoy && !todo && f.estado !== 'presentada')) continue;
       if (f.estado === 'sin' && x.pres) continue;
       if (f.estado && f.estado !== 'sin' && f.estado !== x.estado) continue;
       out.push(x);
@@ -5370,7 +5372,7 @@ Vistas.vencimientos = {
         <input type="search" class="venc-buscar" placeholder="🔍 Cliente o NIT…" value="${Util.esc(f.texto)}" aria-label="Buscar cliente">
         <select data-vf="estado" aria-label="Estado de la declaración">${opt('', 'Todos los estados', f.estado)}${opt('sin', 'Sin presentar', f.estado)}${opt('falta', 'Vencidas sin presentar', f.estado)}${opt('pendiente', 'Pendientes (aún no vencen)', f.estado)}${opt('presentada', 'Presentadas', f.estado)}</select>
         ${this._periodoHtml()}
-        ${f.periodo ? '' : `<select data-vf="dias" aria-label="Hasta">${opt('7', 'Próximos 7 días', f.dias)}${opt('30', 'Próximos 30 días', f.dias)}${opt('90', 'Próximos 90 días', f.dias)}${opt('todo', 'Todo el calendario', f.dias)}</select>`}
+        ${f.periodo || f.texto.trim() ? '' : `<select data-vf="dias" aria-label="Hasta">${opt('7', 'Próximos 7 días', f.dias)}${opt('30', 'Próximos 30 días', f.dias)}${opt('90', 'Próximos 90 días', f.dias)}${opt('todo', 'Todo el calendario', f.dias)}</select>`}
         <select data-vf="digito" aria-label="Último dígito del NIT"><option value="">Último dígito del NIT</option>${['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map(d => opt(d, 'NIT terminado en ' + d, f.digito)).join('')}</select>
         ${hayFiltro ? '<button class="btn btn-sm" data-accion="venc-limpiar">✕ Limpiar</button>' : ''}
       </div>
@@ -5383,7 +5385,7 @@ Vistas.vencimientos = {
         <button class="btn btn-sm" data-accion="venc-exportar" ${filas.length ? '' : 'disabled'}>⬇ Exportar a Excel</button>
         <a class="btn btn-sm" href="${Util.esc(CALENDARIO_DIAN.fuente)}" target="_blank" rel="noopener">📄 Calendario DIAN ${CALENDARIO_DIAN.anio} (PDF)</a></div>
       <div class="cli-dian-lista">${cuerpo || '<p class="muted pad centrado">No hay vencimientos con estos filtros.</p>'}</div>
-      <p class="muted mini">Impuestos DIAN según el último dígito del NIT y los impuestos asociados en la ficha de cada cliente (persona natural: IVA bimestral; empresa: IVA bimestral y retención, si no se cambian). Las declaraciones que vencieron sin marcarse como presentadas siguen saliendo hasta que se marquen; las ya presentadas se ven con <b>Todo el calendario</b>, el estado <b>Presentadas</b> o eligiendo un periodo.</p>`;
+      <p class="muted mini">Impuestos DIAN según el último dígito del NIT y los impuestos asociados en la ficha de cada cliente (persona natural: IVA bimestral; empresa: IVA bimestral y retención, si no se cambian). Las declaraciones que vencieron sin marcarse como presentadas siguen saliendo hasta que se marquen; las ya presentadas se ven con <b>Todo el calendario</b>, el estado <b>Presentadas</b>, eligiendo un periodo o buscando un cliente (la búsqueda muestra todo su calendario).</p>`;
   },
 
   montar(main) {
